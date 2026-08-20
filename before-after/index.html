@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Spidey Reading Tracker — Full diagnostic &amp; 8 before/afters</title>
+  <style>
+    :root {
+      --bg: #0d0d10;
+      --panel: #16161c;
+      --ink: #f3f1ec;
+      --muted: #9a958c;
+      --red: #d7263d;
+      --line: #2a2a33;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.55;
+    }
+    header.hero {
+      padding: 56px 24px 40px;
+      max-width: 1100px;
+      margin: 0 auto;
+      border-bottom: 1px solid var(--line);
+    }
+    header.hero p.kicker {
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: var(--red);
+      margin: 0 0 12px;
+    }
+    h1 { font-size: clamp(32px, 5vw, 52px); line-height: 1.1; margin: 0 0 16px; font-weight: 600; }
+    .lede { font-size: 20px; color: var(--muted); max-width: 46rem; }
+    main { max-width: 1100px; margin: 0 auto; padding: 32px 24px 80px; }
+    h2 { font-size: 28px; margin: 48px 0 12px; }
+    h3 { font-size: 20px; margin: 28px 0 8px; }
+    p, li { font-size: 17px; }
+    .muted { color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 14px; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; }
+    code { font-family: ui-monospace, Menlo, monospace; font-size: 0.9em; color: #ffd0d4; }
+    .frame {
+      margin: 40px 0 56px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .frame img { width: 100%; display: block; background: #000; }
+    .frame figcaption { padding: 18px 20px 22px; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 15px; color: var(--muted); }
+    .frame h3 { margin: 0 0 8px; font-family: Georgia, serif; color: var(--ink); }
+    .num { color: var(--red); font-family: ui-sans-serif, system-ui, sans-serif; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; }
+    ul.compact li { margin: 6px 0; }
+    footer { max-width: 1100px; margin: 0 auto; padding: 0 24px 64px; color: var(--muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <p class="kicker">Production review · 2026-08-19 · spidey-reading-tracker.netlify.app</p>
+    <h1>Everything we found, and eight pictures of what “finished” looks like.</h1>
+    <p class="lede">Claude already captured the collector’s spine. A multi-agent v2 wins by refusing mixed progress units, refusing 16 tabs, and refusing facts that live only in the HTML. The “before” sides reconstruct the live site (emoji nav, camera placeholders, OWN/READ, 0/121). The “after” sides are the contract.</p>
+  </header>
+  <main>
+    <h2>What already works — do not throw it away</h2>
+    <ul class="compact">
+      <li>Reading spine is right: Brand New Day → Big Time → Dying Wish → Superior → Spider-Verse → Spider-Geddon.</li>
+      <li>Side tracks are named: Civil War, Secret Wars 2015, Civil War II, 2099, Ultimate, Venom &amp; Carnage, Web of Spider-Man.</li>
+      <li>Primitives are right: OWN, READ, eras, must-read, Currently Reading, Surprise Me, Step-by-Step, Backup, legal disclaimer.</li>
+      <li>Card copy is often excellent. Keep the blurbs; move them behind a spoiler veil.</li>
+    </ul>
+
+    <h2>Full issue inventory</h2>
+    <h3>Catalog / data (blocker)</h3>
+    <table>
+      <tr><th>ID</th><th>Issue</th></tr>
+      <tr><td>D1</td><td>Big Time #648–656 nested inside a gap of #648–697 — double-count and false “buy both”.</td></tr>
+      <tr><td>D2</td><td>Dying Wish + Superior #1–16 + #17–31 all map to Superior Omni Vol. 1.</td></tr>
+      <tr><td>D3</td><td>Avenging + Team-Up + Superior Vol. 2 all map to Returns Omni.</td></tr>
+      <tr><td>D4</td><td>Worldwide gap listed as ASM 2015 #1–32 only — understates through Red Goblin.</td></tr>
+      <tr><td>D5</td><td>Spider-Geddon is “#0–5 + tie-ins” with no issue map.</td></tr>
+      <tr><td>D6</td><td>Header 0/121 issues vs era 0/3 read (books) — mixed units.</td></tr>
+      <tr><td>D7</td><td>“View issues (6)” repeats on split cards of one book.</td></tr>
+      <tr><td>D8</td><td>Prices with no date or source.</td></tr>
+      <tr><td>D9</td><td>No ISBN / UPC / MU id / GCD id.</td></tr>
+      <tr><td>D10</td><td>No required / recommended / skip-ok flags.</td></tr>
+      <tr><td>D11</td><td>Events are separate apps, not tags.</td></tr>
+      <tr><td>D12</td><td>No publication date vs story date.</td></tr>
+      <tr><td>D13</td><td>Gap cards are ownable.</td></tr>
+      <tr><td>D14</td><td>No reprint / printing distinction.</td></tr>
+      <tr><td>D15</td><td>No digital-vs-print ownership (MU read ≠ shelf own).</td></tr>
+    </table>
+
+    <h3>Deeper findings (second pass)</h3>
+    <table>
+      <tr><th>ID</th><th>Finding</th></tr>
+      <tr><td>X1</td><td>Expand counts look fake — ASM #546–583 is ~38 floppies, card says (8) or (6).</td></tr>
+      <tr><td>X2</td><td>Gap card must be only the uncollected remainder (#657–665, #674–697), not a re-range of the era.</td></tr>
+      <tr><td>X3</td><td>Must-read star almost unused (should mark New Ways to Die, Spider-Island, Go Down Swinging…).</td></tr>
+      <tr><td>X4</td><td>Secret Invasion glued into BND Vol. 1 title instead of an optional tagged tie-in.</td></tr>
+      <tr><td>X5</td><td>Returns omni spanning 2013–2023 is a collection fact parked on a 2018 reading-era row.</td></tr>
+      <tr><td>X6</td><td>No conflict UI when the same issue is “owned” via two cards.</td></tr>
+      <tr><td>X7</td><td>Family Tree / Web of Destiny will drift unless they use the same IDs.</td></tr>
+      <tr><td>X8</td><td>No MU-vs-shelf continue path.</td></tr>
+      <tr><td>X9</td><td>No League of Comic Geeks / CLZ import.</td></tr>
+      <tr><td>X10</td><td>No catalog changelog — users will think their checks moved.</td></tr>
+      <tr><td>X11</td><td>121 must be <code>issues.length</code>, never a hardcoded headline.</td></tr>
+      <tr><td>X12</td><td>Avenging / Team-Up as era chips over-weight Otto side books.</td></tr>
+      <tr><td>X13</td><td>Blurbs spoil Dying Wish and Peter’s return — need a spoiler veil.</td></tr>
+      <tr><td>X14</td><td>Red/black theme will fight real covers; test both themes once images exist.</td></tr>
+      <tr><td>X15</td><td>Single-page dump loads Civil War through 2099 even if you only wanted BND.</td></tr>
+      <tr><td>X16</td><td>No agent-safe source layout — three agents will thrash one HTML file.</td></tr>
+    </table>
+
+    <h3>Links, IA, progress, mobile, AI, ops</h3>
+    <ul class="compact">
+      <li><strong>L1–L7</strong> — Every cover is a camera emoji. Outbound links search the raw card title. Four equal “search Marvel” buttons. Cover Gallery cannot work until IDs exist. Naive hotlinks will 403 and are legally risky.</li>
+      <li><strong>N1–N9</strong> — 16 top-level destinations; three different “order” tools; no search; Surprise Me / Step-by-Step unlabeled vs the tab pile.</li>
+      <li><strong>P1–P12</strong> — Backup without Restore; no schema version; no undo; currently reading buried on the card; Surprise Me can recommend a gap.</li>
+      <li><strong>U1–U12 / M1–M5</strong> — Emoji icons, tiny hit targets, nav wraps on a phone, no sticky current book. This is a couch + phone app.</li>
+      <li><strong>A1–A5</strong> — AI is only worth a Netlify function grounded in <code>issues.json</code>. Otherwise a deterministic Tonight panel.</li>
+      <li><strong>O1–O10</strong> — Disclaimer is good. This GitHub repo is not the site. Split <code>data/</code> from UI. Audit in CI.</li>
+    </ul>
+
+    <h2>Target data model (shared by every agent)</h2>
+    <p>One issue, one READ. OWN lives on collections. Gaps cannot be owned. Progress = <code>readIssueIds.length / issues.length</code>. A second meter counts books owned. Nav has at most five primary items. No outbound URL may be a concatenated title search.</p>
+
+    <h2>How several agents stay stronger than one Claude</h2>
+    <ul class="compact">
+      <li><strong>Catalog</strong> owns <code>data/issues.json</code> and <code>collections.json</code> — not CSS.</li>
+      <li><strong>Audit</strong> owns CI: overlaps, fake expand counts, missing IDs. Fail the build.</li>
+      <li><strong>App</strong> owns Read / Collect / Explore / Me. Never hardcode issue facts.</li>
+      <li><strong>Persist</strong> owns export, restore, schemaVersion, undo, currently-reading chip.</li>
+      <li><strong>Visual</strong> owns type, a11y, cover strategy.</li>
+      <li><strong>Links</strong> owns GCD / MU / ISBN resolution only.</li>
+    </ul>
+    <p>Build order: BND → Geddon catalog first. Then audit. Then Read + Collect. Then persist. Then visual. Explore packs (2099, tree, CW) last.</p>
+
+    <h2>Eight before &amp; afters</h2>
+    <p class="muted">Concept art reconstructed from the live DOM — not photographs of Netlify (this environment cannot screenshot the deployed tab).</p>
+
+    <figure class="frame">
+      <p class="num" style="padding:16px 20px 0">01 · Home header</p>
+      <img src="01-home-header.png" alt="Before and after of the home header and progress" />
+      <figcaption>
+        <h3>Lead with the book in your hand</h3>
+        Stop opening on a slogan, 0/121 with no twin meter, and sixteen tools. After: unofficial badge, issues read + books owned, and “Start at Amazing Spider-Man #546.”
+      </figcaption>
+    </figure>
+
+    <figure class="frame">
+      <p class="num" style="padding:16px 20px 0">02 · Navigation</p>
+      <img src="02-navigation.png" alt="Before and after of site navigation" />
+      <figcaption>
+        <h3>Four verbs, not sixteen destinations</h3>
+        Events become filters under Explore. Search (“Jump to Grim Hunt”) is a first-class control.
+      </figcaption>
+    </figure>
+
+    <figure class="frame">
+      <p class="num" style="padding:16px 20px 0">03 · Collection card</p>
+      <img src="03-collection-card.png" alt="Before and after of a collection card" />
+      <figcaption>
+        <h3>One scannable card</h3>
+        Cover, title, range, two-line why, OWN, READ. The five search links drop one level down.
+      </figcaption>
+    </figure>
+
+    <figure class="frame">
+      <p class="num" style="padding:16px 20px 0">04 · Covers and links</p>
+      <img src="04-covers-and-links.png" alt="Before and after of covers and outbound links" />
+      <figcaption>
+        <h3>No more camera emoji</h3>
+        Store GCD / MU / ISBN. Designed posters if art cannot be hosted. One button that actually lands somewhere.
+      </figcaption>
+    </figure>
+
+    <figure class="frame">
+      <p class="num" style="padding:16px 20px 0">05 · Data overlaps</p>
+      <img src="05-data-overlaps.png" alt="Before and after of overlapping Superior omnibus cards" />
+      <figcaption>
+        <h3>One book, many issues, one read state</h3>
+        The #1 trust killer: Superior Vol. 1, Returns, and Big Time counted two or three times. After: OWN on the collection, READ on each issue.
+      </figcaption>
+    </figure>
+
+    <figure class="frame">
+      <p class="num" style="padding:16px 20px 0">06 · Mobile</p>
+      <img src="06-mobile.png" alt="Before and after of the phone layout" />
+      <figcaption>
+        <h3>Couch-and-phone first</h3>
+        Bottom tabs, 44px Mark read, sticky current issue. If it is not thumbable, the list will go stale and the tracker dies.
+      </figcaption>
+    </figure>
+
+    <figure class="frame">
+      <p class="num" style="padding:16px 20px 0">07 · Next up</p>
+      <img src="07-next-up.png" alt="Before and after of currently reading versus a Tonight panel" />
+      <figcaption>
+        <h3>Tonight replaces four features</h3>
+        Currently Reading + Step-by-Step + Surprise Me + AI Companion collapse into one honest queue: next issue, why, skip optional, mark read.
+      </figcaption>
+    </figure>
+
+    <figure class="frame">
+      <p class="num" style="padding:16px 20px 0">08 · Stats and backup</p>
+      <img src="08-stats-backup.png" alt="Before and after of stats and backup" />
+      <figcaption>
+        <h3>Two meters and a Restore button</h3>
+        Issues read ≠ books owned. Backup and Restore are peers. schemaVersion + last-saved timestamp so the next agent cannot silently migrate you into a hole.
+      </figcaption>
+    </figure>
+
+    <h2>Definition of done for v2</h2>
+    <ul class="compact">
+      <li>Header total === <code>issues.length</code></li>
+      <li>Zero overlapping ownable collections without a shared-issue map</li>
+      <li>Gaps cannot be marked OWN</li>
+      <li>Expand count === issueIds.length</li>
+      <li>No leftover camera placeholders</li>
+      <li>No search-string outbound links</li>
+      <li>Four primary nav items</li>
+      <li>Sticky currently-reading + Next 3</li>
+      <li>Export + Restore + schemaVersion + undo</li>
+      <li>Spoiler veil on by default</li>
+      <li>Audit script in CI</li>
+      <li>Source in git; data split from UI</li>
+    </ul>
+  </main>
+  <footer>
+    Also in this repo: <code>COMPLETE-IMPROVEMENT-PLAYBOOK.md</code> (agent rules + schema) and <code>SPIDEY-TRACKER-DIAGNOSTIC.md</code> (first pass).
+  </footer>
+</body>
+</html>
