@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Spidey Reading Tracker · v2 prototype</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <a class="skip" href="#main">Skip to tonight</a>
+  <header class="top">
+    <div class="brand">
+      <span class="badge">Unofficial fan tool</span>
+      <h1>Spidey Reading Tracker</h1>
+      <p class="spine">Brand New Day → Spider-Geddon</p>
+    </div>
+    <div class="meters" id="meters"></div>
+    <label class="search-wrap">
+      <span class="sr">Search</span>
+      <input id="search" type="search" placeholder="Jump to Grim Hunt, Superior, #700…" autocomplete="off" />
+    </label>
+  </header>
+
+  <nav class="tabs" aria-label="Primary">
+    <button data-tab="read" class="on">Read</button>
+    <button data-tab="collect">Collect</button>
+    <button data-tab="explore">Explore</button>
+    <button data-tab="me">Me</button>
+  </nav>
+
+  <main id="main">
+    <section id="view-read" class="view"></section>
+    <section id="view-collect" class="view hidden"></section>
+    <section id="view-explore" class="view hidden"></section>
+    <section id="view-me" class="view hidden"></section>
+  </main>
+
+  <div id="toast" hidden></div>
+  <footer class="legal">
+    Spider-Man and related characters are trademarks of Marvel Characters, Inc.
+    Unofficial, non-commercial, not affiliated. No Marvel art is hosted here.
+  </footer>
+  <script src="./app.js" type="module"></script>
+</body>
+</html>
