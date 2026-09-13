@@ -1,0 +1,331 @@
+<title>Desktop-94 Build Day</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+:root{
+  --paper:#EDEDE8; --surface:#F7F7F4; --sunk:#E3E3DD; --line:#CFCFC7;
+  --ink:#1C1F1D; --muted:#5E635F; --faint:#868C87;
+  --copper:#B0632F; --copper-soft:#B0632F1A;
+  --ok:#3F7248; --ok-soft:#3F72481F;
+  --warn:#8F6414; --warn-soft:#8F64141F;
+  --bad:#9C3C33; --bad-soft:#9C3C331F;
+  --shadow:0 1px 2px rgba(28,31,29,.06), 0 4px 14px rgba(28,31,29,.05);
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#14181A; --surface:#1C2124; --sunk:#101315; --line:#2E3538;
+    --ink:#E8EAE7; --muted:#9AA29D; --faint:#727A76;
+    --copper:#DF8B50; --copper-soft:#DF8B5024;
+    --ok:#71B079; --ok-soft:#71B07926;
+    --warn:#D8A64C; --warn-soft:#D8A64C26;
+    --bad:#DE7267; --bad-soft:#DE726726;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.28);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#14181A; --surface:#1C2124; --sunk:#101315; --line:#2E3538;
+  --ink:#E8EAE7; --muted:#9AA29D; --faint:#727A76;
+  --copper:#DF8B50; --copper-soft:#DF8B5024;
+  --ok:#71B079; --ok-soft:#71B07926;
+  --warn:#D8A64C; --warn-soft:#D8A64C26;
+  --bad:#DE7267; --bad-soft:#DE726726;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.28);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  font-size:15.5px; line-height:1.6; -webkit-font-smoothing:antialiased;
+  padding-bottom:72px;
+}
+.wrap{max-width:820px; margin:0 auto; padding-inline:16px}
+h1,h2,h3{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif; text-wrap:balance; margin:0}
+h1{font-size:clamp(30px,6.5vw,44px); font-weight:700; letter-spacing:-.015em; line-height:1.05}
+h2{font-size:21px; font-weight:700}
+h3{font-size:15.5px; font-weight:600}
+p{margin:0}
+code{font-family:"IBM Plex Mono",monospace; font-size:.9em; background:var(--sunk); padding:1px 5px; border-radius:4px}
+a{color:var(--copper)}
+.eyebrow{font-family:"IBM Plex Mono",monospace; font-size:11px; font-weight:500;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--faint)}
+
+header{border-bottom:1px solid var(--line); background:var(--surface)}
+.head{padding-block:26px 22px}
+.head p{max-width:60ch; color:var(--muted); margin-top:9px; font-size:15px}
+
+/* progress */
+.prog{position:sticky; top:0; z-index:30; background:var(--surface); border-bottom:1px solid var(--line)}
+.progin{display:flex; align-items:center; gap:12px; padding-block:10px}
+.ptrack{flex:1; height:6px; background:var(--sunk); border-radius:3px; overflow:hidden}
+.pfill{height:100%; width:0; background:var(--copper); border-radius:3px; transition:width .25s ease}
+.pnum{font:600 13px/1 "IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; white-space:nowrap}
+.preset{font:500 10.5px/1 "IBM Plex Mono",monospace; letter-spacing:.05em; text-transform:uppercase;
+  background:transparent; border:1px solid var(--line); border-radius:6px; padding:7px 9px;
+  color:var(--muted); cursor:pointer; white-space:nowrap}
+.preset:hover{color:var(--ink); border-color:var(--muted)}
+
+/* phases */
+.phase{margin-top:34px}
+.ph-hd{display:flex; flex-wrap:wrap; align-items:baseline; gap:10px; padding-bottom:9px; border-bottom:2px solid var(--copper)}
+.ph-n{font:600 12px/1 "IBM Plex Mono",monospace; color:var(--copper); letter-spacing:.08em}
+.ph-hd h2{flex:1; min-width:0}
+.ph-time{font:500 11px/1 "IBM Plex Mono",monospace; color:var(--faint); white-space:nowrap}
+.ph-lede{margin-top:11px; color:var(--muted); font-size:14.5px}
+
+/* steps */
+ol.steps{list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:8px}
+.step{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow)}
+.step label{display:flex; gap:12px; align-items:flex-start; padding:13px 15px; cursor:pointer}
+.step input{
+  appearance:none; -webkit-appearance:none; flex:none; margin-top:2px;
+  width:21px; height:21px; border:1.8px solid var(--muted); border-radius:5px;
+  background:var(--paper); cursor:pointer; display:grid; place-items:center;
+}
+.step input:checked{background:var(--ok); border-color:var(--ok)}
+.step input:checked::after{content:"\2713"; color:#fff; font-size:14px; line-height:1; font-weight:700}
+.step input:focus-visible{outline:2px solid var(--copper); outline-offset:2px}
+.step .body{min-width:0; flex:1}
+.step .t{display:block; font-weight:600}
+.step .d{display:block; margin-top:3px; font-size:14px; color:var(--muted); line-height:1.55}
+.step input:checked ~ .body .t{text-decoration:line-through; color:var(--faint)}
+.step input:checked ~ .body .d{opacity:.55}
+
+/* callouts */
+.note{display:block; margin-top:9px; padding:11px 13px; border-radius:8px; font-size:14px; line-height:1.55}
+.note.stop{background:var(--bad-soft); border-left:3px solid var(--bad)}
+.note.care{background:var(--warn-soft); border-left:3px solid var(--warn)}
+.note.tip{background:var(--ok-soft); border-left:3px solid var(--ok)}
+.note.plain{background:var(--sunk); border-left:3px solid var(--line)}
+.note b{color:var(--ink)}
+.note .lbl{display:block; font:600 10.5px/1 "IBM Plex Mono",monospace; letter-spacing:.09em;
+  text-transform:uppercase; margin-bottom:5px}
+.note.stop .lbl{color:var(--bad)} .note.care .lbl{color:var(--warn)} .note.tip .lbl{color:var(--ok)}
+.note.plain .lbl{color:var(--faint)}
+
+/* shopping */
+.buy{width:100%; border-collapse:collapse; margin-top:12px; font-size:14.5px}
+.buy th{text-align:left; padding:9px 11px; border-bottom:1px solid var(--line);
+  font:500 10.5px/1.4 "IBM Plex Mono",monospace; letter-spacing:.09em; text-transform:uppercase; color:var(--faint)}
+.buy td{padding:10px 11px; border-bottom:1px solid var(--line); vertical-align:top}
+.buy tr:last-child td{border-bottom:0}
+.buy .p{text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; white-space:nowrap}
+.buywrap{overflow-x:auto; border:1px solid var(--line); border-radius:var(--r); background:var(--surface); margin-top:12px}
+
+.branch{margin-top:16px; padding:15px; border:1px dashed var(--copper); border-radius:var(--r); background:var(--copper-soft)}
+.branch h3{margin-bottom:5px}
+.branch p{font-size:14.5px; color:var(--muted)}
+
+footer{margin-top:44px; padding-block:18px 40px; border-top:1px solid var(--line); font-size:13px; color:var(--faint)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header>
+  <div class="wrap head">
+    <p class="eyebrow">Desktop-94 &middot; ASUS PRIME A320M-K &middot; Build day</p>
+    <h1>Do it in this order and nothing goes wrong.</h1>
+    <p>Every step below is written for <em>your</em> machine &mdash; the A320M-K with BIOS 3803,
+      the Ryzen 1400, the WD Blue, the 4K TV. Tick as you go; the page remembers.
+      Total hands-on time is about three hours, most of it waiting for Windows.</p>
+  </div>
+</header>
+
+<div class="prog">
+  <div class="wrap progin">
+    <span class="pnum" id="pnum">0 / 0</span>
+    <div class="ptrack"><div class="pfill" id="pfill"></div></div>
+    <button class="preset" id="reset">Reset</button>
+  </div>
+</div>
+
+<main class="wrap" id="main"></main>
+
+<footer class="wrap">
+  Ticks are saved in this browser only. Nothing is uploaded.
+  Companion pages: <a href="https://claude.ai/code/artifact/0498e4d0-0847-451e-9e4b-5e89265d6990">parts bench</a>.
+</footer>
+
+<script>
+"use strict";
+
+const PHASES = [
+{
+  n:"00", title:"Before you order", time:"15 min",
+  lede:"Get the shopping right and the rest is assembly. Prices are September 2026 bands; check PCPartPicker before paying.",
+  html:`<div class="buywrap"><table class="buy">
+    <thead><tr><th>Buy</th><th>Why this exactly</th><th class="p">Cost</th></tr></thead>
+    <tbody>
+      <tr><td><b>1 TB M.2 2280 NVMe SSD</b></td>
+        <td>Must be <b>2280</b> (80 mm) &mdash; your board drills one standoff, at 2280. A Gen3
+          drive is the exact match; Gen4 works but runs at Gen3 speed here, so do not pay extra.</td>
+        <td class="p">$100&ndash;150</td></tr>
+      <tr><td><b>Ryzen 5 5600</b></td>
+        <td>65 W, six cores. Same AM4 socket, same cooler. Avoid the 5800X3D/5900X &mdash; 105 W
+          is more than this board's VRM should feed.</td>
+        <td class="p">$125&ndash;145</td></tr>
+      <tr><td><b>Thermal paste</b></td>
+        <td>Small tube. The paste on your cooler is eight years old and will be destroyed when
+          you lift it off. Do not skip this &mdash; it is the cheapest item and the easiest to forget.</td>
+        <td class="p">$8&ndash;12</td></tr>
+      <tr><td>USB stick, 8 GB+</td><td>For the BIOS file and the Windows installer. Two sticks is easier than one.</td><td class="p">have one?</td></tr>
+      <tr><td>Phillips #2 screwdriver</td><td>Magnetic tip if you have it. That is the entire toolkit.</td><td class="p">&mdash;</td></tr>
+    </tbody></table></div>
+    <div class="note tip"><span class="lbl">Not on the list</span>
+      <b>RAM.</b> DDR4 has roughly tripled in price. Once the pagefile is on NVMe, 16 GB may stop
+      hurting. Use the machine for a week after this build, and buy memory only if it still stalls.</div>`,
+  steps:[
+    ["Order the SSD, the CPU and thermal paste together","One delivery, one teardown. Doing the SSD now and the CPU next month means opening the case twice."],
+    ["Check the ASUS CPU support list","On the <a href='https://www.asus.com/supportonly/prime%20a320m-k/helpdesk_cpu/' target='_blank' rel='noreferrer'>A320M-K CPU list</a>, confirm the newest BIOS supports <b>both</b> the Ryzen 5 5600 and &mdash; critically &mdash; the Ryzen 5 1400. The 1400 has to still boot after the flash.","care","Why this one matters","Late 300-series BIOS releases dropped some older CPUs to save ROM space. ASUS dropped Bristol Ridge, which is a different family from your Summit Ridge 1400, so it should be fine. I could not open the ASUS site to verify it, so check it yourself. If the 1400 is missing from that list, stop and ask before flashing."],
+  ]
+},
+{
+  n:"01", title:"The week before", time:"1 hour, unattended",
+  lede:"All of this happens while the machine still works normally. Do not skip the backup.",
+  steps:[
+    ["Back up anything you cannot lose","External drive or cloud. You are going to clean-install Windows, which erases the boot drive. Documents, photos, saves, browser bookmarks, anything in your user folder.","stop","This is the only irreversible step","Everything else on this list can be undone. A wiped drive with no backup cannot. Do this first and verify the backup opens before you go any further."],
+    ["Link Windows to a Microsoft account","Settings &rarr; Accounts. Your licence is tied to this hardware, and you are about to change the CPU, which alters the hardware fingerprint. Linking first means you can reactivate by signing in.","care","Do this before the CPU swap","Your Product ID ends AAOEM, so the licence is OEM and tied to the board. Linking to an account gives you a recovery path. Afterwards is too late."],
+    ["Make a Windows 11 USB","Download the Media Creation Tool from Microsoft, point it at an 8 GB stick. Do this on any working PC.","tip","Windows 11, not 10","Windows 10 support ended in October 2025 and paid extended cover ended October 2026. Once the 5600 is in, you are eligible for 11 &mdash; install it directly rather than installing 10 and upgrading."],
+    ["Write down your BIOS settings","Boot into BIOS (Delete at startup) and photograph any screen you have changed. A flash resets everything to defaults."],
+  ]
+},
+{
+  n:"02", title:"Flash the BIOS", time:"20 min",
+  lede:"Machine still assembled, old CPU still installed. This has to happen before the chip comes out - you need a working CPU in the socket to run the update, and this board has no BIOS Flashback to rescue you.",
+  steps:[
+    ["Download the latest BIOS","From the <a href='https://www.asus.com/supportonly/prime%20a320m-k/helpdesk_bios/' target='_blank' rel='noreferrer'>A320M-K BIOS page</a>. You do not need intermediate versions &mdash; go straight from 3803 to the newest."],
+    ["Extract it and run BIOSRenamer","The ZIP contains a <code>.CAP</code> file and usually a small renamer tool. Run the renamer; it gives the file the exact name the board looks for."],
+    ["Format the USB stick as FAT32","Right-click the drive &rarr; Format &rarr; FAT32. <b>Not exFAT, not NTFS</b> &mdash; the BIOS cannot read those. Put the .CAP file in the root, not in a folder."],
+    ["Reboot into BIOS and open EZ Flash 3","Press <b>Delete</b> repeatedly at the ASUS logo. Press <b>F7</b> for Advanced Mode. Go to <b>Tool</b> &rarr; <b>ASUS EZ Flash 3 Utility</b> &rarr; <b>via Storage Device</b>. Pick the stick, pick the .CAP file, confirm.","stop","Then do not touch it","Two to three minutes. It will reboot itself once or twice. Do not switch off, unplug, or press reset while it writes &mdash; that is the one action that genuinely kills the board. If your power is unreliable, wait for a calm evening."],
+    ["Confirm it took","Back in Windows, run <code>Get-CimInstance Win32_BIOS | Format-List SMBIOSBIOSVersion</code>. It should no longer say 3803."],
+  ]
+},
+{
+  n:"03", title:"Open the case", time:"10 min",
+  lede:"Power off at the wall and pull the cord. Then press the power button once with the cord out - that drains residual charge from the board.",
+  steps:[
+    ["Unplug everything and lay the case on its side","Left panel facing up. Thumbscrews at the back."],
+    ["Ground yourself","Touch a bare metal part of the case, and touch it again periodically. Static is the quiet killer of components. Do not work on carpet in socks."],
+    ["Photograph the inside before you touch anything","Every cable, every connector. You will thank yourself in an hour. Your existing teardown photos already cover most of it."],
+  ]
+},
+{
+  n:"04", title:"Fit the SSD", time:"15 min",
+  lede:"Your M.2 slot sits underneath the graphics card, so the card has to come out first. That is the only awkward part.",
+  steps:[
+    ["Unplug the PCIe power cable from the graphics card","Squeeze the clip on the connector. Your 1050 Ti may not have one at all &mdash; it draws 75 W straight from the slot."],
+    ["Remove the graphics card","Undo the one or two screws holding its bracket to the rear of the case. Then <b>press down the plastic retention clip</b> at the far end of the PCIe slot &mdash; it is easy to miss and the card will not come out until you do. Lift straight up, evenly."],
+    ["Find the M.2 slot and remove its standoff screw","A small horizontal connector on the board with a tiny screw about 80 mm away. Keep that screw somewhere it cannot roll away &mdash; it is the smallest part in the machine and the hardest to replace."],
+    ["Insert the drive at an angle, then press flat and screw down","It slots in at roughly 30 degrees, then pivots down flat. Finger-tight on the screw. Do not force it, and do not overtighten &mdash; you are threading into a brass standoff."],
+    ["Refit the graphics card","Line it up, press down until the retention clip clicks by itself, screw the bracket back, reconnect power if it had a cable."],
+  ]
+},
+{
+  n:"05", title:"Swap the CPU", time:"25 min",
+  lede:"The cooler comes off, the chip comes out, the new chip goes in. The one hazard here is specific to AM4 and worth reading before you start.",
+  steps:[
+    ["Unplug the CPU fan cable","Small 4-pin connector near the cooler, labelled CPU_FAN on the board."],
+    ["Loosen the cooler and TWIST it free","Your stock AMD cooler clips onto the plastic bracket &mdash; flip the retention lever, unhook both clips. Then <b>twist the cooler gently left and right</b> before lifting.","stop","Do not just pull upward","Eight-year-old thermal paste acts like glue. Pulling straight up can rip the CPU out of the socket with the retaining lever still closed, bending the pins underneath. Bent pins on a Ryzen chip are sometimes fixable and sometimes not. Twist first, always. If it resists, run the machine for five minutes to warm the paste, shut down, and try again."],
+    ["Open the socket and lift the old CPU straight out","Raise the metal lever beside the socket fully. The chip lifts out with zero force &mdash; if it resists at all, the lever is not fully up. Handle it by the edges and set it on something soft."],
+    ["Clean both surfaces","Old paste off the cooler base and off the old chip if you are keeping it. Coffee filter or lint-free cloth, with isopropyl alcohol if you have it. The cooler base should be shiny."],
+    ["Seat the 5600","Match the small <b>triangle on the corner of the chip</b> to the triangle on the socket. Lower it in &mdash; it drops in under its own weight, no pressure at all. Then close the lever; it takes real force at the end, and that is normal.","care","Never press a Ryzen chip in","If it is not sitting flush, it is misaligned. Lift it out, check the triangle, try again. Forcing it bends pins."],
+    ["Apply thermal paste","A pea-sized blob in the centre. That is genuinely all &mdash; the cooler spreads it. More is worse, not better; excess insulates rather than conducts."],
+    ["Refit the cooler and plug the fan back in","Hook both clips, close the lever, reconnect CPU_FAN. Give the cooler a gentle wiggle &mdash; it should not move at all."],
+  ]
+},
+{
+  n:"06", title:"First boot", time:"10 min",
+  lede:"Do not close the case yet. Reconnect power, keyboard and the display, and start it up.",
+  steps:[
+    ["Power on and go straight into BIOS","Delete at startup. First boot after a CPU change takes longer than usual &mdash; up to a minute of black screen while it trains memory. That is normal, do not panic and cut power.","tip","If nothing appears at all","Power off, re-seat the 24-pin and the 8-pin CPU power connectors at the top-left of the board. Those two are the usual culprits, and it is easy to knock one loose while working."],
+    ["Confirm the CPU is detected","The BIOS main page should read <b>Ryzen 5 5600</b>. If it does, the hard part is behind you."],
+    ["Enable DOCP","Ai Tweaker &rarr; Ai Overclock Tuner &rarr; <b>D.O.C.P.</b> Your memory is rated 2400 and has been running 2133 for eight years. Free speed."],
+    ["Enable AMD fTPM","Advanced &rarr; AMD fTPM configuration &rarr; <b>AMD CPU fTPM</b>. Windows 11 requires it. Your board has no TPM chip, but the CPU provides one."],
+    ["Disable CSM, enable Secure Boot","Boot &rarr; CSM &rarr; <b>Disabled</b>. Then Boot &rarr; Secure Boot &rarr; <b>Windows UEFI mode</b>.","care","This is why you are clean-installing","Turning CSM off stops your old MBR hard drive from booting. That is intentional &mdash; you are installing fresh onto the SSD as GPT. Your data is on the backup you made in Phase 01."],
+    ["Set the boot order to the USB stick, save and exit","F10 to save. Have the Windows 11 installer stick plugged in."],
+  ]
+},
+{
+  n:"07", title:"Install Windows 11", time:"45 min, mostly waiting",
+  lede:"Clean install onto the NVMe. It lands on GPT automatically, which is one of the three things Windows 11 was asking for.",
+  steps:[
+    ["Boot the installer and choose Custom","Not Upgrade. Custom: Install Windows only."],
+    ["Select the new NVMe drive","The new SSD appears as a single block of <b>unallocated space with no partitions</b>. Your old WD Blue appears as 931 GB split across <b>three partitions</b>. Pick the unallocated one.","stop","Check the size and the partitions twice","Your old WD Blue is 931 GB and has three partitions with data on them. The new SSD is one unallocated block. Pick the wrong one and you erase the backup source. If you are unsure, physically unplug the SATA cable from the old drive during install and reconnect it afterwards &mdash; that removes all doubt."],
+    ["Let it run","It reboots itself a few times. Sign in with the Microsoft account you linked in Phase 01 and activation should carry over."],
+    ["Reconnect the old HDD and copy your data back","It will appear as a second drive. Pull your files across, then reformat it as a clean archive drive when you are satisfied everything is off it."],
+    ["Install the chipset and graphics drivers","AMD chipset driver from AMD's site, GeForce driver from NVIDIA. Windows Update handles most of it but the chipset driver is worth doing by hand."],
+  ]
+},
+{
+  n:"08", title:"Check it worked", time:"10 min",
+  lede:"Four quick confirmations, then close the case.",
+  steps:[
+    ["Run the rig report again","<code>powershell -ExecutionPolicy Bypass -File rig-report.ps1</code>. Boot drive should read SSD, CPU should read 5600, memory should read 2400."],
+    ["Open three heavy things at once","Browser with real tabs, a game, and whatever else usually killed it. The multi-second stalls should be gone. That was the entire point."],
+    ["Set the TV back to 4K if you dropped it to 1080p","With 16 GB still installed, keep an eye on whether stalls return at 4K. If they do, that is your signal that memory is the remaining bottleneck &mdash; and only then is it worth paying shortage prices for it."],
+    ["Close the case and put the screws back","All of them. The side panel is part of the airflow path."],
+  ]
+},
+];
+
+const BRANCH = {
+  after: 4,
+  title:"Only doing the SSD? Stop here.",
+  body:"If you skipped the CPU, you can jump from here straight to Phase 07 and clean-install Windows 10 onto the NVMe &mdash; or clone your existing install across with the free tool your drive maker supplies. Leave CSM enabled, skip fTPM and Secure Boot, and you are done. You will not get Windows 11, but you will get the freezing fixed, which was the actual complaint."
+};
+
+const KEY = "d94-buildday-v1";
+let done = {};
+try { done = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch(e) { done = {}; }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(done)); } catch(e){} }
+
+function esc(id){ return String(id).replace(/[^a-z0-9-]/gi,""); }
+
+function render(){
+  const main = document.getElementById("main");
+  main.innerHTML = PHASES.map((ph, pi) => {
+    const steps = ph.steps.map((st, si) => {
+      const id = `s-${pi}-${si}`;
+      const [t, d, kind, lbl, note] = st;
+      return `<li class="step">
+        <label for="${id}">
+          <input type="checkbox" id="${id}" data-k="${id}"${done[id] ? " checked" : ""}>
+          <span class="body">
+            <span class="t">${t}</span>
+            ${d ? `<span class="d">${d}</span>` : ""}
+            ${kind ? `<span class="note ${kind}"><span class="lbl">${lbl}</span>${note}</span>` : ""}
+          </span>
+        </label></li>`;
+    }).join("");
+    const branch = BRANCH.after === pi
+      ? `<div class="branch"><h3>${BRANCH.title}</h3><p>${BRANCH.body}</p></div>` : "";
+    return `<section class="phase">
+      <div class="ph-hd"><span class="ph-n">${ph.n}</span><h2>${ph.title}</h2><span class="ph-time">${ph.time}</span></div>
+      <p class="ph-lede">${ph.lede}</p>
+      ${ph.html || ""}
+      <ol class="steps">${steps}</ol>
+      ${branch}
+    </section>`;
+  }).join("");
+
+  main.querySelectorAll("input[type=checkbox]").forEach(el => {
+    el.addEventListener("change", () => { done[el.dataset.k] = el.checked; save(); tally(); });
+  });
+  tally();
+}
+
+function tally(){
+  const all = document.querySelectorAll("#main input[type=checkbox]");
+  const n = [...all].filter(x => x.checked).length;
+  document.getElementById("pnum").textContent = `${n} / ${all.length}`;
+  document.getElementById("pfill").style.width = all.length ? (n / all.length * 100) + "%" : "0";
+}
+
+document.getElementById("reset").onclick = () => {
+  if(!confirm("Clear every tick and start over?")) return;
+  done = {}; save(); render();
+};
+
+render();
+</script>
