@@ -571,8 +571,8 @@ function evaluate(){
     flag("cpu","bad");
   } else if(cpu.gen===3){
     if(bd.v==="a320mk"){
-      add("warn","info",["board","cpu"],"Flash the BIOS first.",`On the A320M-K a Zen 3 chip needs BIOS 5862 or newer, and you must flash it <b>while the Ryzen 1400 is still installed</b>. Out of order, the machine won't POST until you borrow the old CPU back.`);
-      flag("cpu","warn");
+      add("bad","pair",["board","cpu"],"Your BIOS is too old for this CPU \u2014 confirmed.",`msinfo32 reports BIOS <b>${KNOWN.biosVer}, dated ${KNOWN.biosDate}</b>. Zen 3 needs ${KNOWN.biosNeeded}-era firmware, so as this machine stands today the chip <b>will not POST</b>. Free to fix: flash the BIOS <b>while the Ryzen 1400 is still installed</b>, then swap. Do it in the other order and the machine is dead until you borrow the old CPU back.`);
+      flag("cpu","bad"); flag("board","bad"); chipText.board="Flash BIOS";
     } else if(bd.pcie===4){
       add("ok","info",["board","cpu"],"No BIOS dance needed.",`B550 and X570 boards shipped Zen 3-ready. The flash-first trap that the A320M-K sets simply does not exist here \u2014 one more reason a board swap and a CPU swap belong in the same order.`);
     } else {
@@ -671,7 +671,9 @@ function evaluate(){
   // --- Windows 11 ---
   const win11 = cpu.gen>=3 && cpu.socket!=="AM5";
   if(cpu.gen===1) add("bad","os",["cpu"],"Windows 11 stays blocked.",`The Ryzen 1400 is Zen 1, and Microsoft's supported AMD list starts at Ryzen 2000. No BIOS setting fixes this \u2014 only the CPU does.`);
-  else if(win11) add("ok","os",["cpu"],"Windows 11 unlocked.",`This chip is on the supported list. Enable AMD fTPM and Secure Boot in BIOS, and clean-install onto the new drive so it lands on GPT.`);
+  else if(win11) add("warn","os",["cpu","board"],"CPU is eligible, but the firmware is not set up for it.",
+      `The chip clears Microsoft's list. Three BIOS-side jobs remain, all confirmed outstanding: this machine boots in <b>${KNOWN.biosMode}</b>, Secure Boot reports <b>Unsupported</b> because of it, and the system disk is therefore MBR. Turn CSM off, enable Secure Boot and AMD fTPM, and clean-install onto the new SSD so it lands on GPT.`);
+  else if(false) add("ok","os",["cpu"],"Windows 11 unlocked.",`This chip is on the supported list. Enable AMD fTPM and Secure Boot in BIOS, and clean-install onto the new drive so it lands on GPT.`);
 
   // --- freeze score ---
   let risk=0;
@@ -689,6 +691,20 @@ function evaluate(){
 
 /* ============ size view ============ */
 const CASE = { name:"Thermaltake ATX mid-tower", maxBoardW:305, maxBoardH:244, gpuClear:320, slots:7 };
+
+/* Confirmed 13 Sep 2026 from an msinfo32 export of the live machine.
+   Everything here used to be inferred from photos. It is now read. */
+const KNOWN = {
+  board:      "ASUSTeK PRIME A320M-K",   // matches the photo inference exactly
+  biosVer:    "3803",
+  biosDate:   "22 January 2018",
+  biosNeeded: "6042",
+  biosMode:   "Legacy (CSM)",            // -> disk is MBR, Secure Boot unsupported
+  panelW: 1920, panelH: 1080, panelHz: 60,
+  pagefileOn: "C: (the WD Blue HDD)",
+  pagedOutGB: 4.1,                       // 20.0 GB committed against 15.9 GB physical
+  freeGB: 259,
+};
 
 const FORMFACTORS = [
   {n:"E-ATX",     w:305,h:330, blurb:"Oversized. Needs a full tower. Not something you need.", slots:"7+"},

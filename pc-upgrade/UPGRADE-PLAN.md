@@ -18,8 +18,38 @@ until they were answered. Four of the five are legible in the photos:
 | RAM layout | **2 x 8 GB GeIL EVO Potenza**, DDR4-2400 CL16 | Module label in `ram.jpg` |
 | Case | **Thermaltake ATX mid-tower**, 7 slots, full GPU clearance, empty drive bays | `overview.jpg`, `cages.jpg`, `rear.jpg` |
 
-Still open: **monitor** (decides the GPU) and **BIOS version** (decides the CPU swap).
-The board model is inferred rather than read, so confirm it in software before buying a CPU.
+## CONFIRMED 13 Sept 2026 from msinfo32 on the live machine
+
+Nothing below is inferred any more. Every open question is closed.
+
+| Fact | Value | What it settles |
+|---|---|---|
+| Board | **ASUSTeK PRIME A320M-K** | The photo inference was exactly right |
+| BIOS | **3803, dated 22 Jan 2018** | **A Ryzen 5000 will NOT POST. Flash first.** |
+| BIOS mode | **Legacy (CSM)** | Disk is MBR; Secure Boot reports *Unsupported* |
+| Display | **1920 x 1080 @ 60 Hz** | Do not overbuy a graphics card |
+| Disks | **One. WD10EZEX, 931 GB, "Fixed hard disk"** | No SSD exists in this machine |
+| Free space | 259 GB of 921 GB | Down from earlier; still fine |
+| Physical RAM | 15.9 GB total, **4.03 GB free** | 11.9 GB already in use |
+| Virtual | 33.9 GB total, **13.9 GB free** | **20.0 GB committed** |
+| Pagefile | **C:\pagefile.sys**, 18 GB | On the mechanical drive |
+
+**The freeze is now measured, not argued.** 20.0 GB committed against 15.9 GB of physical
+memory means roughly **4.1 GB was living in the pagefile** at the moment of that snapshot --
+and the pagefile sits on the 7200 rpm platter. That is the stall, caught in the act.
+
+**Two things changed in the plan as a result:**
+
+1. **The BIOS flash moved from a caution to a hard prerequisite.** BIOS 3803 is from January
+   2018. Zen 3 needs 6042-era firmware. Flash it *while the Ryzen 1400 is still installed*.
+2. **The graphics card dropped down a tier.** A 1080p 60 Hz panel cannot show more than 60
+   frames a second. A used RTX 3060 12 GB or RX 6600 pins that panel in almost everything --
+   a $475 RX 9060 XT would be money with nowhere to go. Buy a better monitor first if you
+   want a better card to mean anything.
+
+Windows 11 also needs more than the CPU: CSM is on, so Secure Boot is unsupported and the
+disk is MBR. Turn CSM off, enable Secure Boot and AMD fTPM, and clean-install onto the new
+SSD so it lands on GPT.
 
 **`rig-report.ps1` answers all three automatically.** Double-click `run-rig-report.cmd`, or
 from a Command Prompt:
