@@ -177,6 +177,44 @@ select:focus-visible{outline:2px solid var(--copper); outline-offset:1px}
 .presets button:hover{border-color:var(--copper); color:var(--copper)}
 .presets button:focus-visible{outline:2px solid var(--copper); outline-offset:1px}
 
+/* ---------- size view ---------- */
+#sizeview{display:none; padding:14px; background:var(--sunk); border-radius:0 0 var(--r) var(--r)}
+#sizeview.on{display:block}
+.sizeblock + .sizeblock{margin-top:18px; padding-top:16px; border-top:1px solid var(--line)}
+.sizeblock h3{margin-bottom:2px}
+.sizeblock .cap{font-size:12.5px; color:var(--muted); margin-bottom:9px}
+.sizeblock svg{display:block; width:100%; height:auto; max-width:100%; overflow:visible}
+.legend{display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:9px; font-size:12px; color:var(--muted)}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.swatch{width:11px; height:11px; border-radius:2px; flex:none}
+.delta{
+  margin-top:10px; padding:9px 11px; border-radius:7px; font-size:13px; line-height:1.5;
+  background:var(--surface); border:1px solid var(--line);
+}
+.delta b{font-weight:600}
+
+/* ---------- mobile live bar ---------- */
+.livebar{
+  position:fixed; left:0; right:0; bottom:0; z-index:40; display:none;
+  align-items:center; gap:12px; padding:9px 14px calc(9px + env(safe-area-inset-bottom));
+  background:var(--surface); border-top:1px solid var(--line);
+  box-shadow:0 -3px 16px rgba(0,0,0,.13);
+}
+.livebar .lb-n{display:flex; flex-direction:column; line-height:1.15}
+.livebar .lb-n b{font:600 15px/1 "IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+.livebar .lb-n i{font:500 9.5px/1 "IBM Plex Mono",monospace; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); font-style:normal; margin-top:3px}
+.livebar #lb-go{
+  margin-left:auto; font:500 11.5px/1 "IBM Plex Mono",monospace; letter-spacing:.05em; text-transform:uppercase;
+  padding:9px 12px; border-radius:6px; border:1px solid var(--copper); background:var(--copper-soft);
+  color:var(--copper); cursor:pointer;
+}
+@media (max-width:940px){
+  .livebar{display:flex}
+  body{padding-bottom:74px}
+}
+@keyframes pulse{0%{box-shadow:0 0 0 0 var(--copper-soft)}70%{box-shadow:0 0 0 9px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.pulse{animation:pulse .5s ease-out}
+
 /* ---------- notes ---------- */
 .notes{padding-block:8px 40px}
 .notegrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px; margin-top:14px}
@@ -221,6 +259,7 @@ select:focus-visible{outline:2px solid var(--copper); outline-offset:1px}
         <div class="seg" role="group" aria-label="View">
           <button id="v-board" aria-pressed="true">Board</button>
           <button id="v-case" aria-pressed="false">Case</button>
+          <button id="v-size" aria-pressed="false">Size</button>
           <button id="v-3d" aria-pressed="false">3D</button>
         </div>
       </div>
@@ -228,6 +267,7 @@ select:focus-visible{outline:2px solid var(--copper); outline-offset:1px}
         <div class="shot on" id="shot-board"><img src="rig/board-wide.jpg" alt="Motherboard, RAM slots, CPU cooler and graphics card inside the case"></div>
         <div class="shot" id="shot-case"><img src="rig/overview.jpg" alt="Full case interior showing power supply, drive cages and fans"></div>
         <canvas id="three"></canvas>
+        <div id="sizeview"></div>
       </div>
       <p class="stagefoot" id="stagefoot">Tap a marker to jump to that slot. Labels are the board&rsquo;s own silkscreen designations.</p>
     </section>
@@ -314,6 +354,14 @@ select:focus-visible{outline:2px solid var(--copper); outline-offset:1px}
     </div>
   </section>
 
+  <div class="livebar" id="livebar">
+    <span class="chip flat" id="lb-state">Stock</span>
+    <span class="lb-n"><b id="lb-cost">$0</b><i>cost</i></span>
+    <span class="lb-n"><b id="lb-w">140 W</b><i>draw</i></span>
+    <span class="lb-n"><b id="lb-f">100</b><i>freeze</i></span>
+    <button id="lb-go">See it</button>
+  </div>
+
   <p class="foot">
     Board model inferred from silkscreen and rear I/O &mdash; confirm with
     <code>Get-CimInstance Win32_BaseBoard</code> before buying a CPU. Prices are Sept&nbsp;2026 bands,
@@ -337,17 +385,17 @@ const SLOTS = [
 
 const P = {
   board:[
-    {v:"a320mk", label:"ASUS PRIME A320M-K (installed)", cost:0,
+    {v:"a320mk", w:226,h:221, ffName:"microATX (reduced)", label:"ASUS PRIME A320M-K (installed)", cost:0,
      dimm:2, maxRam:32, m2:1, m2gen:3, pcie:3, oc:false, vrm:"weak",   zen1:true,  ff:"mATX", stock:true},
-    {v:"b450m",  label:"Used B450M \u2014 mATX", cost:75,
+    {v:"b450m", w:244,h:244, ffName:"microATX", label:"Used B450M \u2014 mATX", cost:75,
      dimm:4, maxRam:128, m2:1, m2gen:3, pcie:3, oc:true,  vrm:"ok",     zen1:true,  ff:"mATX"},
-    {v:"b450atx",label:"Used B450 ATX (Tomahawk class)", cost:115,
+    {v:"b450atx", w:305,h:244, ffName:"ATX", label:"Used B450 ATX (Tomahawk class)", cost:115,
      dimm:4, maxRam:128, m2:2, m2gen:3, pcie:3, oc:true,  vrm:"good",   zen1:true,  ff:"ATX"},
-    {v:"b550m",  label:"B550M \u2014 mATX, PCIe 4.0", cost:115,
+    {v:"b550m", w:244,h:244, ffName:"microATX", label:"B550M \u2014 mATX, PCIe 4.0", cost:115,
      dimm:4, maxRam:128, m2:2, m2gen:4, pcie:4, oc:true,  vrm:"good",   zen1:false, ff:"mATX"},
-    {v:"b550atx",label:"B550 ATX, PCIe 4.0", cost:155,
+    {v:"b550atx", w:305,h:244, ffName:"ATX", label:"B550 ATX, PCIe 4.0", cost:155,
      dimm:4, maxRam:128, m2:2, m2gen:4, pcie:4, oc:true,  vrm:"strong", zen1:false, ff:"ATX"},
-    {v:"x570",   label:"Used X570 ATX \u2014 PCIe 4.0 throughout", cost:185,
+    {v:"x570", w:305,h:244, ffName:"ATX", label:"Used X570 ATX \u2014 PCIe 4.0 throughout", cost:185,
      dimm:4, maxRam:128, m2:2, m2gen:4, pcie:4, oc:true,  vrm:"strong", zen1:false, ff:"ATX", fan:true},
   ],
   cpu:[
@@ -377,12 +425,12 @@ const P = {
     {v:"22110", label:"+ M.2 22110 (110 mm) NVMe",         cost:140, tooLong:true},
   ],
   gpu:[
-    {v:"1050ti",label:"GTX 1050 Ti 4 GB (installed)", cost:0,  w:75,  stock:true, weak:true},
-    {v:"3060",  label:"Used RTX 3060 12 GB",          cost:250, w:170, lanes:"4.0 \u00d716"},
-    {v:"6700xt",label:"Used RX 6700 XT 12 GB",        cost:280, w:230, lanes:"4.0 \u00d716"},
-    {v:"9060xt",label:"RX 9060 XT 16 GB",             cost:475, w:160, lanes:"5.0 \u00d78", narrow:true},
-    {v:"5060ti",label:"RTX 5060 Ti 16 GB",            cost:470, w:180, lanes:"5.0 \u00d78", narrow:true},
-    {v:"9070xt",label:"RX 9070 XT 16 GB",             cost:750, w:304, lanes:"5.0 \u00d716", big:true},
+    {v:"1050ti", len:200,label:"GTX 1050 Ti 4 GB (installed)", cost:0,  w:75,  stock:true, weak:true},
+    {v:"3060", len:242,  label:"Used RTX 3060 12 GB",          cost:250, w:170, lanes:"4.0 \u00d716"},
+    {v:"6700xt", len:267,label:"Used RX 6700 XT 12 GB",        cost:280, w:230, lanes:"4.0 \u00d716"},
+    {v:"9060xt", len:245,label:"RX 9060 XT 16 GB",             cost:475, w:160, lanes:"5.0 \u00d78", narrow:true},
+    {v:"5060ti", len:242,label:"RTX 5060 Ti 16 GB",            cost:470, w:180, lanes:"5.0 \u00d78", narrow:true},
+    {v:"9070xt", len:330,label:"RX 9070 XT 16 GB",             cost:750, w:304, lanes:"5.0 \u00d716", big:true},
   ],
   psu:[
     {v:"tt600", label:"Thermaltake Smart 600 W (installed)", cost:0, cap:600, derate:.75, stock:true},
@@ -550,6 +598,142 @@ function evaluate(){
   return {iss, slotState, chipText, draw, safe, cost, risk, win11, blocked};
 }
 
+
+/* ============ size view ============ */
+const CASE = { name:"Thermaltake ATX mid-tower", maxBoardW:305, maxBoardH:244, gpuClear:320, slots:7 };
+
+const FORMFACTORS = [
+  {n:"E-ATX",     w:305,h:330, blurb:"Oversized. Needs a full tower. Not something you need.", slots:"7+"},
+  {n:"ATX",       w:305,h:244, blurb:"Full size. The most slots and ports for the money. Fits your case.", slots:"7"},
+  {n:"microATX",  w:244,h:244, blurb:"Mid size. Same width shortened at the bottom \u2014 you lose two expansion slots, not RAM slots.", slots:"4"},
+  {n:"Mini-ITX",  w:170,h:170, blurb:"Small. One expansion slot and only TWO RAM slots. A downgrade for you.", slots:"1"},
+];
+
+function svgBoards(){
+  const bd=get("board"), cur=P.board[0];
+  const VW=340, VH=270, ox=14, oy=10;
+  const box=(w,h,fill,stroke,dash,op)=>`<rect x="${ox}" y="${oy}" width="${w}" height="${h}" rx="3"
+    fill="${fill}" fill-opacity="${op}" stroke="${stroke}" stroke-width="1.6" ${dash?`stroke-dasharray="6 4"`:""}/>`;
+  const changed = !bd.stock;
+  return `<svg viewBox="0 0 ${VW} ${VH}" role="img" aria-label="Board footprints drawn to scale in millimetres">
+    <text x="${ox}" y="${oy-2}" font-size="8" font-family="IBM Plex Mono, monospace" fill="var(--faint)">CASE ACCEPTS UP TO ATX ${CASE.maxBoardW} \u00d7 ${CASE.maxBoardH} mm</text>
+    ${box(CASE.maxBoardW, CASE.maxBoardH, "none", "var(--faint)", true, 1)}
+    ${changed ? box(bd.w, bd.h, "var(--copper)", "var(--copper)", false, .17) : ""}
+    ${box(cur.w, cur.h, changed?"none":"var(--ok)", changed?"var(--muted)":"var(--ok)", changed, changed?1:.15)}
+    <text x="${ox+6}" y="${oy+cur.h-7}" font-size="9" font-family="IBM Plex Mono, monospace" fill="var(--muted)">A320M-K ${cur.w}\u00d7${cur.h}</text>
+    ${changed?`<text x="${ox+6}" y="${oy+bd.h-7}" font-size="9" font-family="IBM Plex Mono, monospace" fill="var(--copper)" font-weight="600">${bd.ffName} ${bd.w}\u00d7${bd.h}</text>`:""}
+    <line x1="${ox}" y1="${oy+CASE.maxBoardH+14}" x2="${ox+CASE.maxBoardW}" y2="${oy+CASE.maxBoardH+14}" stroke="var(--faint)" stroke-width="1"/>
+    <line x1="${ox}" y1="${oy+CASE.maxBoardH+10}" x2="${ox}" y2="${oy+CASE.maxBoardH+18}" stroke="var(--faint)" stroke-width="1"/>
+    <line x1="${ox+CASE.maxBoardW}" y1="${oy+CASE.maxBoardH+10}" x2="${ox+CASE.maxBoardW}" y2="${oy+CASE.maxBoardH+18}" stroke="var(--faint)" stroke-width="1"/>
+    <text x="${ox+CASE.maxBoardW/2}" y="${oy+CASE.maxBoardH+27}" font-size="9" text-anchor="middle" font-family="IBM Plex Mono, monospace" fill="var(--faint)">305 mm \u2014 12 inches</text>
+  </svg>`;
+}
+
+function svgFactors(){
+  const VW=340, gap=8; let x=4;
+  const total=FORMFACTORS.reduce((a,f)=>a+f.w,0);
+  const sc=(VW-8-gap*(FORMFACTORS.length-1))/total;
+  const VH=Math.max(...FORMFACTORS.map(f=>f.h))*sc+30;
+  const parts=FORMFACTORS.map(f=>{
+    const w=f.w*sc, h=f.h*sc, y=VH-24-h;
+    const r=`<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2.5"
+      fill="var(--copper)" fill-opacity="${f.n==="ATX"||f.n==="microATX"?.15:.05}"
+      stroke="var(--copper)" stroke-opacity="${f.n==="ATX"||f.n==="microATX"?1:.45}" stroke-width="1.4"/>
+      <text x="${x}" y="${VH-12}" font-size="9" font-family="IBM Plex Mono, monospace" fill="var(--ink)">${f.n}</text>
+      <text x="${x}" y="${VH-3}" font-size="7.5" font-family="IBM Plex Mono, monospace" fill="var(--faint)">${f.w}\u00d7${f.h} \u00b7 ${f.slots} slot${f.slots==="1"?"":"s"}</text></g>`;
+    x += w + gap; return r;
+  }).join("");
+  return `<svg viewBox="0 0 ${VW} ${VH}" role="img" aria-label="Motherboard form factors drawn to scale">${parts}</svg>`;
+}
+
+function svgGpu(){
+  const gpu=get("gpu"), VW=340, rowH=26, cards=P.gpu.slice();
+  const longest=Math.max(CASE.gpuClear, ...cards.map(c=>c.len||0));
+  const sc=(VW-96-42)/longest;
+  const VH=cards.length*rowH+30;
+  const rows=cards.map((c,i)=>{
+    const y=i*rowH+8, w=(c.len||200)*sc, on=c.v===gpu.v, over=(c.len||0)>CASE.gpuClear;
+    return `<g>
+      <text x="0" y="${y+12}" font-size="8.5" font-family="IBM Plex Mono, monospace"
+        fill="${on?"var(--copper)":"var(--muted)"}" font-weight="${on?600:400}">${c.label.replace(/ \(installed\)/,"").replace("Used ","").slice(0,22)}</text>
+      <rect x="96" y="${y+3}" width="${w}" height="12" rx="2"
+        fill="${over?"var(--bad)":on?"var(--copper)":"var(--muted)"}" fill-opacity="${on?.85:.3}"/>
+      <text x="${96+w+4}" y="${y+12.5}" font-size="8" font-family="IBM Plex Mono, monospace" fill="var(--faint)">${c.len} mm</text>
+    </g>`;
+  }).join("");
+  const clearX=96+CASE.gpuClear*sc;
+  return `<svg viewBox="0 0 ${VW} ${VH}" role="img" aria-label="Graphics card lengths against case clearance">
+    ${rows}
+    <line x1="${clearX}" y1="0" x2="${clearX}" y2="${VH-18}" stroke="var(--bad)" stroke-width="1.4" stroke-dasharray="4 3"/>
+    <text x="${clearX}" y="${VH-6}" font-size="8" text-anchor="end" font-family="IBM Plex Mono, monospace" fill="var(--bad)">~${CASE.gpuClear} mm clearance \u2014 measure yours</text>
+  </svg>`;
+}
+
+function svgM2(){
+  const ssd=get("ssd"), VW=340, lens=[{n:"2242",v:42},{n:"2260",v:60},{n:"2280",v:80},{n:"22110",v:110}];
+  const sc=(VW-42-104)/110, VH=lens.length*22+16;
+  const rows=lens.map((l,i)=>{
+    const y=i*22+6, w=l.v*sc, bad=l.v>80, on=(ssd.v==="22110"&&l.n==="22110")||(l.n==="2280"&&/^g/.test(ssd.v));
+    return `<g>
+      <text x="0" y="${y+11}" font-size="8.5" font-family="IBM Plex Mono, monospace" fill="${on?"var(--ink)":"var(--muted)"}">${l.n}</text>
+      <rect x="42" y="${y+2}" width="${w}" height="11" rx="2" fill="${bad?"var(--bad)":"var(--ok)"}" fill-opacity="${on?.8:.28}"/>
+      <text x="${42+w+4}" y="${y+11}" font-size="8" font-family="IBM Plex Mono, monospace" fill="var(--faint)">${l.v} mm${bad?" \u2014 no standoff":""}</text>
+    </g>`;
+  }).join("");
+  return `<svg viewBox="0 0 ${VW} ${VH}" role="img" aria-label="M.2 drive lengths">${rows}</svg>`;
+}
+
+function renderSize(){
+  const bd=get("board"), cur=P.board[0], gpu=get("gpu");
+  const dw=bd.w-cur.w, dh=bd.h-cur.h;
+  const areaNow=(bd.w*bd.h/100).toFixed(0), areaWas=(cur.w*cur.h/100).toFixed(0);
+  const gpuFits=(gpu.len||0)<=CASE.gpuClear;
+
+  $("sizeview").innerHTML = `
+    <div class="sizeblock">
+      <h3>Board footprint, to scale</h3>
+      <p class="cap">Both boards share the rear I/O corner, which is how they actually mount \u2014 the standoff pattern is common to all of them.</p>
+      ${svgBoards()}
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--ok);opacity:.5"></i>Your A320M-K</span>
+        <span><i class="swatch" style="background:var(--copper)"></i>Selected board</span>
+        <span><i class="swatch" style="border:1.5px dashed var(--faint)"></i>Case maximum</span>
+      </div>
+      <div class="delta">${
+        bd.stock
+        ? `Your board is <b>226 \u00d7 221 mm</b> \u2014 a <b>reduced microATX</b>, smaller even than the 244 \u00d7 244 the standard allows. Your case can take a board <b>${(CASE.maxBoardW*CASE.maxBoardH)/(cur.w*cur.h)>1?Math.round(((CASE.maxBoardW*CASE.maxBoardH)/(cur.w*cur.h)-1)*100):0}% larger</b>, so every option on the list physically fits with room to spare.`
+        : `The ${bd.ffName} board is <b>${dw>0?`${dw} mm wider`:dw<0?`${-dw} mm narrower`:"the same width"}</b> and <b>${dh>0?`${dh} mm taller`:dh<0?`${-dh} mm shorter`:"the same height"}</b> \u2014 ${areaWas} cm\u00b2 becomes ${areaNow} cm\u00b2. It bolts to standoffs your case already has, and the extra length is where the two extra DIMM slots and expansion slots live. <b>No modification needed.</b>`
+      }</div>
+    </div>
+
+    <div class="sizeblock">
+      <h3>What the size names mean</h3>
+      <p class="cap">Drawn at the same scale. Bigger board = more slots, not more speed.</p>
+      ${svgFactors()}
+      <div class="delta">
+        ${FORMFACTORS.map(f=>`<div style="margin:4px 0"><b>${f.n}</b> \u2014 ${f.blurb}</div>`).join("")}
+      </div>
+    </div>
+
+    <div class="sizeblock">
+      <h3>Card length against your case</h3>
+      <p class="cap">The one size that actually bites. Length is what runs out, never width.</p>
+      ${svgGpu()}
+      <div class="delta">${
+        gpuFits
+        ? `The ${gpu.label.replace(/ \(installed\)/,"")} is <b>${gpu.len} mm</b> \u2014 about ${CASE.gpuClear-gpu.len} mm to spare. <b>Measure before you buy anyway:</b> from the rear slot bracket forward to the drive cage. That number is the only one that matters, and I estimated yours from a photo.`
+        : `The ${gpu.label.replace(/ \(installed\)/,"")} is <b>${gpu.len} mm</b> against roughly ${CASE.gpuClear} mm of clearance. <b>It will not go in</b> without removing the drive cage \u2014 if that is even possible on this case.`
+      }</div>
+    </div>
+
+    <div class="sizeblock">
+      <h3>M.2 drive lengths</h3>
+      <p class="cap">The number IS the size: 2280 means 22 mm wide, 80 mm long.</p>
+      ${svgM2()}
+      <div class="delta">Your board drills one standoff, at <b>2280</b>. Shorter drives (2242, 2260) physically fit the slot but have no screw hole to land on; <b>22110 overhangs entirely</b>. Buy 2280 \u2014 it is the common desktop size anyway.</div>
+    </div>`;
+}
+
 /* ============ render ============ */
 function renderRail(){
   $("rail").innerHTML = SLOTS.map(s=>`
@@ -635,6 +819,14 @@ function paint(){
   $("p-oc").textContent    = bd.oc?"Unlocked":"Locked";
   $("plate").style.borderColor = bd.stock?"":"var(--copper)";
 
+  $("lb-state").textContent = sc.textContent;
+  $("lb-state").className = sc.className;
+  $("lb-cost").textContent = "$"+r.cost;
+  $("lb-w").textContent = r.draw+" W";
+  $("lb-f").textContent = r.risk;
+  const bar=$("livebar"); bar.classList.remove("pulse"); void bar.offsetWidth; bar.classList.add("pulse");
+
+  if(view==="size") renderSize();
   paintHotspots();
   if(window.__three) window.__three.highlight(focus);
 }
@@ -662,7 +854,8 @@ function setFocus(id){
   focus = (focus===id ? null : id);
   const s = SLOTS.find(x=>x.id===focus);
   if(s){
-    if(s.hot.case && !s.hot.board && view!=="3d") setView("case");
+    if(s.id==="board" && view!=="3d" && view!=="size") setView("size");
+    else if(s.hot.case && !s.hot.board && view!=="3d") setView("case");
     else if(s.hot.board && view==="case") setView("board");
   }
   paint();
@@ -674,18 +867,25 @@ function setView(v){
   $("shot-board").classList.toggle("on", v==="board");
   $("shot-case").classList.toggle("on", v==="case");
   $("three").classList.toggle("on", v==="3d");
-  $("v-board").setAttribute("aria-pressed", v==="board");
-  $("v-case").setAttribute("aria-pressed", v==="case");
-  $("v-3d").setAttribute("aria-pressed", v==="3d");
-  $("stagetitle").textContent = v==="board"?"Board & slots" : v==="case"?"Case & power" : "Rotate the build";
+  $("sizeview").classList.toggle("on", v==="size");
+  ["board","case","size","3d"].forEach(k=>$("v-"+k).setAttribute("aria-pressed", v===k));
+  $("stagetitle").textContent = {board:"Board & slots", case:"Case & power", size:"Physical size", "3d":"Rotate the build"}[v];
   $("stagefoot").textContent = v==="3d"
     ? "Drag to rotate. Parts light up copper as you select them on the right."
+    : v==="size"
+    ? "Everything here is drawn to real millimetres. Change a part and the drawings redraw."
     : "Tap a marker to jump to that slot. Labels are the board\u2019s own silkscreen designations.";
+  if(v==="size") renderSize();
   if(v==="3d" && window.__three) window.__three.start();
 }
 $("v-board").onclick=()=>setView("board");
 $("v-case").onclick=()=>setView("case");
+$("v-size").onclick=()=>setView("size");
 $("v-3d").onclick=()=>setView("3d");
+$("lb-go").onclick=()=>{
+  if(view!=="size") setView("size");
+  document.querySelector(".bench").scrollIntoView({behavior:"smooth",block:"start"});
+};
 
 $("reset").onclick=()=>{ build={...STOCK}; focus=null; renderRail(); paint(); };
 document.querySelectorAll(".presets button").forEach(b=>{

@@ -49,6 +49,40 @@ Two costs the spec sheets do not list are surfaced as warnings on every board ch
 the only swap that is not standalone (everything comes out), and the OEM Windows licence is
 tied to the board it first activated on.
 
+## Size view
+
+Everything is drawn in real millimetres — the SVG `viewBox` is in mm, so the rectangles are
+the parts. Four blocks, all redrawn on any change:
+
+1. **Board footprint** — the current board and the selected one overlaid, sharing the rear
+   I/O corner (which is how they actually mount), inside the case's ATX maximum. The prose
+   below computes the real delta in mm and cm².
+2. **Form factors to scale** — E-ATX / ATX / microATX / Mini-ITX side by side with
+   plain-language descriptions, because "full / mid / small" is the part most guides assume
+   you already know. The point it makes: a bigger board buys slots, not speed.
+3. **Card length vs case clearance** — every GPU in the catalog as a bar against a dashed
+   clearance line. This is the only size that actually bites, and length is what runs out.
+4. **M.2 lengths** — 2242 / 2260 / 2280 / 22110, showing why the number *is* the size.
+
+Reference dimensions: A320M-K 226x221 (a reduced microATX), microATX 244x244, ATX 305x244,
+E-ATX 305x330, Mini-ITX 170x170. Case GPU clearance is estimated at ~320 mm from the
+teardown photos and is labelled as an estimate everywhere it appears — the page tells the
+reader to measure rather than trusting it.
+
+Bar scales reserve room for their right-hand labels, so nothing clips at 390 px.
+
+## Mobile
+
+The two-column layout stacks on narrow screens, which put the stage off-screen while you
+worked the rail below it — changes happened where you could not see them. A fixed bottom bar
+now carries the live verdict, cost, draw and freeze score at all times, pulses on every
+change, and its "See it" button jumps to the stage. Selecting the board slot switches the
+stage to the Size view, since that is where a board change is actually visible.
+
+Note when testing locally: the publish pipeline injects a viewport meta tag and
+`python3 -m http.server` does not, so a local phone-width test lays out at 980 px and the
+media queries never fire. Inject the tag in the test harness.
+
 ## The rules engine
 
 `evaluate()` in `index.html` is the whole thing. It distinguishes two different failures,
