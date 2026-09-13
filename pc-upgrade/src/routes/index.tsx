@@ -12,6 +12,7 @@ import {
   RigPanel,
 } from "@/components/panels";
 import {
+  BenchPanel,
   FreezePanel,
   MarketPanel,
   PowerPanel,
@@ -114,6 +115,7 @@ function Home() {
         <PowerPanel />
         <WindowsPanel />
         <MarketPanel />
+        <BenchPanel />
         <DiagnosisPanel />
         <IntentPanel />
         <PathsPanel />

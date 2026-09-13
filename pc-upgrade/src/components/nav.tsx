@@ -11,6 +11,7 @@ export const SECTIONS = [
   { id: "power", label: "Power" },
   { id: "windows", label: "Windows 11" },
   { id: "market", label: "Prices" },
+  { id: "bench", label: "Bench" },
   { id: "diagnosis", label: "Diagnosis" },
   { id: "intent", label: "Intent" },
   { id: "paths", label: "Paths" },

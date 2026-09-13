@@ -394,6 +394,47 @@ export function PowerPanel() {
   );
 }
 
+/** Live link to the interactive configurator. */
+export const CONFIGURATOR_URL =
+  "https://claude.ai/code/artifact/0498e4d0-0847-451e-9e4b-5e89265d6990";
+
+export function BenchPanel() {
+  return (
+    <Section
+      id="bench"
+      kicker="Interactive"
+      title="Swap the parts yourself."
+    >
+      <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+        This dossier is the reasoning. The parts bench is the same rules made interactive:
+        pick a part per slot and it recomputes what fits, what the supply can feed, what it
+        costs, and where the freeze risk lands &mdash; against this board, not a generic AM4
+        template. It runs on a phone, so it works standing in a shop.
+      </p>
+      <a
+        href={CONFIGURATOR_URL}
+        target="_blank"
+        rel="noreferrer noopener"
+        className="mt-6 flex flex-col gap-3 rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] transition-colors hover:bg-elevated"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h3 className="text-base font-medium">Desktop-94 Parts Bench</h3>
+          <Badge tone="ok">Open</Badge>
+        </div>
+        <ul className="grid gap-1.5 text-sm text-muted-foreground sm:grid-cols-2">
+          <li>14 motherboards, filtered to what reuses your case and PSU</li>
+          <li>Your real teardown photos with the slots marked</li>
+          <li>Every board and card drawn to scale in millimetres</li>
+          <li>Separates &ldquo;won&rsquo;t fit&rdquo; from &ldquo;incompatible parts&rdquo;</li>
+          <li>Live power budget against the derated 600 W supply</li>
+          <li>Flags when a prebuilt would be the better buy</li>
+        </ul>
+        <p className="font-mono text-xs break-all text-subtle">{CONFIGURATOR_URL}</p>
+      </a>
+    </Section>
+  );
+}
+
 /** 08 — Windows 11 eligibility. */
 export function WindowsPanel() {
   const meta = {

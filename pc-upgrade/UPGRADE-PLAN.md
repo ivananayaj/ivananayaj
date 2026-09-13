@@ -1,7 +1,10 @@
 # Desktop-94 — upgrade plan
 
-Worked out from the teardown photos in `public/rig/`, not from guesses. The app in
-`src/` renders all of this interactively; this file is the same answer in plain text.
+Worked out from the teardown photos in `public/rig/`, not from guesses.
+
+**Interactive version:** <https://claude.ai/code/artifact/0498e4d0-0847-451e-9e4b-5e89265d6990>
+— swap any part and see what fits, what it draws, and what it costs. Source in
+`configurator/`. This file is the same answer in plain text.
 
 ## What the photos settled
 
@@ -48,7 +51,7 @@ Five of the six subsystems swap in isolation — one part, one evening, everythi
 | Processor | Swap | AM4 — same socket, same cooler | $125–200 |
 | Graphics card | Swap — last, buy used | PCIe 3.0 x16 | $200–300 used |
 | Power supply | **Keep** | Standard ATX | $0 now |
-| Motherboard | **Ceiling — don't buy** | AM4 / DDR4 / PCIe 3.0 | — |
+| Motherboard | Optional — see below | AM4 / DDR4 / PCIe 3.0 | $45–185 |
 
 ### Compatibility traps worth knowing
 
@@ -58,6 +61,87 @@ Five of the six subsystems swap in isolation — one part, one evening, everythi
 - **PCIe 3.0 tax.** Modern mid-range cards (RX 9060 XT, RTX 5060 Ti) use a PCIe 5.0 x8 interface, which negotiates down to PCIe 3.0 x8 in this slot — about a quarter of designed bandwidth. If you buy new, get the **16 GB** version — the penalty only bites hard once the card runs out of VRAM and starts swapping across that narrow link. Better still, buy a used RX 6700 XT or RTX 3060 12 GB: both are PCIe 4.0 **x16**, so they lose nothing in this slot and cost half as much.
 - **The M.2 slot is under the graphics card.** Pull the GPU to reach it, then put it back.
 - **DDR4 does not move to AM5**, and neither does the Ryzen 1400. Board, CPU and RAM move together or not at all.
+
+## Changing the motherboard
+
+Not required, and not the first thing to buy — but it is no longer a dead end. Any AM4 board
+reuses your case, PSU, cooler, GPU, drives and memory. It is the **only** swap that is not
+standalone: cooler, RAM, GPU, every cable and nine standoffs all come out. Budget an
+afternoon, not an evening.
+
+| Chipset | Slots / max RAM | PCIe | Overclock | Takes your 1400? | Cost |
+|---|---|---|---|---|---|
+| **A320** *(yours)* | 2 · 32 GB | 3.0 | No | Yes | — |
+| A320 (4-slot) | 4 · 64 GB | 3.0 | No | **Yes** | ~$45 |
+| B350 | 4 · 64 GB | 3.0 | Yes | **Yes** | ~$60 |
+| **B450** | 4 · 128 GB | 3.0 | Yes | **Yes** | $75–115 |
+| X370 / X470 | 4 · 64–128 GB | 3.0 | Yes | **Yes** | $85–130 |
+| A520 | 4 · 128 GB | 3.0 | **No** | **No** | ~$70 |
+| B550 | 4 · 128 GB | **4.0** | Yes | **No** | $115–160 |
+| X570 | 4 · 128 GB | **4.0** | Yes | **No** | ~$185 |
+
+### The three things that decide it
+
+**B550 and X570 will not start with your CPU.** They officially begin at Ryzen 3000; your
+1400 is Zen 1. Those boards force a CPU purchase in the *same order*, not later. **B450 spans
+the 1400 through the 5700X**, so it is the right answer if you want to change the board now
+and the chip whenever.
+
+**Four slots halve the RAM cost.** With four DIMMs you keep the GeIL pair and *add* two 8 GB
+sticks (~$115) rather than replacing both with a 2×16 kit (~$220). Mixed kits clock to the
+slower stick — 2400 here — but 32 GB at 2400 beats 16 GB at 3200 every time you open the
+third app. A $75 B450M plus $115 of memory is **$190 for 32 GB**, against $220 for the RAM
+alone on your current board.
+
+**PCIe 4.0 needs both halves.** Effective generation is the *lower* of board and CPU. A B550
+with a Ryzen 5 5500 is still 3.0, because the 5500 has no 4.0 support.
+
+Two costs no spec sheet lists: the OEM Windows licence is tied to the board it first
+activated on (link it to a Microsoft account **before** swapping), and A520 still cannot
+overclock despite being newer than A320.
+
+## Sizes, in plain language
+
+"Full / mid / small" is the part most guides assume you already know. Every board below is
+drawn to scale in the interactive version.
+
+| Form factor | Size (mm) | What it means |
+|---|---|---|
+| E-ATX | 305 × 330 | Oversized. Needs a full tower. **Will not fit your case.** |
+| **ATX** | 305 × 244 | Full size. Most slots for the money. Fits you. |
+| **microATX** | 244 × 244 | Mid size. Same width, shortened — you lose two *expansion* slots, not RAM slots. |
+| Mini-ITX | 170 × 170 | Small. One expansion slot and only **two** RAM slots. A downgrade for you. |
+
+Your A320M-K is **226 × 221 mm** — a *reduced* microATX, smaller than the standard even
+allows. Your case takes up to full ATX, so everything on the list fits with room to spare.
+
+A microATX board being shorter does **not** mean fewer memory slots. A 244 × 244 microATX
+still gives you four. That is the whole saving above.
+
+**The size that actually bites is graphics card length**, never width. Rough clearance in
+your case is ~320 mm, estimated from the photos — measure from the rear slot bracket forward
+to the drive cage before buying. Reference: RTX 3060 242 mm, RX 6700 XT 267 mm, RX 9070 XT
+330 mm (would not fit).
+
+**M.2 length**: the number *is* the size. 2280 = 22 mm wide, 80 mm long. Your board drills
+one standoff, at 2280. A 22110 drive overhangs with nothing to screw into.
+
+## When to stop and buy a prebuilt instead
+
+If your parts list passes about **$600**, or replaces four of the six subsystems, price a
+prebuilt before committing. At that point what survives is a case and a nine-year-old power
+supply — that is not an upgrade, it is a new computer assembled inside an old shell.
+
+**Why this is worth checking in 2026 specifically:** OEMs and system integrators buy memory
+and storage on contracts negotiated months or years ahead, so the RAM inside a prebuilt today
+was very likely bought *before* the shortage tripled retail prices. That has inverted the
+usual maths — in the **$1,000–1,900** band a well-specced prebuilt frequently beats an
+honestly-priced parts list, and it comes with one warranty covering the whole machine. Past
+$2,000 the edge fades and hand-picking parts wins again.
+
+**This does not change the cheap end.** The $125–260 plan — SSD, then CPU — is still the best
+money on this page. Buying an SSD is not a reason to buy a computer. The prebuilt question
+only applies to the far end.
 
 ## Market conditions — read this before the prices
 
