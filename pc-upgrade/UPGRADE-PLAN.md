@@ -19,12 +19,21 @@ until they were answered. Four of the five are legible in the photos:
 | Case | **Thermaltake ATX mid-tower**, 7 slots, full GPU clearance, empty drive bays | `overview.jpg`, `cages.jpg`, `rear.jpg` |
 
 Still open: **monitor** (decides the GPU) and **BIOS version** (decides the CPU swap).
-The board model is inferred rather than read, so confirm it in software before buying a CPU:
+The board model is inferred rather than read, so confirm it in software before buying a CPU.
 
-```powershell
-Get-CimInstance Win32_BaseBoard | Format-List Manufacturer, Product
-Get-CimInstance Win32_BIOS | Format-List SMBIOSBIOSVersion, ReleaseDate
+**`rig-report.ps1` answers all three automatically.** Double-click `run-rig-report.cmd`, or
+from a Command Prompt:
+
 ```
+powershell -ExecutionPolicy Bypass -File rig-report.ps1
+```
+
+It reads the live machine and prints a colour-coded verdict: the real board model and BIOS
+date, how many DIMM slots the board actually has, whether DOCP is off, **whether the boot
+drive is mechanical and whether the pagefile sits on it** (the freeze, proven rather than
+argued), your monitor's resolution and refresh rate, and Windows 11 eligibility. Everything
+it runs is read-only. It saves `rig-report.txt` next to itself, which you can paste back
+here.
 
 This is a custom build, not an OEM prebuilt — which means standard parts and no proprietary
 shapes to work around.
