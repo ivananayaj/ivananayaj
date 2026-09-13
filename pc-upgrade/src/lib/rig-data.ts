@@ -14,7 +14,9 @@ export const CURRENT_RIG = {
   storage: "932 GB HDD",
   storageModel: "WDC WD10EZEX-08WN4A0",
   storageUsed: "517 GB of 932 GB used",
-  os: "64-bit Windows, x64",
+  os: "Windows 10, 64-bit x64",
+  osNote:
+    "Windows 11 is blocked: the Ryzen 5 1400 is Zen 1, and Microsoft's supported list starts at Ryzen 2000 (Zen+). Windows 10 consumer support ended 14 Oct 2025; paid ESU cover ends 13 Oct 2026.",
   productId: "00325-80000-00000-AAOEM",
   deviceId: "77651BDC-1C9E-4925-8A45-8A915002AAE2",
 } as const;
@@ -106,7 +108,7 @@ export const BOTTLENECKS = [
     score: 88,
     severity: "severe" as const,
     verdict:
-      "Capacity is the real problem, not speed. Windows 11 idles around 4\u20136 GB. A browser with a real tab load, a game, and a Discord or OBS on top clears 16 GB, and everything past that goes to the pagefile on the spinning disk. That is the second half of the freeze. Separately, DOCP is off \u2014 you paid for 2400 and are running 2133.",
+      "Capacity is the real problem, not speed. Windows 10 idles around 3\u20134 GB. A browser with a real tab load, a game, and a Discord or OBS on top clears 16 GB, and everything past that goes to the pagefile on the spinning disk. That is the second half of the freeze. Separately, DOCP is off \u2014 you paid for 2400 and are running 2133.",
     firstMove:
       "Free first: enable DOCP in BIOS tonight. Then 2 x 16 GB DDR4-3200. Note the board has only two slots, so this is a replacement, not an addition \u2014 the GeIL sticks come out.",
   },
@@ -168,7 +170,7 @@ export const PATHS = [
     id: "am4",
     name: "AM4 last mile",
     kicker: "Rescue the box you already have — now the clear favourite",
-    spend: "$285 (fixes the freezing) — $605 (everything, GPU included)",
+    spend: "$125 (fixes the freezing) — $260 (plus a supported OS) — ~$800 (everything)",
     years: "2\u20133 years of useful life",
     when:
       "The teardown made this the default answer. The A320M-K takes a Zen 3 drop-in on a late BIOS, the 600 W supply has the cables and the headroom, and the case has room for a full-length card. Nothing needs replacing to unblock anything else.",
@@ -194,14 +196,14 @@ export const PATHS = [
     id: "am5",
     name: "New AM5 platform",
     kicker: "Only worth it if 1440p high-refresh is the goal",
-    spend: "$1,000\u2013$1,800",
+    spend: "$1,600\u2013$2,500 at September 2026 prices",
     years: "AM5 supported through 2029",
     when:
-      "Harder to justify than it looked before the teardown. Choose this only if you want sustained 1440p high-refresh, need more than 32 GB of RAM, or want a platform that still takes a drop-in CPU in 2029. For fixing the freezing, it is roughly four times the price of the answer.",
+      "Harder to justify than ever. The teardown already made this the weaker option; the memory shortage then pushed DDR5 and GPU prices up hard, so a build that cost $1,000\u2013$1,800 a year ago now runs $1,600\u2013$2,500. Choose it only if you want sustained 1440p high-refresh or need more than 32 GB of RAM. For fixing the freezing it is more than ten times the price of the answer.",
     steps: [
       "CPU: Ryzen 5 9600X or 7600. Skip X3D unless the GPU is already 9070-class.",
       "Board: B850 or B650 with Wi-Fi, four DIMM slots, two M.2, BIOS flashback.",
-      "RAM: 32 GB (2x16) DDR5-6000 CL30 EXPO \u2014 the AMD sweet spot in 2026.",
+      "RAM: 32 GB (2x16) DDR5-6000 CL30 EXPO \u2014 still the sweet spot, but entry-level 32 GB DDR5 kits now clear $300 on their own.",
       "GPU sized to the monitor: RX 9060 XT 16 GB or RTX 5060 Ti 16 GB for 1080p/1440p; RX 9070 XT if the budget stretches.",
       "1\u20132 TB Gen4 NVMe and a 650\u2013750 W ATX 3.1 supply. The Thermaltake does not come along.",
     ],

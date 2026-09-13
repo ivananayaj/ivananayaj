@@ -9,6 +9,8 @@ export const SECTIONS = [
   { id: "swap", label: "Swaps" },
   { id: "stages", label: "Order" },
   { id: "power", label: "Power" },
+  { id: "windows", label: "Windows 11" },
+  { id: "market", label: "Prices" },
   { id: "diagnosis", label: "Diagnosis" },
   { id: "intent", label: "Intent" },
   { id: "paths", label: "Paths" },

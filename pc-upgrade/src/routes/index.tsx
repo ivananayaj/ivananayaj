@@ -13,10 +13,12 @@ import {
 } from "@/components/panels";
 import {
   FreezePanel,
+  MarketPanel,
   PowerPanel,
   StagesPanel,
   SwapMatrixPanel,
   TeardownPanel,
+  WindowsPanel,
 } from "@/components/swap-panels";
 import { Button } from "@/components/ui/button";
 import { buildDossier } from "@/lib/brief";
@@ -110,6 +112,8 @@ function Home() {
         <SwapMatrixPanel />
         <StagesPanel />
         <PowerPanel />
+        <WindowsPanel />
+        <MarketPanel />
         <DiagnosisPanel />
         <IntentPanel />
         <PathsPanel />

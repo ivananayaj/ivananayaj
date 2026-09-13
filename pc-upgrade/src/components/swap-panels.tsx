@@ -11,7 +11,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Section } from "@/components/nav";
 import {
+  BYPASS_NOTE,
   FREEZE_CHAIN,
+  OS_TIMELINE,
+  WIN11_ELIGIBILITY,
   POWER_BUDGET,
   STAGES,
   SWAP_MATRIX,
@@ -20,6 +23,7 @@ import {
   type SwapStatus,
 } from "@/lib/swap-plan";
 import { CONFIRMED_PARTS } from "@/lib/rig-data";
+import { MARKET, PRICES_AS_OF, PRICE_BANDS, inflation } from "@/lib/pricing";
 import { useRig } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -379,6 +383,147 @@ export function PowerPanel() {
         <ArrowRight className="mt-0.5 size-4 shrink-0 text-ok" />
         <span>{POWER_BUDGET.verdict}</span>
       </p>
+    </Section>
+  );
+}
+
+/** 08 — Windows 11 eligibility. */
+export function WindowsPanel() {
+  const meta = {
+    blocked: { tone: "danger" as const, label: "Blocked" },
+    fixable: { tone: "warn" as const, label: "Fixable in BIOS" },
+    met: { tone: "ok" as const, label: "Already met" },
+  };
+  return (
+    <Section
+      id="windows"
+      kicker="08 — Operating system"
+      title="One part is the reason Windows 11 refuses."
+    >
+      <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+        {OS_TIMELINE.detail} {OS_TIMELINE.verdict}
+      </p>
+
+      <div className="mt-6 overflow-x-auto rounded-xl bg-surface shadow-[var(--shadow-border)]">
+        <table className="w-full min-w-[40rem] text-sm">
+          <thead>
+            <tr className="border-b border-border text-left">
+              <th className="px-5 py-3 font-medium text-muted-foreground">Requirement</th>
+              <th className="px-5 py-3 font-medium text-muted-foreground">Status</th>
+              <th className="px-5 py-3 font-medium text-muted-foreground">What to do</th>
+            </tr>
+          </thead>
+          <tbody>
+            {WIN11_ELIGIBILITY.map((row) => (
+              <tr key={row.requirement} className="border-b border-border last:border-none">
+                <td className="px-5 py-3 align-top">{row.requirement}</td>
+                <td className="px-5 py-3 align-top">
+                  <Badge tone={meta[row.status].tone}>{meta[row.status].label}</Badge>
+                </td>
+                <td className="px-5 py-3 align-top text-muted-foreground">
+                  <p>{row.detail}</p>
+                  <p className="mt-1 text-foreground">{row.action}</p>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="mt-4 rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-medium">The bypass route</p>
+          <Badge tone="warn">{BYPASS_NOTE.cost}</Badge>
+        </div>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+          {BYPASS_NOTE.summary} {BYPASS_NOTE.catch}
+        </p>
+      </div>
+    </Section>
+  );
+}
+
+/** 09 — Prices, with provenance. */
+export function MarketPanel() {
+  return (
+    <Section
+      id="market"
+      kicker="09 — Market conditions"
+      title={MARKET.headline}
+    >
+      <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+        {MARKET.detail}
+      </p>
+
+      <div className="mt-6 overflow-x-auto rounded-xl bg-surface shadow-[var(--shadow-border)]">
+        <table className="w-full min-w-[44rem] text-sm">
+          <thead>
+            <tr className="border-b border-border text-left">
+              <th className="px-5 py-3 font-medium text-muted-foreground">Part</th>
+              <th className="px-5 py-3 text-right font-medium text-muted-foreground">
+                Now
+              </th>
+              <th className="px-5 py-3 text-right font-medium text-muted-foreground">
+                Pre-shortage
+              </th>
+              <th className="px-5 py-3 text-right font-medium text-muted-foreground">
+                Change
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {PRICE_BANDS.map((p) => {
+              const pct = inflation(p);
+              return (
+                <tr key={p.id} className="border-b border-border last:border-none align-top">
+                  <td className="px-5 py-3">
+                    <p>{p.item}</p>
+                    {p.note && (
+                      <p className="mt-1 max-w-md text-xs leading-relaxed text-subtle">
+                        {p.note}
+                      </p>
+                    )}
+                  </td>
+                  <td className="px-5 py-3 text-right tabular-nums whitespace-nowrap">
+                    ${p.low} – ${p.high}
+                  </td>
+                  <td className="px-5 py-3 text-right tabular-nums whitespace-nowrap text-muted-foreground">
+                    {p.wasLow !== undefined ? `$${p.wasLow} – $${p.wasHigh}` : "—"}
+                  </td>
+                  <td className="px-5 py-3 text-right whitespace-nowrap">
+                    {pct !== null ? (
+                      <Badge tone={pct > 100 ? "danger" : pct > 40 ? "warn" : "default"}>
+                        +{pct}%
+                      </Badge>
+                    ) : (
+                      <span className="text-subtle">—</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="mt-3 text-xs text-subtle">
+        Prices as of {PRICES_AS_OF}. Every figure above carries a source in{" "}
+        <code className="text-muted-foreground">src/lib/pricing.ts</code>. Re-check anything
+        older than a month — in this market that is not paranoia.
+      </p>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
+          <p className="text-sm font-medium">When it eases</p>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{MARKET.timing}</p>
+        </div>
+        <div className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
+          <p className="text-sm font-medium">What it changes</p>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            {MARKET.consequence}
+          </p>
+        </div>
+      </div>
     </Section>
   );
 }
