@@ -487,12 +487,12 @@ const P = {
     {v:"22110", label:"+ M.2 22110 (110 mm) NVMe",         cost:140, tooLong:true},
   ],
   gpu:[
-    {v:"1050ti", len:200,label:"GTX 1050 Ti 4 GB (installed)", cost:0,  w:75,  stock:true, weak:true},
-    {v:"3060", len:242,  label:"Used RTX 3060 12 GB",          cost:250, w:170, lanes:"4.0 \u00d716"},
-    {v:"6700xt", len:267,label:"Used RX 6700 XT 12 GB",        cost:280, w:230, lanes:"4.0 \u00d716"},
-    {v:"9060xt", len:245,label:"RX 9060 XT 16 GB",             cost:475, w:160, lanes:"5.0 \u00d78", narrow:true},
-    {v:"5060ti", len:242,label:"RTX 5060 Ti 16 GB",            cost:470, w:180, lanes:"5.0 \u00d78", narrow:true},
-    {v:"9070xt", len:330,label:"RX 9070 XT 16 GB",             cost:750, w:304, lanes:"5.0 \u00d716", big:true},
+    {v:"1050ti", vram:4, len:200,label:"GTX 1050 Ti 4 GB (installed)", cost:0,  w:75,  stock:true, weak:true},
+    {v:"3060", vram:12, len:242,  label:"Used RTX 3060 12 GB",          cost:250, w:170, lanes:"4.0 \u00d716"},
+    {v:"6700xt", vram:12, len:267,label:"Used RX 6700 XT 12 GB",        cost:280, w:230, lanes:"4.0 \u00d716"},
+    {v:"9060xt", vram:16, len:245,label:"RX 9060 XT 16 GB",             cost:475, w:160, lanes:"5.0 \u00d78", narrow:true},
+    {v:"5060ti", vram:16, len:242,label:"RTX 5060 Ti 16 GB",            cost:470, w:180, lanes:"5.0 \u00d78", narrow:true},
+    {v:"9070xt", vram:16, len:330,label:"RX 9070 XT 16 GB",             cost:750, w:304, lanes:"5.0 \u00d716", big:true},
   ],
   psu:[
     {v:"tt600", label:"Thermaltake Smart 600 W (installed)", cost:0, cap:600, derate:.75, stock:true},
@@ -646,7 +646,14 @@ function evaluate(){
     flag("cpu","warn");
   }
   if(gpu.weak){ chipText.gpu = chipText.gpu || "Weak"; }
-  if(gpu.weak) add("warn","perf",["gpu"],"4 GB will not hold modern textures.",`Fine for the desktop, and irrelevant to the freezing \u2014 but it is why current games refuse to launch or crawl.`);
+  if(gpu.weak){
+    add("bad","pair",["gpu","ssd"],"4 GB of VRAM driving a 4K panel is feeding the freeze.",`The display is confirmed at <b>3840 \u00d7 2160</b>. A 4K desktop needs roughly four times the framebuffer and texture memory of 1080p, and this card has 4 GB. When VRAM fills, the driver spills into system RAM \u2014 already 11.9 GB used of 15.9 \u2014 which pushes more into the pagefile on the mechanical drive. The panel is not just showing the problem, it is <b>amplifying</b> it. Free test: set the TV to 1080p for a week and see whether the stalls ease.`);
+    flag("gpu","bad"); chipText.gpu="Amplifying";
+  }
+  if(!gpu.stock && (gpu.len||0)>0){
+    add("ok","perf",["gpu"],"Right strategy: render at 1440p, output 4K.",`Native 4K gaming is not realistic on this platform at any sane budget \u2014 a card fast enough would cost more than everything else here combined, and the Ryzen 1400 would still cap it. Run games at 1440p and let the TV or the driver upscale. Desktop and video stay native 4K, which every modern card does for free.`);
+    if((gpu.vram||12) < 12) add("warn","perf",["gpu"],"Prefer 12 GB or more at 4K.",`A 4K framebuffer plus modern textures eats VRAM even when you render games below native. 8 GB works; 12\u201316 GB is the comfortable band for this display.`);
+  }
   if(cpu.gen===1 && !gpu.stock){
     add("warn","pair",["cpu","gpu"],"The 1400 will bottleneck this card.",`Four 2017 cores cannot feed a modern GPU. You will see far less than the card is capable of until the CPU changes.`);
     flag("gpu","warn");
@@ -700,7 +707,8 @@ const KNOWN = {
   biosDate:   "22 January 2018",
   biosNeeded: "6042",
   biosMode:   "Legacy (CSM)",            // -> disk is MBR, Secure Boot unsupported
-  panelW: 1920, panelH: 1080, panelHz: 60,
+  panelW: 3840, panelH: 2160, panelHz: 60,   // 4K TV \u2014 confirmed by a second msinfo32 scan
+  panelNote: "a 4K TV, not a desktop monitor. An LG monitor also exists; its specs are unknown.",
   pagefileOn: "C: (the WD Blue HDD)",
   pagedOutGB: 4.1,                       // 20.0 GB committed against 15.9 GB physical
   freeGB: 259,

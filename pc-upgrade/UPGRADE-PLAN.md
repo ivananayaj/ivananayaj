@@ -27,7 +27,7 @@ Nothing below is inferred any more. Every open question is closed.
 | Board | **ASUSTeK PRIME A320M-K** | The photo inference was exactly right |
 | BIOS | **3803, dated 22 Jan 2018** | **A Ryzen 5000 will NOT POST. Flash first.** |
 | BIOS mode | **Legacy (CSM)** | Disk is MBR; Secure Boot reports *Unsupported* |
-| Display | **1920 x 1080 @ 60 Hz** | Do not overbuy a graphics card |
+| Display | **3840 x 2160 @ 60 Hz** (a 4K TV) | Corrected by a second scan. See below. |
 | Disks | **One. WD10EZEX, 931 GB, "Fixed hard disk"** | No SSD exists in this machine |
 | Free space | 259 GB of 921 GB | Down from earlier; still fine |
 | Physical RAM | 15.9 GB total, **4.03 GB free** | 11.9 GB already in use |
@@ -42,10 +42,19 @@ and the pagefile sits on the 7200 rpm platter. That is the stall, caught in the 
 
 1. **The BIOS flash moved from a caution to a hard prerequisite.** BIOS 3803 is from January
    2018. Zen 3 needs 6042-era firmware. Flash it *while the Ryzen 1400 is still installed*.
-2. **The graphics card dropped down a tier.** A 1080p 60 Hz panel cannot show more than 60
-   frames a second. A used RTX 3060 12 GB or RX 6600 pins that panel in almost everything --
-   a $475 RX 9060 XT would be money with nowhere to go. Buy a better monitor first if you
-   want a better card to mean anything.
+2. **The display is a 4K TV, and it is making the freezing worse.** A 4K desktop needs
+   roughly four times the framebuffer and texture memory of 1080p. The 1050 Ti has 4 GB.
+   When VRAM fills, the driver spills into system RAM -- already 11.9 GB of 15.9 in use --
+   which pushes more into the pagefile on the mechanical drive. The panel is not just showing
+   the problem, it is amplifying it.
+
+   **Free diagnostic:** set the TV to 1080p, or switch to the LG monitor, for a week. If the
+   stalls ease, that is confirmation and it cost nothing.
+
+   **Do not chase native 4K gaming.** A card fast enough would cost more than everything else
+   in this plan combined, and the Ryzen 1400 would still cap it. The right strategy is render
+   at 1440p and let the TV upscale; desktop and video stay native 4K for free. Prefer 12-16 GB
+   of VRAM -- a used RX 6700 XT or RTX 3060 12 GB.
 
 Windows 11 also needs more than the CPU: CSM is on, so Secure Boot is unsupported and the
 disk is MBR. Turn CSM off, enable Secure Boot and AMD fTPM, and clean-install onto the new
