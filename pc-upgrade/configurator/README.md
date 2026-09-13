@@ -31,6 +31,9 @@ Candidates are limited to boards that reuse what is already in the case — AM4 
 ATX or mATX, one 24-pin plus one 8-pin EPS. Nothing here asks for a new PSU, cooler, case
 or memory.
 
+Fourteen boards across A320, B350, X370, B450, X470, A520, B550, X570, plus an E-ATX board
+and an AM5 board that exist specifically to demonstrate the two failure kinds.
+
 Three rules make this slot worth having:
 
 1. **B550 and X570 do not support Zen 1.** Officially they start at Ryzen 3000, so pairing
@@ -48,6 +51,18 @@ Three rules make this slot worth having:
 Two costs the spec sheets do not list are surfaced as warnings on every board change: it is
 the only swap that is not standalone (everything comes out), and the OEM Windows licence is
 tied to the board it first activated on.
+
+## The prebuilt check
+
+Past $600, or four replaced subsystems, or a board swap plus three others, a card appears
+arguing the user should price a prebuilt first. It computes what actually survives the build
+rather than asserting it, and it makes a specific, current argument: OEMs buy memory and
+storage on contracts negotiated months ahead, so a prebuilt's RAM was very likely bought
+before the shortage tripled retail prices. Through 2026 that inverts the usual maths in the
+$1,000-1,900 band.
+
+It deliberately does not overreach: the card closes by saying the $125-260 end of the plan is
+still the best money on the page and this only concerns the far end.
 
 ## Size view
 
@@ -85,13 +100,25 @@ media queries never fire. Inject the tag in the test harness.
 
 ## The rules engine
 
-`evaluate()` in `index.html` is the whole thing. It distinguishes two different failures,
-which is the point:
+`evaluate()` in `index.html` is the whole thing. Every finding is
+`{sev, kind, parts[], head, body}`, and **kind** is what makes the output readable:
 
-- **Won't fit** — a genuine incompatibility (DDR5, 64 GB over the board's ceiling,
-  AM5 CPU, M.2 22110, a card past the supply's derated ceiling).
-- **Bottleneck / Check** — it works, it's just a bad idea (the HDD, a 105 W chip on the
-  A320 VRM, a PCIe 5.0 x8 card in a 3.0 slot, a modern GPU behind a Ryzen 1400).
+| kind | Means | Chip |
+|---|---|---|
+| `size` | Physically will not go in the case | Won't fit |
+| `pair` | Two parts cannot work together | Incompatible |
+| `perf` | Fits and works, but is the bottleneck | Bottleneck / Weak |
+| `os`   | Windows 11 eligibility | — |
+| `info` | Worth knowing | Fits / Check |
+
+`parts[]` names the components involved, so a finding renders as `BOARD x CPU` rather than
+leaving the reader to work out which two things clash. Findings are grouped under headings
+by kind, and a **banner at the top of the parts panel** repeats the first blocking one — the
+earlier version buried the reason below the fold, so a size failure read as a parts failure
+while you scrolled.
+
+Worked examples: an E-ATX board is `size` (330 mm against 244 mm of tray, nothing else is
+wrong); a B550 with the Ryzen 1400 is `pair`; the HDD is `perf`.
 
 It also computes peak draw against the PSU's *derated* capacity (the 2017 Thermaltake is
 haircut 25%, a modern Gold unit only 5%), a freeze-risk score, running cost, and Windows 11
