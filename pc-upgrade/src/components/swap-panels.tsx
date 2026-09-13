@@ -23,7 +23,14 @@ import {
   type SwapStatus,
 } from "@/lib/swap-plan";
 import { CONFIRMED_PARTS } from "@/lib/rig-data";
-import { MARKET, PRICES_AS_OF, PRICE_BANDS, inflation } from "@/lib/pricing";
+import {
+  MARKET,
+  PRICES_AS_OF,
+  PRICE_BANDS,
+  SOURCES,
+  VERIFICATION_NOTE,
+  inflation,
+} from "@/lib/pricing";
 import { useRig } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -507,10 +514,64 @@ export function MarketPanel() {
       </div>
 
       <p className="mt-3 text-xs text-subtle">
-        Prices as of {PRICES_AS_OF}. Every figure above carries a source in{" "}
-        <code className="text-muted-foreground">src/lib/pricing.ts</code>. Re-check anything
-        older than a month — in this market that is not paranoia.
+        Prices as of {PRICES_AS_OF}. Re-check anything older than a month — in this market
+        that is not paranoia.
       </p>
+
+      <div className="mt-6 rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
+        <div className="flex items-center gap-2">
+          <CircleAlert className="size-4 text-warn" />
+          <h3 className="text-base font-medium">How solid are these numbers?</h3>
+        </div>
+        <dl className="mt-3 grid gap-3 text-sm leading-relaxed sm:grid-cols-2">
+          <div>
+            <dt className="text-ok">What holds up</dt>
+            <dd className="mt-1 text-muted-foreground">{VERIFICATION_NOTE.checked}</dd>
+          </div>
+          <div>
+            <dt className="text-danger">What was not checked</dt>
+            <dd className="mt-1 text-muted-foreground">{VERIFICATION_NOTE.notChecked}</dd>
+          </div>
+          <div>
+            <dt className="text-warn">Stale listings to watch for</dt>
+            <dd className="mt-1 text-muted-foreground">{VERIFICATION_NOTE.watchOut}</dd>
+          </div>
+          <div>
+            <dt className="text-foreground">Before you buy</dt>
+            <dd className="mt-1 text-muted-foreground">{VERIFICATION_NOTE.advice}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <h3 className="mt-6 text-base font-medium">Check it yourself</h3>
+      <ul className="mt-3 flex flex-col gap-2">
+        {SOURCES.map((src) => (
+          <li
+            key={src.id}
+            className="rounded-xl bg-surface p-4 shadow-[var(--shadow-border)]"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <a
+                href={src.url}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="text-sm underline decoration-border underline-offset-4 hover:decoration-foreground"
+              >
+                {src.label}
+              </a>
+              <Badge tone={src.kind === "tracker" ? "ok" : "default"}>
+                {src.kind === "tracker"
+                  ? "Live tracker"
+                  : src.kind === "manufacturer"
+                    ? "Manufacturer"
+                    : "Reporting"}
+              </Badge>
+            </div>
+            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{src.covers}</p>
+            <p className="mt-1 font-mono text-xs break-all text-subtle">{src.url}</p>
+          </li>
+        ))}
+      </ul>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <div className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">

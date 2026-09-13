@@ -72,8 +72,38 @@ has pulled DRAM and NAND capacity away from consumer parts:
 | RX 9060 XT 16 GB | $430–500 | $330–360 | +35% |
 | Used RX 6700 XT / RTX 3060 12 GB | $200–300 | — | — |
 
-One 32 GB Corsair Vengeance LPX DDR4-3200 kit went from $71.99 to $262.99 in six months.
-Relief is not expected before late 2027. Sources are recorded in `src/lib/pricing.ts`.
+Relief is not expected before late 2027.
+
+### Proof — and what I could not verify
+
+**Honest limitation first:** no live retail listing was opened while writing this. Newegg,
+Amazon, Best Buy, Micro Center, eBay, PCPartPicker and every price-history site are blocked
+by the network policy on the machine this was written on. The bands above are synthesised
+from reporting and manufacturer pages, not observed on a store page.
+
+**What holds up.** Multiple independent outlets report the same direction and rough
+magnitude, and Corsair's own store lists a 32 GB DDR4-3200 kit at **$249.99** against a
+$315.99 list — a manufacturer-direct figure, not a reseller markup, and consistent with the
+$180–265 band.
+
+**Live trackers — check these before you buy:**
+
+- [Tom's Hardware RAM price index 2026](https://www.tomshardware.com/pc-components/ram/ram-price-index-2026-lowest-price-on-ddr5-and-ddr4-memory-of-all-capacities) — DDR4/DDR5, all capacities
+- [Tom's Hardware SSD price tracker](https://www.tomshardware.com/news/lowest-ssd-prices) — lowest price on every M.2 drive
+- [rampricehistory.com — 1 TB NVMe](https://rampricehistory.com/ssd/us/1tb-nvme) — charted history, not a snapshot
+- [PCPartPicker](https://pcpartpicker.com/) — the right final check; aggregates live retail and flags AM4 compatibility as you add parts
+- [Corsair Vengeance LPX 32 GB DDR4-3200 C16](https://www.corsair.com/us/en/p/memory/cmk32gx4m2e3200c16/vengeancea-lpx-32gb-2-x-16gb-ddr4-dram-3200mhz-c16-memory-kit-black-cmk32gx4m2e3200c16) — manufacturer direct
+
+**Reporting behind the shortage:**
+
+- [TechPowerUp — DDR4 prices skyrocketing amid DRAM shortage](https://www.techpowerup.com/345717/ddr4-prices-skyrocketing-amid-dram-shortage-crunch)
+- [GamersNexus — SSDs: WTF?](https://gamersnexus.net/features/ssds-wtf)
+- [TechSpot — GPU pricing, Q3 2026](https://www.techspot.com/article/3167-gpu-pricing-q3-2026/)
+- [Tom's Hardware — why GPU prices keep surging](https://www.tomshardware.com/pc-components/gpus/gpu-prices-for-current-gen-nvidia-and-amd-price-increases-why-have-the-prices-not-dropped-and-can-you-still-buy-a-cheap-gpu)
+
+**Watch for stale listings.** Search turns up a $61 Corsair 32 GB kit and a $64.99 1 TB
+Samsung drive with no visible date. Both are almost certainly pre-shortage posts from
+2024–2025. If a price looks like the old world, check its date before believing it.
 
 **This reshuffles the plan.** Memory went from the second-best value to the worst. Silicon
 escaped the crisis, so the CPU is now the fairly-priced upgrade. And a new AM5 build — which
