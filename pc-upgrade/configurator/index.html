@@ -198,12 +198,12 @@ select:focus-visible{outline:2px solid var(--copper); outline-offset:1px}
         and the freeze risk all recompute against <em>your</em> board &mdash; two DIMM slots, one M.2,
         PCIe&nbsp;3.0, and a nine-year-old 600&nbsp;W supply.</p>
     </div>
-    <div class="idplate">
-      <div class="row"><span>SOCKET</span><b>AM4 / mATX</b></div>
-      <div class="row"><span>DIMM</span><b>2 slots &middot; 32 GB max</b></div>
-      <div class="row"><span>M.2</span><b>1 &times; 2280 PCIe 3.0 &times;4</b></div>
-      <div class="row"><span>PCIE</span><b>3.0 &times;16</b></div>
-      <div class="row"><span>PSU</span><b>600 W &middot; 2&times; 6+2</b></div>
+    <div class="idplate" id="plate">
+      <div class="row"><span>BOARD</span><b id="p-board">A320M-K</b></div>
+      <div class="row"><span>DIMM</span><b id="p-dimm">&mdash;</b></div>
+      <div class="row"><span>M.2</span><b id="p-m2">&mdash;</b></div>
+      <div class="row"><span>PCIE</span><b id="p-pcie">&mdash;</b></div>
+      <div class="row"><span>CPU OC</span><b id="p-oc">&mdash;</b></div>
     </div>
   </div>
 </header>
@@ -269,7 +269,9 @@ select:focus-visible{outline:2px solid var(--copper); outline-offset:1px}
       <div class="presets">
         <button data-preset="cheap">$125 &mdash; kill the freezing</button>
         <button data-preset="sweet">$260 &mdash; + supported OS</button>
-        <button data-preset="full">Everything</button>
+        <button data-preset="full">Everything, same board</button>
+        <button data-preset="headroom">New board &mdash; raise the ceiling</button>
+        <button data-preset="trap">B550 + your old CPU</button>
         <button data-preset="wrong">The mistake most people make</button>
       </div>
     </section>
@@ -292,6 +294,18 @@ select:focus-visible{outline:2px solid var(--copper); outline-offset:1px}
         <h3>The M.2 hides under the graphics card</h3>
         <p>Pull the GPU to reach <code>M.2_1</code>, then put it back. Ten extra minutes, no extra parts.</p>
       </div>
+      <div class="note key">
+        <h3>B550 will not start with your CPU</h3>
+        <p>B550 and X570 officially begin at Ryzen 3000. Your 1400 is Zen 1, so those boards
+          force a CPU purchase in the same order. A <b>B450</b> takes everything from the 1400
+          to a 5700X &mdash; drop it in today, upgrade the chip whenever.</p>
+      </div>
+      <div class="note">
+        <h3>Four slots changes the RAM math</h3>
+        <p>With four DIMMs you keep the GeIL pair and <em>add</em> two sticks rather than
+          replacing both. In a market where a 2&nbsp;&times;&nbsp;16 kit runs $220, that is
+          the difference between $115 and $220 for the same 32&nbsp;GB.</p>
+      </div>
       <div class="note">
         <h3>PCIe 3.0 taxes new cards</h3>
         <p>A 9060 XT or 5060 Ti uses a PCIe 5.0 <em>&times;8</em> link, which drops to 3.0 &times;8 here.
@@ -313,6 +327,7 @@ select:focus-visible{outline:2px solid var(--copper); outline-offset:1px}
 
 /* ============ catalog ============ */
 const SLOTS = [
+  { id:"board",desig:"BOARD",     name:"Motherboard",   hot:{board:[52,11]}, three:"mobo" },
   { id:"cpu",  desig:"AM4",       name:"Processor",     hot:{board:[46,36]}, three:"cpu" },
   { id:"ram",  desig:"DIMM_A1/B1",name:"Memory",        hot:{board:[58,34]}, three:"ram" },
   { id:"ssd",  desig:"M.2_1",     name:"Boot drive",    hot:{board:[35,78]}, three:"m2"  },
@@ -321,22 +336,37 @@ const SLOTS = [
 ];
 
 const P = {
+  board:[
+    {v:"a320mk", label:"ASUS PRIME A320M-K (installed)", cost:0,
+     dimm:2, maxRam:32, m2:1, m2gen:3, pcie:3, oc:false, vrm:"weak",   zen1:true,  ff:"mATX", stock:true},
+    {v:"b450m",  label:"Used B450M \u2014 mATX", cost:75,
+     dimm:4, maxRam:128, m2:1, m2gen:3, pcie:3, oc:true,  vrm:"ok",     zen1:true,  ff:"mATX"},
+    {v:"b450atx",label:"Used B450 ATX (Tomahawk class)", cost:115,
+     dimm:4, maxRam:128, m2:2, m2gen:3, pcie:3, oc:true,  vrm:"good",   zen1:true,  ff:"ATX"},
+    {v:"b550m",  label:"B550M \u2014 mATX, PCIe 4.0", cost:115,
+     dimm:4, maxRam:128, m2:2, m2gen:4, pcie:4, oc:true,  vrm:"good",   zen1:false, ff:"mATX"},
+    {v:"b550atx",label:"B550 ATX, PCIe 4.0", cost:155,
+     dimm:4, maxRam:128, m2:2, m2gen:4, pcie:4, oc:true,  vrm:"strong", zen1:false, ff:"ATX"},
+    {v:"x570",   label:"Used X570 ATX \u2014 PCIe 4.0 throughout", cost:185,
+     dimm:4, maxRam:128, m2:2, m2gen:4, pcie:4, oc:true,  vrm:"strong", zen1:false, ff:"ATX", fan:true},
+  ],
   cpu:[
-    {v:"1400",  label:"Ryzen 5 1400 \u2014 4C/8T (installed)", cost:0,   w:65,  gen:1, stock:true},
-    {v:"5500",  label:"Ryzen 5 5500 \u2014 6C/12T, 65 W",      cost:95,  w:65,  gen:3, cut:true},
-    {v:"5600",  label:"Ryzen 5 5600 \u2014 6C/12T, 65 W",      cost:135, w:76,  gen:3},
-    {v:"5700x", label:"Ryzen 7 5700X \u2014 8C/16T, 65 W",     cost:175, w:88,  gen:3},
-    {v:"5800x3d",label:"Ryzen 7 5800X3D \u2014 105 W",         cost:230, w:120, gen:3, hot105:true},
-    {v:"5900x", label:"Ryzen 9 5900X \u2014 12C, 105 W",       cost:250, w:142, gen:3, hot105:true},
-    {v:"7600",  label:"Ryzen 5 7600 \u2014 AM5",               cost:200, w:88,  gen:5, socket:"AM5"},
+    {v:"1400",  label:"Ryzen 5 1400 \u2014 4C/8T (installed)", cost:0,   w:65,  gen:1, pcie:3, stock:true},
+    {v:"5500",  label:"Ryzen 5 5500 \u2014 6C/12T, 65 W",      cost:95,  w:65,  gen:3, pcie:3, cut:true},
+    {v:"5600",  label:"Ryzen 5 5600 \u2014 6C/12T, 65 W",      cost:135, w:76,  gen:3, pcie:4},
+    {v:"5700x", label:"Ryzen 7 5700X \u2014 8C/16T, 65 W",     cost:175, w:88,  gen:3, pcie:4},
+    {v:"5800x3d",label:"Ryzen 7 5800X3D \u2014 105 W",         cost:230, w:120, gen:3, pcie:4, hot105:true},
+    {v:"5900x", label:"Ryzen 9 5900X \u2014 12C, 105 W",       cost:250, w:142, gen:3, pcie:4, hot105:true},
+    {v:"7600",  label:"Ryzen 5 7600 \u2014 AM5",               cost:200, w:88,  gen:5, pcie:5, socket:"AM5"},
   ],
   ram:[
-    {v:"2x8-2400", label:"2 \u00d7 8 GB DDR4-2400 (installed, running 2133)", cost:0, gb:16, mhz:2133, stock:true},
-    {v:"2x8-docp", label:"2 \u00d7 8 GB DDR4-2400 \u2014 DOCP enabled",            cost:0, gb:16, mhz:2400, free:true},
-    {v:"2x16-3200",label:"2 \u00d7 16 GB DDR4-3200",                          cost:220,gb:32, mhz:3200},
-    {v:"2x16-3600",label:"2 \u00d7 16 GB DDR4-3600",                          cost:250,gb:32, mhz:3600, fast:true},
-    {v:"2x32-3200",label:"2 \u00d7 32 GB DDR4-3200 \u2014 64 GB",                  cost:430,gb:64, mhz:3200},
-    {v:"ddr5",     label:"2 \u00d7 16 GB DDR5-6000",                          cost:300,gb:32, mhz:6000, ddr5:true},
+    {v:"2x8-2400", label:"2 \u00d7 8 GB DDR4-2400 (installed, running 2133)", cost:0, gb:16, mhz:2133, sticks:2, stock:true},
+    {v:"2x8-docp", label:"2 \u00d7 8 GB DDR4-2400 \u2014 DOCP enabled",            cost:0, gb:16, mhz:2400, sticks:2, free:true},
+    {v:"add2x8",   label:"Keep the GeIL pair + add 2 \u00d7 8 GB \u2192 32 GB",     cost:115, gb:32, mhz:2400, sticks:4, mixed:true},
+    {v:"2x16-3200",label:"2 \u00d7 16 GB DDR4-3200 \u2014 replaces both sticks",    cost:220, gb:32, mhz:3200, sticks:2},
+    {v:"2x16-3600",label:"2 \u00d7 16 GB DDR4-3600",                          cost:250, gb:32, mhz:3600, sticks:2, fast:true},
+    {v:"4x16-3200",label:"4 \u00d7 16 GB DDR4-3200 \u2014 64 GB",                   cost:440, gb:64, mhz:3200, sticks:4},
+    {v:"ddr5",     label:"2 \u00d7 16 GB DDR5-6000",                          cost:300, gb:32, mhz:6000, sticks:2, ddr5:true},
   ],
   ssd:[
     {v:"hdd",   label:"WD Blue 1 TB HDD only (installed)", cost:0,  stock:true, slow:true},
@@ -361,12 +391,14 @@ const P = {
   ],
 };
 
-const STOCK = {cpu:"1400", ram:"2x8-2400", ssd:"hdd", gpu:"1050ti", psu:"tt600"};
+const STOCK = {board:"a320mk", cpu:"1400", ram:"2x8-2400", ssd:"hdd", gpu:"1050ti", psu:"tt600"};
 const PRESETS = {
-  cheap: {cpu:"1400", ram:"2x8-docp", ssd:"g3",  gpu:"1050ti", psu:"tt600"},
-  sweet: {cpu:"5600", ram:"2x8-docp", ssd:"g3",  gpu:"1050ti", psu:"tt600"},
-  full:  {cpu:"5700x",ram:"2x16-3200",ssd:"g3",  gpu:"3060",   psu:"tt600"},
-  wrong: {cpu:"1400", ram:"2x8-2400", ssd:"hdd", gpu:"9060xt", psu:"tt600"},
+  cheap:  {board:"a320mk", cpu:"1400", ram:"2x8-docp", ssd:"g3", gpu:"1050ti", psu:"tt600"},
+  sweet:  {board:"a320mk", cpu:"5600", ram:"2x8-docp", ssd:"g3", gpu:"1050ti", psu:"tt600"},
+  full:   {board:"a320mk", cpu:"5700x",ram:"2x16-3200",ssd:"g3", gpu:"3060",   psu:"tt600"},
+  headroom:{board:"b550m", cpu:"5700x",ram:"add2x8",   ssd:"g4", gpu:"3060",   psu:"tt600"},
+  trap:   {board:"b550m", cpu:"1400", ram:"2x8-2400", ssd:"g3", gpu:"1050ti", psu:"tt600"},
+  wrong:  {board:"a320mk", cpu:"1400", ram:"2x8-2400", ssd:"hdd", gpu:"9060xt", psu:"tt600"},
 };
 
 let build = {...STOCK};
@@ -378,21 +410,49 @@ const $ = (id) => document.getElementById(id);
 
 /* ============ rules ============ */
 function evaluate(){
-  const cpu=get("cpu"), ram=get("ram"), ssd=get("ssd"), gpu=get("gpu"), psu=get("psu");
+  const bd=get("board"), cpu=get("cpu"), ram=get("ram"), ssd=get("ssd"), gpu=get("gpu"), psu=get("psu");
+  const newBoard = !bd.stock;
+  const effPcie = Math.min(bd.pcie, cpu.pcie||3);
   const iss=[]; const slotState={}; const chipText={};
   const flag=(slot,sev)=>{ const rank={ok:0,warn:1,bad:2};
     if(!slotState[slot] || rank[sev]>rank[slotState[slot]]) slotState[slot]=sev; };
+
+  // --- BOARD ---
+  if(newBoard){
+    if(!bd.zen1 && cpu.gen===1){
+      iss.push(["bad","This board will not POST with your CPU.",`B550 and X570 officially start at Ryzen 3000 \u2014 first-gen Zen is not on their support list, and most will not even train memory with it. Choosing this board means buying a CPU in the <b>same order</b>, not later. If you want a board you can drop in today and upgrade the CPU whenever, take a B450: it supports everything from the 1400 to the 5700X.`]);
+      flag("board","bad"); flag("cpu","bad");
+    }
+    iss.push(["warn","The one swap that is not standalone.",`Every other part on this list comes out on its own. The board means unmounting the cooler, the RAM, the GPU, every cable and all nine standoffs \u2014 an afternoon, not an evening. Budget the labour, not just the $${bd.cost}.`]);
+    iss.push(["warn","Windows will need reactivating.",`This machine's key is OEM (Product ID ends AAOEM), and an OEM licence is tied to the board it was first activated on. Link your install to a Microsoft account <b>before</b> you swap, or expect to buy a licence.`]);
+    iss.push(["ok",`${bd.ff} fits your case.`,`The Thermaltake tower is a full ATX mid-tower with seven expansion slots, so it takes ATX or mATX without modification. The 600 W supply, the stock cooler, the GPU and the drives all carry straight over.`]);
+    if(bd.fan) iss.push(["warn","X570 has a chipset fan.",`Small, high-pitched, and a known wear item on nine-year-old-adjacent used boards. Unless you specifically need the extra PCIe 4.0 lanes, B550 does the same job silently for less.`]);
+  }
 
   // --- CPU ---
   if(cpu.socket==="AM5"){
     iss.push(["bad","Wrong socket.",`${cpu.label.split(" \u2014")[0]} is AM5. It will not enter an AM4 board \u2014 and AM5 needs DDR5 and a new board too. Board, CPU and RAM move together or none of them do.`]);
     flag("cpu","bad");
   } else if(cpu.gen===3){
-    iss.push(["warn","Flash the BIOS first.",`A Zen 3 chip needs BIOS 5862 or newer, and you must flash it <b>while the Ryzen 1400 is still installed</b>. Out of order, the machine won't POST until you borrow the old CPU back.`]);
-    flag("cpu","warn");
+    if(bd.v==="a320mk"){
+      iss.push(["warn","Flash the BIOS first.",`On the A320M-K a Zen 3 chip needs BIOS 5862 or newer, and you must flash it <b>while the Ryzen 1400 is still installed</b>. Out of order, the machine won't POST until you borrow the old CPU back.`]);
+      flag("cpu","warn");
+    } else if(bd.pcie===4){
+      iss.push(["ok","No BIOS dance needed.",`B550 and X570 boards shipped Zen 3-ready. The flash-first trap that the A320M-K sets simply does not exist here \u2014 one more reason a board swap and a CPU swap belong in the same order.`]);
+    } else {
+      iss.push(["warn","Check the seller's BIOS version.",`B450 needs a 2021-or-later BIOS for Zen 3. Most used boards already have it, but ask before you buy \u2014 and if it is old, flash it with the 1400 still installed.`]);
+      flag("cpu","warn");
+    }
     if(cpu.hot105){
-      iss.push(["bad","105 W on an A320 VRM.",`It will physically fit, but the A320M-K's small unheatsinked VRM is not built to feed a 105 W part, and A320 cannot overclock to recover the loss. Stay at 65 W: the 5600 or 5700X.`]);
-      flag("cpu","bad");
+      if(bd.vrm==="weak"){
+        iss.push(["bad","105 W on an A320 VRM.",`It will physically fit, but the A320M-K's small unheatsinked VRM is not built to feed a 105 W part, and A320 cannot overclock to recover the loss. Stay at 65 W \u2014 or change the board, which is exactly what this slot is for.`]);
+        flag("cpu","bad");
+      } else if(bd.vrm==="ok"){
+        iss.push(["warn","105 W on an entry B450 VRM.",`Workable, but budget mATX B450 boards throttle a 105 W chip under sustained load. A Tomahawk-class B450 or any B550 handles it properly.`]);
+        flag("cpu","warn");
+      } else {
+        iss.push(["ok","VRM can feed it.",`This board's power stages are built for 105 W parts. The 5800X3D in particular is the fastest gaming CPU AM4 ever shipped.`]);
+      }
     }
     if(cpu.cut) iss.push(["warn","5500 is the cut-down one.",`Half the L3 cache of a 5600 and no PCIe 4.0. For about $40 more the 5600 is the better buy.`]);
   }
@@ -401,11 +461,17 @@ function evaluate(){
   if(ram.ddr5){
     iss.push(["bad","DDR5 does not fit DDR4.",`Different notch, different socket, different board. This is the single hardest wall on the machine \u2014 it is what makes AM5 a full rebuild rather than a swap.`]);
     flag("ram","bad");
-  } else if(ram.gb>32){
-    iss.push(["bad","Over the board's 32 GB ceiling.",`The A320M-K addresses a maximum of 32 GB across its two slots. A 64 GB kit will not run here.`]);
+  } else if(ram.sticks>bd.dimm){
+    iss.push(["bad",`Needs ${ram.sticks} slots; this board has ${bd.dimm}.`,`${bd.stock?"The A320M-K has only two DIMM slots \u2014 this is the single hardest ceiling on your current board.":"Pick a four-slot board or a two-stick kit."} A four-slot B450 or B550 unlocks it.`]);
+    flag("ram","bad");
+  } else if(ram.gb>bd.maxRam){
+    iss.push(["bad",`Over this board's ${bd.maxRam} GB ceiling.`,`It will not address that much memory.`]);
     flag("ram","bad");
   } else {
-    if(ram.gb===32){
+    if(ram.mixed){
+      iss.push(["ok","The cheap route, and the shortage makes it the smart one.",`Four slots means you keep the GeIL pair and add two more 8 GB sticks instead of throwing $220 at a 2 \u00d7 16 kit. Mixed kits run at the slower stick's timings \u2014 here that is 2400 \u2014 but 32 GB at 2400 beats 16 GB at 3200 every time you open the third app.`]);
+    }
+    if(ram.gb===32 && ram.sticks===2 && bd.dimm===2){
       iss.push(["warn","Both sticks come out.",`Only two DIMM slots, and both are full. 32 GB means removing the GeIL pair and selling or shelving it \u2014 you cannot add to what is there.`]);
       flag("ram","warn");
     }
@@ -422,15 +488,26 @@ function evaluate(){
     iss.push(["bad","The freeze lives here.",`A 7200 rpm platter services roughly 100\u2013150 random operations per second. When RAM fills and Windows pages to it, the whole desktop blocks on a physically moving arm. That is the multi-second lock-up.`]);
     flag("ssd","warn"); chipText.ssd="Bottleneck";
   } else {
-    if(ssd.capped) iss.push(["warn","Gen4 runs at Gen3 speed.",`The M.2 slot is PCIe 3.0 \u00d74. A Gen4 drive works perfectly, it just cannot exceed ~3.5 GB/s. Not worth paying extra for \u2014 but still 20\u00d7 the HDD.`]);
+    if(ssd.capped && Math.min(bd.m2gen, cpu.pcie||3)===3)
+      iss.push(["warn","Gen4 runs at Gen3 speed.",`This M.2 link is PCIe 3.0 \u00d74. A Gen4 drive works perfectly, it just cannot exceed ~3.5 GB/s. Not worth paying extra for \u2014 but still 20\u00d7 the HDD.`]);
+    else if(ssd.capped)
+      iss.push(["ok","Gen4 runs at full speed.",`Board and CPU both do PCIe 4.0, so this drive gets its full ~7 GB/s. Honestly invisible next to the jump from a platter, but you are not paying for nothing.`]);
+    if(newBoard && bd.m2>1)
+      iss.push(["ok",`${bd.m2} M.2 slots.`,`Room for this drive and a second one later, without touching the SATA ports \u2014 and no pulling the graphics card to reach it.`]);
     if(ssd.v==="sata") iss.push(["warn","SATA is the fallback.",`Fine, and still transformative next to the platter \u2014 but the M.2 slot is free and NVMe costs about the same. Use SATA only if the M.2 turns out to be occupied.`]);
     iss.push(["ok","Keep the HDD.",`It stays installed as the archive drive. You are adding a boot drive, not removing storage.`]);
   }
 
   // --- GPU / lanes ---
-  if(gpu.narrow){
-    iss.push(["warn","PCIe 3.0 tax.",`This card talks over a PCIe 5.0 <b>\u00d78</b> link. In a 3.0 slot that negotiates down to 3.0 \u00d78 \u2014 roughly a quarter of its designed bandwidth. The 16 GB version limits the damage; a used 4.0 \u00d716 card avoids it entirely.`]);
+  if(gpu.narrow && effPcie===3){
+    iss.push(["warn","PCIe 3.0 tax.",`This card talks over a PCIe 5.0 <b>\u00d78</b> link. At 3.0 that negotiates down to 3.0 \u00d78 \u2014 roughly a quarter of its designed bandwidth. The 16 GB version limits the damage; a used 4.0 \u00d716 card avoids it entirely.`]);
     flag("gpu","warn");
+  } else if(gpu.narrow && effPcie===4){
+    iss.push(["ok","PCIe 4.0 \u00d78 is enough.",`On this board and CPU the \u00d78 link runs at 4.0, which carries the same bandwidth as 3.0 \u00d716. The narrow-link penalty disappears.`]);
+  }
+  if(bd.pcie===4 && (cpu.pcie||3)===3 && !cpu.socket){
+    iss.push(["warn","You bought PCIe 4.0 and the CPU cannot use it.",`${cpu.gen===1?"The Ryzen 1400":"The 5500"} tops out at PCIe 3.0, so this board's headline feature sits idle. ${cpu.gen===1?"":"For about $40 more the 5600 unlocks 4.0 on both the slot and the M.2."}`]);
+    flag("cpu","warn");
   }
   if(gpu.weak){ chipText.gpu = chipText.gpu || "Weak"; }
   if(gpu.weak) iss.push(["warn","4 GB will not hold modern textures.",`Fine for the desktop, and irrelevant to the freezing \u2014 but it is why current games refuse to launch or crawl.`]);
@@ -452,6 +529,8 @@ function evaluate(){
   }
   if(gpu.big) { iss.push(["warn","Two 8-pin connectors.",`The Smart 600 W has 2\u00d7 6+2, so it physically connects \u2014 but a 300 W card on a 2017 group-regulated unit is asking for a shutdown under load.`]); flag("gpu","warn"); }
   if(!psu.stock) iss.push(["ok","Modern supply.",`Independent regulation and a real warranty. No performance change \u2014 this is a reliability line item.`]);
+
+  if(newBoard && bd.oc) iss.push(["ok","Memory and CPU overclocking unlocked.",`A320 permits neither. Any B450 or B550 lets you actually run rated memory speeds and tune the CPU \u2014 free performance the current board withholds.`]);
 
   // --- Windows 11 ---
   const win11 = cpu.gen>=3 && cpu.socket!=="AM5";
@@ -513,7 +592,8 @@ function paint(){
       : sev==="warn" ? "Check"
       : o.stock ? "Stock" : "Fits";
     $("cost-"+s.id).textContent = o.cost? "$"+o.cost : (o.stock?"\u2014":"free");
-    const notes={cpu:o.socket||"AM4", ram:o.gb+" GB \u00b7 "+o.mhz,
+    const notes={board:o.dimm+" DIMM \u00b7 "+o.m2+"\u00d7 M.2 \u00b7 PCIe "+o.pcie+".0"+(o.zen1?"":" \u00b7 no Zen 1"),
+      cpu:o.socket||"AM4", ram:o.gb+" GB \u00b7 "+o.mhz,
       ssd:o.stock?"7200 rpm \u00b7 ~150 IOPS":o.v==="sata"?"SATA 6Gb/s":"M.2 2280 \u00b7 PCIe 3.0 \u00d74",
       gpu:o.lanes||"PCIe 3.0 \u00d716", psu:o.cap+" W"};
     $("note-"+s.id).textContent = notes[s.id]||"";
@@ -545,6 +625,15 @@ function paint(){
   const sc=$("statechip");
   sc.textContent = r.blocked?"Won't build" : changed?"Modified":"Stock";
   sc.className = "chip "+(r.blocked?"bad":changed?"ok":"flat");
+
+  const bd=get("board"), cp=get("cpu");
+  const eff=Math.min(bd.pcie, cp.pcie||3);
+  $("p-board").textContent = bd.stock?"A320M-K":bd.label.replace(/ \u2014.*/,"").replace("Used ","");
+  $("p-dimm").textContent  = bd.dimm+" slots \u00b7 "+bd.maxRam+" GB max";
+  $("p-m2").textContent    = bd.m2+" \u00d7 2280 \u00b7 Gen"+Math.min(bd.m2gen, cp.pcie||3);
+  $("p-pcie").textContent  = eff+".0 \u00d716"+(eff<bd.pcie?" (CPU-limited)":"");
+  $("p-oc").textContent    = bd.oc?"Unlocked":"Locked";
+  $("plate").style.borderColor = bd.stock?"":"var(--copper)";
 
   paintHotspots();
   if(window.__three) window.__three.highlight(focus);
@@ -632,7 +721,7 @@ document.querySelectorAll(".presets button").forEach(b=>{
   const edges=new THREE.LineSegments(new THREE.EdgesGeometry(shell.geometry),
     new THREE.LineBasicMaterial({color:0x8d968f})); edges.position.copy(shell.position); root.add(edges);
 
-  mk(5.4,.14,4.6, -.25,-.3,0, 0x1f4d33);            // motherboard
+  mk(5.4,.14,4.6, -.25,-.3,0, 0x1f4d33,"mobo");     // motherboard
   mk(.95,.95,.95, -1.5,.35,.5, 0x9aa0a4,"cpu");     // cpu cooler
   mk(.22,2.0,.5,   .55,.75,.5, 0xb0392f,"ram");     // dimm A1
   const ram2=mk(.22,2.0,.5, .95,.75,.5, 0xb0392f);  // dimm B1
