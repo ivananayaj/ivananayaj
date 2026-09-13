@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Rig File",
+      "hasCanvas": false,
+      "bodyTextLen": 15702,
+      "bodyTextHash": "3c6dd4e7dde49345fe9913b95d20d75d2bd5445af3dc37e5451e5609ae495187",
+      "bodyTextPrefix": "RIG FILE Captured 12 September 2026 Desktop-94 Nine years on the",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Rig File",
+      "hasCanvas": false,
+      "bodyTextLen": 15702,
+      "bodyTextHash": "3c6dd4e7dde49345fe9913b95d20d75d2bd5445af3dc37e5451e5609ae495187",
+      "bodyTextPrefix": "RIG FILE Captured 12 September 2026 Desktop-94 Nine years on the",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}
