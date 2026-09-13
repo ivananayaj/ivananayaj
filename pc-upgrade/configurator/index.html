@@ -1,0 +1,674 @@
+<title>Desktop-94 Parts Bench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+:root{
+  --paper:#EDEDE8; --surface:#F7F7F4; --sunk:#E3E3DD; --line:#CFCFC7;
+  --ink:#1C1F1D; --muted:#5E635F; --faint:#868C87;
+  --copper:#B0632F; --copper-soft:#B0632F1A;
+  --ok:#3F7248; --ok-soft:#3F72481F;
+  --warn:#8F6414; --warn-soft:#8F64141F;
+  --bad:#9C3C33; --bad-soft:#9C3C331F;
+  --shadow:0 1px 2px rgba(28,31,29,.06), 0 4px 14px rgba(28,31,29,.05);
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#14181A; --surface:#1C2124; --sunk:#101315; --line:#2E3538;
+    --ink:#E8EAE7; --muted:#9AA29D; --faint:#727A76;
+    --copper:#DF8B50; --copper-soft:#DF8B5024;
+    --ok:#71B079; --ok-soft:#71B07926;
+    --warn:#D8A64C; --warn-soft:#D8A64C26;
+    --bad:#DE7267; --bad-soft:#DE726726;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.28);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#14181A; --surface:#1C2124; --sunk:#101315; --line:#2E3538;
+  --ink:#E8EAE7; --muted:#9AA29D; --faint:#727A76;
+  --copper:#DF8B50; --copper-soft:#DF8B5024;
+  --ok:#71B079; --ok-soft:#71B07926;
+  --warn:#D8A64C; --warn-soft:#D8A64C26;
+  --bad:#DE7267; --bad-soft:#DE726726;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.28);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1240px; margin:0 auto; padding-inline:16px; padding-block:0}
+h1,h2,h3{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif; text-wrap:balance; margin:0}
+h1{font-size:clamp(30px,5.2vw,46px); font-weight:700; letter-spacing:-.015em; line-height:1.05}
+h2{font-size:20px; font-weight:700; letter-spacing:-.005em}
+h3{font-size:15px; font-weight:600}
+p{margin:0}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; font-weight:500;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--faint);
+}
+
+/* ---------- header ---------- */
+header{border-bottom:1px solid var(--line); background:var(--surface)}
+.head{display:flex; flex-wrap:wrap; gap:20px; justify-content:space-between; align-items:flex-end; padding-block:26px 22px}
+.head p.lede{max-width:56ch; color:var(--muted); margin-top:9px; font-size:14.5px}
+.idplate{
+  font-family:"IBM Plex Mono",monospace; font-size:11.5px; line-height:1.7;
+  border:1px solid var(--line); border-radius:var(--r); padding:11px 14px;
+  background:var(--paper); color:var(--muted); min-width:210px;
+}
+.idplate b{color:var(--ink); font-weight:500}
+.idplate .row{display:flex; justify-content:space-between; gap:18px}
+
+/* ---------- layout ---------- */
+.bench{display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:20px; padding-block:22px}
+.bench > section:first-child{align-self:start; position:sticky; top:16px}
+@media (max-width:940px){ .bench{grid-template-columns:1fr} .bench > section:first-child{position:static} }
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow)}
+.panel-hd{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; padding:13px 15px; border-bottom:1px solid var(--line)}
+
+/* ---------- view toggle ---------- */
+.seg{display:flex; gap:2px; background:var(--sunk); border-radius:7px; padding:2px}
+.seg button{
+  font:500 12px/1 "IBM Plex Mono",monospace; letter-spacing:.06em; text-transform:uppercase;
+  padding:7px 11px; border:0; border-radius:5px; background:transparent; color:var(--muted); cursor:pointer;
+}
+.seg button[aria-pressed="true"]{background:var(--surface); color:var(--ink); box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.seg button:focus-visible{outline:2px solid var(--copper); outline-offset:1px}
+
+/* ---------- photo stage ---------- */
+.stage{position:relative; background:var(--sunk); border-radius:0 0 var(--r) var(--r); overflow:hidden}
+.shot{position:relative; display:none}
+.shot.on{display:block}
+.shot img{display:block; width:100%; max-width:100%; height:auto}
+.hot{
+  position:absolute; transform:translate(-50%,-50%);
+  width:26px; height:26px; border-radius:50%; cursor:pointer; padding:0;
+  border:1.5px solid #fff; background:rgba(20,24,26,.55);
+  box-shadow:0 0 0 1.5px rgba(20,24,26,.65), 0 2px 8px rgba(0,0,0,.4);
+  color:#fff; font:600 10px/1 "IBM Plex Mono",monospace; backdrop-filter:blur(2px);
+  display:grid; place-items:center; transition:transform .12s ease, background .12s ease;
+}
+.hot:hover{transform:translate(-50%,-50%) scale(1.14)}
+.hot:focus-visible{outline:2px solid var(--copper); outline-offset:2px}
+.hot[data-on="1"]{background:var(--copper); border-color:#fff; transform:translate(-50%,-50%) scale(1.2)}
+.hot .lbl{
+  position:absolute; left:32px; top:50%; transform:translateY(-50%);
+  white-space:nowrap; font:500 10.5px/1 "IBM Plex Mono",monospace; letter-spacing:.05em;
+  background:rgba(20,24,26,.82); color:#fff; padding:4px 7px; border-radius:4px;
+  opacity:0; pointer-events:none; transition:opacity .12s ease;
+}
+.hot:hover .lbl,.hot[data-on="1"] .lbl{opacity:1}
+.hot.flip .lbl{left:auto; right:32px}
+.stagefoot{padding:9px 14px; font-size:12.5px; color:var(--faint); border-top:1px solid var(--line); background:var(--surface)}
+#three{display:none; width:100%; aspect-ratio:1.32; background:var(--sunk); touch-action:none; cursor:grab}
+#three.on{display:block}
+#three:active{cursor:grabbing}
+
+/* ---------- slot rail ---------- */
+.rail{display:flex; flex-direction:column; gap:9px; padding:14px}
+.slot{border:1px solid var(--line); border-radius:8px; background:var(--paper); overflow:hidden}
+.slot[data-on="1"]{border-color:var(--copper); box-shadow:0 0 0 2px var(--copper-soft)}
+.slot-hd{display:flex; gap:11px; align-items:baseline; padding:10px 12px 8px; cursor:pointer}
+.slot-hd:focus-visible{outline:2px solid var(--copper); outline-offset:-2px}
+.desig{font:500 11px/1.4 "IBM Plex Mono",monospace; color:var(--copper); letter-spacing:.04em; flex:none}
+.slot-hd h3{flex:1; min-width:0}
+.slot-body{padding:0 12px 11px}
+select{
+  width:100%; font:400 13.5px/1.3 "IBM Plex Sans",sans-serif; color:var(--ink);
+  background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:8px 9px;
+}
+select:focus-visible{outline:2px solid var(--copper); outline-offset:1px}
+.slotmeta{display:flex; flex-wrap:wrap; gap:6px 12px; margin-top:8px; font-size:12.5px; color:var(--muted)}
+.slotmeta .cost{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; color:var(--ink)}
+
+/* ---------- verdict chips ---------- */
+.chip{
+  display:inline-flex; align-items:center; gap:5px; flex:none;
+  font:500 10.5px/1 "IBM Plex Mono",monospace; letter-spacing:.05em; text-transform:uppercase;
+  padding:4px 7px; border-radius:4px;
+}
+.chip.ok{background:var(--ok-soft); color:var(--ok)}
+.chip.warn{background:var(--warn-soft); color:var(--warn)}
+.chip.bad{background:var(--bad-soft); color:var(--bad)}
+.chip.flat{background:var(--sunk); color:var(--muted)}
+
+/* ---------- issues ---------- */
+.issues{display:flex; flex-direction:column; gap:7px; padding:14px; border-top:1px solid var(--line)}
+.iss{display:flex; gap:10px; align-items:flex-start; font-size:13.5px; line-height:1.5}
+.iss .bar{width:3px; align-self:stretch; border-radius:2px; flex:none}
+.iss.bad .bar{background:var(--bad)} .iss.warn .bar{background:var(--warn)} .iss.ok .bar{background:var(--ok)}
+.iss b{font-weight:600}
+.iss .t{color:var(--muted)}
+.iss .t b{color:var(--ink)}
+
+/* ---------- meters ---------- */
+.meters{display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:14px; border-top:1px solid var(--line)}
+@media (max-width:520px){ .meters{grid-template-columns:1fr} }
+.meter .top{display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:6px}
+.meter .n{font:600 19px/1 "IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+.track{height:7px; background:var(--sunk); border-radius:4px; overflow:hidden; position:relative}
+.fill{height:100%; border-radius:4px; transition:width .3s ease, background .3s ease}
+.tick{position:absolute; top:-2px; bottom:-2px; width:1.5px; background:var(--ink); opacity:.42}
+.meter .sub{font-size:12px; color:var(--faint); margin-top:5px}
+
+/* ---------- totals ---------- */
+.totals{display:flex; flex-wrap:wrap; gap:10px 22px; align-items:baseline; padding:13px 15px; border-top:1px solid var(--line); background:var(--paper); border-radius:0 0 var(--r) var(--r)}
+.totals .big{font:600 24px/1 "IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+.totals .sub{font-size:12.5px; color:var(--muted)}
+.reset{margin-left:auto; font:500 12px/1 "IBM Plex Mono",monospace; letter-spacing:.05em; text-transform:uppercase;
+  background:transparent; border:1px solid var(--line); border-radius:6px; padding:8px 11px; color:var(--muted); cursor:pointer}
+.reset:hover{color:var(--ink); border-color:var(--muted)}
+.reset:focus-visible{outline:2px solid var(--copper); outline-offset:1px}
+
+/* ---------- presets ---------- */
+.presets{display:flex; flex-wrap:wrap; gap:7px; padding:0 15px 15px}
+.presets button{
+  font:500 12px/1 "IBM Plex Mono",monospace; letter-spacing:.04em;
+  padding:8px 11px; border:1px solid var(--line); border-radius:6px;
+  background:var(--surface); color:var(--muted); cursor:pointer;
+}
+.presets button:hover{border-color:var(--copper); color:var(--copper)}
+.presets button:focus-visible{outline:2px solid var(--copper); outline-offset:1px}
+
+/* ---------- notes ---------- */
+.notes{padding-block:8px 40px}
+.notegrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px; margin-top:14px}
+.note{border-top:2px solid var(--line); padding-top:11px}
+.note h3{margin-bottom:5px}
+.note p{font-size:13.5px; color:var(--muted)}
+.note.key{border-top-color:var(--copper)}
+.foot{border-top:1px solid var(--line); padding-block:16px 34px; font-size:12.5px; color:var(--faint)}
+.foot a{color:var(--muted)}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important} }
+</style>
+
+<header>
+  <div class="wrap head">
+    <div>
+      <p class="eyebrow">Desktop-94 &middot; ASUS PRIME A320M-K &middot; Socket AM4</p>
+      <h1>What actually fits in this box.</h1>
+      <p class="lede">Every part below swaps on its own. Change one, and the slot rules, the power budget
+        and the freeze risk all recompute against <em>your</em> board &mdash; two DIMM slots, one M.2,
+        PCIe&nbsp;3.0, and a nine-year-old 600&nbsp;W supply.</p>
+    </div>
+    <div class="idplate">
+      <div class="row"><span>SOCKET</span><b>AM4 / mATX</b></div>
+      <div class="row"><span>DIMM</span><b>2 slots &middot; 32 GB max</b></div>
+      <div class="row"><span>M.2</span><b>1 &times; 2280 PCIe 3.0 &times;4</b></div>
+      <div class="row"><span>PCIE</span><b>3.0 &times;16</b></div>
+      <div class="row"><span>PSU</span><b>600 W &middot; 2&times; 6+2</b></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="bench">
+
+    <!-- VISUAL -->
+    <section class="panel" aria-label="Your machine">
+      <div class="panel-hd">
+        <div>
+          <p class="eyebrow">Your machine</p>
+          <h2 id="stagetitle">Board &amp; slots</h2>
+        </div>
+        <div class="seg" role="group" aria-label="View">
+          <button id="v-board" aria-pressed="true">Board</button>
+          <button id="v-case" aria-pressed="false">Case</button>
+          <button id="v-3d" aria-pressed="false">3D</button>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="shot on" id="shot-board"><img src="rig/board-wide.jpg" alt="Motherboard, RAM slots, CPU cooler and graphics card inside the case"></div>
+        <div class="shot" id="shot-case"><img src="rig/overview.jpg" alt="Full case interior showing power supply, drive cages and fans"></div>
+        <canvas id="three"></canvas>
+      </div>
+      <p class="stagefoot" id="stagefoot">Tap a marker to jump to that slot. Labels are the board&rsquo;s own silkscreen designations.</p>
+    </section>
+
+    <!-- CONFIGURATOR -->
+    <section class="panel" aria-label="Parts">
+      <div class="panel-hd">
+        <div>
+          <p class="eyebrow">Swap parts</p>
+          <h2>Slot by slot</h2>
+        </div>
+        <span class="chip flat" id="statechip">Stock</span>
+      </div>
+      <div class="rail" id="rail"></div>
+      <div class="issues" id="issues"></div>
+      <div class="meters">
+        <div class="meter">
+          <div class="top"><span class="eyebrow">Power draw</span><span class="n" id="wnum">&mdash;</span></div>
+          <div class="track"><div class="fill" id="wfill"></div><div class="tick" id="wtick" title="Derated safe ceiling"></div></div>
+          <p class="sub" id="wsub"></p>
+        </div>
+        <div class="meter">
+          <div class="top"><span class="eyebrow">Freeze risk</span><span class="n" id="fnum">&mdash;</span></div>
+          <div class="track"><div class="fill" id="ffill"></div></div>
+          <p class="sub" id="fsub"></p>
+        </div>
+      </div>
+      <div class="totals">
+        <div>
+          <div class="big" id="cost">$0</div>
+          <p class="sub">to buy, at Sept 2026 prices</p>
+        </div>
+        <div>
+          <div class="big" id="win11">&mdash;</div>
+          <p class="sub">Windows 11</p>
+        </div>
+        <button class="reset" id="reset">Back to stock</button>
+      </div>
+      <div class="presets">
+        <button data-preset="cheap">$125 &mdash; kill the freezing</button>
+        <button data-preset="sweet">$260 &mdash; + supported OS</button>
+        <button data-preset="full">Everything</button>
+        <button data-preset="wrong">The mistake most people make</button>
+      </div>
+    </section>
+  </div>
+
+  <section class="notes">
+    <p class="eyebrow">Traps this board sets</p>
+    <div class="notegrid">
+      <div class="note key">
+        <h3>BIOS before CPU, always</h3>
+        <p>Flash to 5862 or newer <em>while the Ryzen 1400 is still in the socket</em>. A 2017 BIOS
+          won&rsquo;t POST with a Zen 3 chip, and you need a working CPU to run the update.</p>
+      </div>
+      <div class="note">
+        <h3>Two slots means replace, not add</h3>
+        <p>Both DIMM slots are already full with 8 GB sticks. Going to 32 GB means the GeIL pair comes
+          out. There is no adding a stick, and 32 GB is the board&rsquo;s hard ceiling.</p>
+      </div>
+      <div class="note">
+        <h3>The M.2 hides under the graphics card</h3>
+        <p>Pull the GPU to reach <code>M.2_1</code>, then put it back. Ten extra minutes, no extra parts.</p>
+      </div>
+      <div class="note">
+        <h3>PCIe 3.0 taxes new cards</h3>
+        <p>A 9060 XT or 5060 Ti uses a PCIe 5.0 <em>&times;8</em> link, which drops to 3.0 &times;8 here.
+          Used 6700 XT and 3060 cards are 4.0 &times;16 and lose nothing.</p>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">
+    Board model inferred from silkscreen and rear I/O &mdash; confirm with
+    <code>Get-CimInstance Win32_BaseBoard</code> before buying a CPU. Prices are Sept&nbsp;2026 bands,
+    not live listings; check <a href="https://pcpartpicker.com/" target="_blank" rel="noreferrer noopener">PCPartPicker</a> before you spend.
+  </p>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+
+/* ============ catalog ============ */
+const SLOTS = [
+  { id:"cpu",  desig:"AM4",       name:"Processor",     hot:{board:[46,36]}, three:"cpu" },
+  { id:"ram",  desig:"DIMM_A1/B1",name:"Memory",        hot:{board:[58,34]}, three:"ram" },
+  { id:"ssd",  desig:"M.2_1",     name:"Boot drive",    hot:{board:[35,78]}, three:"m2"  },
+  { id:"gpu",  desig:"PCIEX16",   name:"Graphics card", hot:{board:[40,67]}, three:"gpu" },
+  { id:"psu",  desig:"ATX PSU",   name:"Power supply",  hot:{case:[21,62]},  three:"psu" },
+];
+
+const P = {
+  cpu:[
+    {v:"1400",  label:"Ryzen 5 1400 \u2014 4C/8T (installed)", cost:0,   w:65,  gen:1, stock:true},
+    {v:"5500",  label:"Ryzen 5 5500 \u2014 6C/12T, 65 W",      cost:95,  w:65,  gen:3, cut:true},
+    {v:"5600",  label:"Ryzen 5 5600 \u2014 6C/12T, 65 W",      cost:135, w:76,  gen:3},
+    {v:"5700x", label:"Ryzen 7 5700X \u2014 8C/16T, 65 W",     cost:175, w:88,  gen:3},
+    {v:"5800x3d",label:"Ryzen 7 5800X3D \u2014 105 W",         cost:230, w:120, gen:3, hot105:true},
+    {v:"5900x", label:"Ryzen 9 5900X \u2014 12C, 105 W",       cost:250, w:142, gen:3, hot105:true},
+    {v:"7600",  label:"Ryzen 5 7600 \u2014 AM5",               cost:200, w:88,  gen:5, socket:"AM5"},
+  ],
+  ram:[
+    {v:"2x8-2400", label:"2 \u00d7 8 GB DDR4-2400 (installed, running 2133)", cost:0, gb:16, mhz:2133, stock:true},
+    {v:"2x8-docp", label:"2 \u00d7 8 GB DDR4-2400 \u2014 DOCP enabled",            cost:0, gb:16, mhz:2400, free:true},
+    {v:"2x16-3200",label:"2 \u00d7 16 GB DDR4-3200",                          cost:220,gb:32, mhz:3200},
+    {v:"2x16-3600",label:"2 \u00d7 16 GB DDR4-3600",                          cost:250,gb:32, mhz:3600, fast:true},
+    {v:"2x32-3200",label:"2 \u00d7 32 GB DDR4-3200 \u2014 64 GB",                  cost:430,gb:64, mhz:3200},
+    {v:"ddr5",     label:"2 \u00d7 16 GB DDR5-6000",                          cost:300,gb:32, mhz:6000, ddr5:true},
+  ],
+  ssd:[
+    {v:"hdd",   label:"WD Blue 1 TB HDD only (installed)", cost:0,  stock:true, slow:true},
+    {v:"sata",  label:"+ 1 TB 2.5\" SATA SSD",             cost:95},
+    {v:"g3",    label:"+ 1 TB M.2 NVMe, Gen3",             cost:110},
+    {v:"g4",    label:"+ 1 TB M.2 NVMe, Gen4",             cost:130, capped:true},
+    {v:"g4-2tb",label:"+ 2 TB M.2 NVMe, Gen4",             cost:230, capped:true},
+    {v:"22110", label:"+ M.2 22110 (110 mm) NVMe",         cost:140, tooLong:true},
+  ],
+  gpu:[
+    {v:"1050ti",label:"GTX 1050 Ti 4 GB (installed)", cost:0,  w:75,  stock:true, weak:true},
+    {v:"3060",  label:"Used RTX 3060 12 GB",          cost:250, w:170, lanes:"4.0 \u00d716"},
+    {v:"6700xt",label:"Used RX 6700 XT 12 GB",        cost:280, w:230, lanes:"4.0 \u00d716"},
+    {v:"9060xt",label:"RX 9060 XT 16 GB",             cost:475, w:160, lanes:"5.0 \u00d78", narrow:true},
+    {v:"5060ti",label:"RTX 5060 Ti 16 GB",            cost:470, w:180, lanes:"5.0 \u00d78", narrow:true},
+    {v:"9070xt",label:"RX 9070 XT 16 GB",             cost:750, w:304, lanes:"5.0 \u00d716", big:true},
+  ],
+  psu:[
+    {v:"tt600", label:"Thermaltake Smart 600 W (installed)", cost:0, cap:600, derate:.75, stock:true},
+    {v:"650g",  label:"650 W 80+ Gold, ATX 3.1",             cost:100, cap:650, derate:.95},
+    {v:"750g",  label:"750 W 80+ Gold, ATX 3.1",             cost:125, cap:750, derate:.95},
+  ],
+};
+
+const STOCK = {cpu:"1400", ram:"2x8-2400", ssd:"hdd", gpu:"1050ti", psu:"tt600"};
+const PRESETS = {
+  cheap: {cpu:"1400", ram:"2x8-docp", ssd:"g3",  gpu:"1050ti", psu:"tt600"},
+  sweet: {cpu:"5600", ram:"2x8-docp", ssd:"g3",  gpu:"1050ti", psu:"tt600"},
+  full:  {cpu:"5700x",ram:"2x16-3200",ssd:"g3",  gpu:"3060",   psu:"tt600"},
+  wrong: {cpu:"1400", ram:"2x8-2400", ssd:"hdd", gpu:"9060xt", psu:"tt600"},
+};
+
+let build = {...STOCK};
+let focus = null;
+let view = "board";
+
+const get = (slot) => P[slot].find(o => o.v === build[slot]);
+const $ = (id) => document.getElementById(id);
+
+/* ============ rules ============ */
+function evaluate(){
+  const cpu=get("cpu"), ram=get("ram"), ssd=get("ssd"), gpu=get("gpu"), psu=get("psu");
+  const iss=[]; const slotState={}; const chipText={};
+  const flag=(slot,sev)=>{ const rank={ok:0,warn:1,bad:2};
+    if(!slotState[slot] || rank[sev]>rank[slotState[slot]]) slotState[slot]=sev; };
+
+  // --- CPU ---
+  if(cpu.socket==="AM5"){
+    iss.push(["bad","Wrong socket.",`${cpu.label.split(" \u2014")[0]} is AM5. It will not enter an AM4 board \u2014 and AM5 needs DDR5 and a new board too. Board, CPU and RAM move together or none of them do.`]);
+    flag("cpu","bad");
+  } else if(cpu.gen===3){
+    iss.push(["warn","Flash the BIOS first.",`A Zen 3 chip needs BIOS 5862 or newer, and you must flash it <b>while the Ryzen 1400 is still installed</b>. Out of order, the machine won't POST until you borrow the old CPU back.`]);
+    flag("cpu","warn");
+    if(cpu.hot105){
+      iss.push(["bad","105 W on an A320 VRM.",`It will physically fit, but the A320M-K's small unheatsinked VRM is not built to feed a 105 W part, and A320 cannot overclock to recover the loss. Stay at 65 W: the 5600 or 5700X.`]);
+      flag("cpu","bad");
+    }
+    if(cpu.cut) iss.push(["warn","5500 is the cut-down one.",`Half the L3 cache of a 5600 and no PCIe 4.0. For about $40 more the 5600 is the better buy.`]);
+  }
+
+  // --- RAM ---
+  if(ram.ddr5){
+    iss.push(["bad","DDR5 does not fit DDR4.",`Different notch, different socket, different board. This is the single hardest wall on the machine \u2014 it is what makes AM5 a full rebuild rather than a swap.`]);
+    flag("ram","bad");
+  } else if(ram.gb>32){
+    iss.push(["bad","Over the board's 32 GB ceiling.",`The A320M-K addresses a maximum of 32 GB across its two slots. A 64 GB kit will not run here.`]);
+    flag("ram","bad");
+  } else {
+    if(ram.gb===32){
+      iss.push(["warn","Both sticks come out.",`Only two DIMM slots, and both are full. 32 GB means removing the GeIL pair and selling or shelving it \u2014 you cannot add to what is there.`]);
+      flag("ram","warn");
+    }
+    if(ram.fast) { iss.push(["warn","3600 is wasted here.",`A320 offers no guaranteed memory overclocking, and Zen 3 wants a 1:1 fabric ratio around 3200 anyway. You would pay more and run 3200.`]); flag("ram","warn"); }
+    if(ram.free) { iss.push(["ok","Free speed.",`DOCP is currently off, so 2400-rated sticks run at 2133. Five minutes in BIOS, no money.`]); }
+  }
+  if(cpu.gen===1 && ram.gb===32) iss.push(["warn","Zen 1 will not love this.",`32 GB helps, but the 1400's memory controller is the weakest part of first-gen Ryzen. Pair this with the CPU swap to get the benefit.`]);
+
+  // --- storage ---
+  if(ssd.tooLong){
+    iss.push(["bad","22110 is too long.",`The board's standoff is drilled for 2280 (80 mm). A 110 mm drive has nowhere to screw down. Buy 2280 \u2014 it is the common size anyway.`]);
+    flag("ssd","bad");
+  } else if(ssd.slow){
+    iss.push(["bad","The freeze lives here.",`A 7200 rpm platter services roughly 100\u2013150 random operations per second. When RAM fills and Windows pages to it, the whole desktop blocks on a physically moving arm. That is the multi-second lock-up.`]);
+    flag("ssd","warn"); chipText.ssd="Bottleneck";
+  } else {
+    if(ssd.capped) iss.push(["warn","Gen4 runs at Gen3 speed.",`The M.2 slot is PCIe 3.0 \u00d74. A Gen4 drive works perfectly, it just cannot exceed ~3.5 GB/s. Not worth paying extra for \u2014 but still 20\u00d7 the HDD.`]);
+    if(ssd.v==="sata") iss.push(["warn","SATA is the fallback.",`Fine, and still transformative next to the platter \u2014 but the M.2 slot is free and NVMe costs about the same. Use SATA only if the M.2 turns out to be occupied.`]);
+    iss.push(["ok","Keep the HDD.",`It stays installed as the archive drive. You are adding a boot drive, not removing storage.`]);
+  }
+
+  // --- GPU / lanes ---
+  if(gpu.narrow){
+    iss.push(["warn","PCIe 3.0 tax.",`This card talks over a PCIe 5.0 <b>\u00d78</b> link. In a 3.0 slot that negotiates down to 3.0 \u00d78 \u2014 roughly a quarter of its designed bandwidth. The 16 GB version limits the damage; a used 4.0 \u00d716 card avoids it entirely.`]);
+    flag("gpu","warn");
+  }
+  if(gpu.weak){ chipText.gpu = chipText.gpu || "Weak"; }
+  if(gpu.weak) iss.push(["warn","4 GB will not hold modern textures.",`Fine for the desktop, and irrelevant to the freezing \u2014 but it is why current games refuse to launch or crawl.`]);
+  if(cpu.gen===1 && !gpu.stock){
+    iss.push(["warn","The 1400 will bottleneck this card.",`Four 2017 cores cannot feed a modern GPU. You will see far less than the card is capable of until the CPU changes.`]);
+    flag("gpu","warn");
+  }
+
+  // --- power ---
+  const base=45;
+  const draw = base + cpu.w + gpu.w;
+  const safe = Math.round(psu.cap * psu.derate);
+  if(draw > safe){
+    iss.push(["bad","Past the supply's honest ceiling.",`${draw} W peak against about ${safe} W of dependable output. ${psu.stock?"This unit is a nine-year-old group-regulated budget design, so its 600 W label deserves a 25% haircut.":""} Either drop to a smaller card or move to a 750 W Gold unit.`]);
+    flag("psu","bad"); flag("gpu","bad");
+  } else if(draw > safe*0.85){
+    iss.push(["warn","Tight on power.",`${draw} W against ~${safe} W usable leaves little margin for transient spikes, which modern cards produce constantly.`]);
+    flag("psu","warn");
+  }
+  if(gpu.big) { iss.push(["warn","Two 8-pin connectors.",`The Smart 600 W has 2\u00d7 6+2, so it physically connects \u2014 but a 300 W card on a 2017 group-regulated unit is asking for a shutdown under load.`]); flag("gpu","warn"); }
+  if(!psu.stock) iss.push(["ok","Modern supply.",`Independent regulation and a real warranty. No performance change \u2014 this is a reliability line item.`]);
+
+  // --- Windows 11 ---
+  const win11 = cpu.gen>=3 && cpu.socket!=="AM5";
+  if(cpu.gen===1) iss.push(["bad","Windows 11 stays blocked.",`The Ryzen 1400 is Zen 1, and Microsoft's supported AMD list starts at Ryzen 2000. No BIOS setting fixes this \u2014 only the CPU does.`]);
+  else if(win11) iss.push(["ok","Windows 11 unlocked.",`This chip is on the supported list. Enable AMD fTPM and Secure Boot in BIOS, and clean-install onto the new drive so it lands on GPT.`]);
+
+  // --- freeze score ---
+  let risk=0;
+  if(ssd.slow) risk+=55;
+  else if(ssd.v==="sata") risk+=10;
+  if(ram.gb<32) risk+= (ssd.slow?30:16);
+  if(cpu.gen===1) risk+=15;
+  risk=Math.max(0,Math.min(100,risk));
+
+  const cost = Object.keys(build).reduce((s,k)=>s+get(k).cost,0);
+  const blocked = Object.values(slotState).some(v=>v==="bad");
+  return {iss, slotState, chipText, draw, safe, cost, risk, win11, blocked};
+}
+
+/* ============ render ============ */
+function renderRail(){
+  $("rail").innerHTML = SLOTS.map(s=>`
+    <div class="slot" id="slot-${s.id}" data-on="${focus===s.id?1:0}">
+      <div class="slot-hd" role="button" tabindex="0" data-slot="${s.id}">
+        <span class="desig">${s.desig}</span>
+        <h3>${s.name}</h3>
+        <span class="chip flat" id="chip-${s.id}"></span>
+      </div>
+      <div class="slot-body">
+        <label class="sr" for="sel-${s.id}" hidden>${s.name}</label>
+        <select id="sel-${s.id}" data-slot="${s.id}">
+          ${P[s.id].map(o=>`<option value="${o.v}"${build[s.id]===o.v?" selected":""}>${o.label}</option>`).join("")}
+        </select>
+        <div class="slotmeta">
+          <span class="cost" id="cost-${s.id}"></span>
+          <span id="note-${s.id}"></span>
+        </div>
+      </div>
+    </div>`).join("");
+
+  $("rail").querySelectorAll("select").forEach(el=>{
+    el.addEventListener("change", e=>{ build[e.target.dataset.slot]=e.target.value; setFocus(e.target.dataset.slot); paint(); });
+  });
+  $("rail").querySelectorAll(".slot-hd").forEach(el=>{
+    el.addEventListener("click", ()=>setFocus(el.dataset.slot));
+    el.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault(); setFocus(el.dataset.slot);} });
+  });
+}
+
+function paint(){
+  const r = evaluate();
+
+  SLOTS.forEach(s=>{
+    const o=get(s.id), sev=r.slotState[s.id]||"ok";
+    const chip=$("chip-"+s.id);
+    chip.className="chip "+(sev==="bad"?"bad":sev==="warn"?"warn":"ok");
+    chip.textContent = r.chipText[s.id] ? r.chipText[s.id]
+      : sev==="bad" ? "Won't fit"
+      : sev==="warn" ? "Check"
+      : o.stock ? "Stock" : "Fits";
+    $("cost-"+s.id).textContent = o.cost? "$"+o.cost : (o.stock?"\u2014":"free");
+    const notes={cpu:o.socket||"AM4", ram:o.gb+" GB \u00b7 "+o.mhz,
+      ssd:o.stock?"7200 rpm \u00b7 ~150 IOPS":o.v==="sata"?"SATA 6Gb/s":"M.2 2280 \u00b7 PCIe 3.0 \u00d74",
+      gpu:o.lanes||"PCIe 3.0 \u00d716", psu:o.cap+" W"};
+    $("note-"+s.id).textContent = notes[s.id]||"";
+    $("slot-"+s.id).dataset.on = focus===s.id?1:0;
+  });
+
+  $("issues").innerHTML = r.iss.map(([sev,head,body])=>
+    `<div class="iss ${sev}"><span class="bar"></span><span class="t"><b>${head}</b> ${body}</span></div>`).join("");
+
+  const pct=Math.min(100, r.draw/r.safe*100);
+  $("wnum").textContent = r.draw+" W";
+  $("wfill").style.width = pct+"%";
+  $("wfill").style.background = r.draw>r.safe?"var(--bad)":r.draw>r.safe*.85?"var(--warn)":"var(--ok)";
+  $("wtick").style.left = "100%";
+  $("wsub").textContent = `Peak draw against ~${r.safe} W of dependable output from the ${get("psu").cap} W unit.`;
+
+  $("fnum").textContent = r.risk;
+  $("ffill").style.width = Math.max(3,r.risk)+"%";
+  $("ffill").style.background = r.risk>50?"var(--bad)":r.risk>20?"var(--warn)":"var(--ok)";
+  $("fsub").textContent = r.risk>50?"Still locks up under three tasks."
+    : r.risk>20?"Much better. Occasional slowdown, no hard stalls."
+    : "Paging is no longer painful. This is the goal.";
+
+  $("cost").textContent = "$"+r.cost;
+  $("win11").textContent = r.win11?"Eligible":"Blocked";
+  $("win11").style.color = r.win11?"var(--ok)":"var(--bad)";
+
+  const changed = Object.keys(build).some(k=>build[k]!==STOCK[k]);
+  const sc=$("statechip");
+  sc.textContent = r.blocked?"Won't build" : changed?"Modified":"Stock";
+  sc.className = "chip "+(r.blocked?"bad":changed?"ok":"flat");
+
+  paintHotspots();
+  if(window.__three) window.__three.highlight(focus);
+}
+
+/* ============ hotspots ============ */
+function paintHotspots(){
+  ["board","case"].forEach(which=>{
+    const host=$("shot-"+which);
+    host.querySelectorAll(".hot").forEach(n=>n.remove());
+    SLOTS.filter(s=>s.hot[which]).forEach(s=>{
+      const [x,y]=s.hot[which];
+      const b=document.createElement("button");
+      b.className="hot"+(x>62?" flip":"");
+      b.style.left=x+"%"; b.style.top=y+"%";
+      b.dataset.on = focus===s.id?1:0;
+      b.setAttribute("aria-label",s.name+" \u2014 "+s.desig);
+      b.innerHTML=`<span aria-hidden="true">${s.desig[0]}</span><span class="lbl">${s.desig}</span>`;
+      b.addEventListener("click",()=>{ setFocus(s.id); $("sel-"+s.id).focus(); });
+      host.appendChild(b);
+    });
+  });
+}
+
+function setFocus(id){
+  focus = (focus===id ? null : id);
+  const s = SLOTS.find(x=>x.id===focus);
+  if(s){
+    if(s.hot.case && !s.hot.board && view!=="3d") setView("case");
+    else if(s.hot.board && view==="case") setView("board");
+  }
+  paint();
+}
+
+/* ============ view switch ============ */
+function setView(v){
+  view=v;
+  $("shot-board").classList.toggle("on", v==="board");
+  $("shot-case").classList.toggle("on", v==="case");
+  $("three").classList.toggle("on", v==="3d");
+  $("v-board").setAttribute("aria-pressed", v==="board");
+  $("v-case").setAttribute("aria-pressed", v==="case");
+  $("v-3d").setAttribute("aria-pressed", v==="3d");
+  $("stagetitle").textContent = v==="board"?"Board & slots" : v==="case"?"Case & power" : "Rotate the build";
+  $("stagefoot").textContent = v==="3d"
+    ? "Drag to rotate. Parts light up copper as you select them on the right."
+    : "Tap a marker to jump to that slot. Labels are the board\u2019s own silkscreen designations.";
+  if(v==="3d" && window.__three) window.__three.start();
+}
+$("v-board").onclick=()=>setView("board");
+$("v-case").onclick=()=>setView("case");
+$("v-3d").onclick=()=>setView("3d");
+
+$("reset").onclick=()=>{ build={...STOCK}; focus=null; renderRail(); paint(); };
+document.querySelectorAll(".presets button").forEach(b=>{
+  b.onclick=()=>{ build={...PRESETS[b.dataset.preset]}; focus=null; renderRail(); paint(); };
+});
+
+/* ============ 3D ============ */
+(function(){
+  if(typeof THREE==="undefined") return;
+  const cv=$("three");
+  const scene=new THREE.Scene();
+  const cam=new THREE.PerspectiveCamera(38,1.32,.1,100);
+  cam.position.set(6.4,4.4,7.4); cam.lookAt(0,.4,0);
+  const rend=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+  rend.setPixelRatio(Math.min(devicePixelRatio,2));
+
+  scene.add(new THREE.HemisphereLight(0xffffff,0x33393c,.85));
+  const key=new THREE.DirectionalLight(0xffffff,.75); key.position.set(5,8,6); scene.add(key);
+
+  const root=new THREE.Group(); scene.add(root);
+  const parts={};
+  const mk=(w,h,d,x,y,z,col,name)=>{
+    const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),
+      new THREE.MeshStandardMaterial({color:col,roughness:.72,metalness:.12}));
+    m.position.set(x,y,z); m.userData.base=col; root.add(m);
+    if(name) parts[name]=m; return m;
+  };
+
+  // case shell (open front)
+  const shell=new THREE.Mesh(new THREE.BoxGeometry(6.2,6.4,5.6),
+    new THREE.MeshStandardMaterial({color:0x2b3134,roughness:.9,transparent:true,opacity:.16}));
+  shell.position.y=.6; root.add(shell);
+  const edges=new THREE.LineSegments(new THREE.EdgesGeometry(shell.geometry),
+    new THREE.LineBasicMaterial({color:0x8d968f})); edges.position.copy(shell.position); root.add(edges);
+
+  mk(5.4,.14,4.6, -.25,-.3,0, 0x1f4d33);            // motherboard
+  mk(.95,.95,.95, -1.5,.35,.5, 0x9aa0a4,"cpu");     // cpu cooler
+  mk(.22,2.0,.5,   .55,.75,.5, 0xb0392f,"ram");     // dimm A1
+  const ram2=mk(.22,2.0,.5, .95,.75,.5, 0xb0392f);  // dimm B1
+  parts.ram2=ram2;
+  mk(3.0,.28,1.35, -.9,-.75,-.9, 0x36393d,"gpu");   // gpu
+  mk(1.5,.08,.35,  -1.0,-.18,-1.9, 0x6f7479,"m2");  // m.2 stick
+  mk(3.1,1.4,2.4,  -1.1,-2.6,.4, 0x24282b,"psu");   // psu
+  mk(1.5,.5,2.2,    1.9,-2.4,.2, 0x4a4f53,"hdd");   // hdd
+
+  const COPPER=0xdf8b50;
+  function highlight(id){
+    Object.entries(parts).forEach(([k,m])=>{
+      const on = id && (k===id || (id==="ram" && k==="ram2"));
+      m.material.color.setHex(on?COPPER:m.userData.base);
+      m.material.emissive.setHex(on?0x3a1f0c:0x000000);
+    });
+  }
+
+  let ry=.5, rx=.22, drag=false, px=0, py=0, running=false;
+  const dn=e=>{drag=true; px=(e.touches?e.touches[0]:e).clientX; py=(e.touches?e.touches[0]:e).clientY;};
+  const mv=e=>{ if(!drag)return; const t=e.touches?e.touches[0]:e;
+    ry+=(t.clientX-px)*.008; rx=Math.max(-.5,Math.min(1.0,rx+(t.clientY-py)*.006));
+    px=t.clientX; py=t.clientY; if(e.touches)e.preventDefault(); };
+  const up=()=>drag=false;
+  cv.addEventListener("mousedown",dn); addEventListener("mousemove",mv); addEventListener("mouseup",up);
+  cv.addEventListener("touchstart",dn,{passive:true}); cv.addEventListener("touchmove",mv,{passive:false}); addEventListener("touchend",up);
+
+  function size(){ const w=cv.clientWidth||600; rend.setSize(w, Math.round(w/1.32), false);
+    cam.aspect=1.32; cam.updateProjectionMatrix(); }
+  function loop(){ if(!running) return; requestAnimationFrame(loop);
+    root.rotation.y += (ry-root.rotation.y)*.12; root.rotation.x += (rx-root.rotation.x)*.12;
+    rend.render(scene,cam); }
+  window.__three={ highlight, start(){ if(running)return; running=true; size(); loop(); } };
+  addEventListener("resize",()=>{ if(running) size(); });
+})();
+
+renderRail();
+paint();
+</script>
