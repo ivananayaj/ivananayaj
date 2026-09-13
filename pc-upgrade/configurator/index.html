@@ -254,6 +254,22 @@ select:focus-visible{outline:2px solid var(--copper); outline-offset:1px}
 @keyframes pulse{0%{box-shadow:0 0 0 0 var(--copper-soft)}70%{box-shadow:0 0 0 9px transparent}100%{box-shadow:0 0 0 0 transparent}}
 .pulse{animation:pulse .5s ease-out}
 
+/* ---------- prebuilts ---------- */
+.pbwrap{overflow-x:auto; margin-top:12px; border:1px solid var(--line); border-radius:var(--r); background:var(--surface)}
+.pbtable{width:100%; min-width:36rem; border-collapse:collapse; font-size:13.5px}
+.pbtable th{
+  text-align:left; padding:10px 13px; border-bottom:1px solid var(--line);
+  font:500 10.5px/1.4 "IBM Plex Mono",monospace; letter-spacing:.09em; text-transform:uppercase; color:var(--faint);
+}
+.pbtable td{padding:11px 13px; border-bottom:1px solid var(--line); vertical-align:top}
+.pbtable tr:last-child td{border-bottom:0}
+.pbtable .num{text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; white-space:nowrap}
+.pbsub{font-size:11.5px; color:var(--faint); margin-top:2px; font-family:"IBM Plex Sans",sans-serif}
+.pbnote{margin-top:5px; font-size:12.5px; line-height:1.45; padding-left:9px; border-left:2px solid var(--line)}
+.pbnote.ok{border-left-color:var(--ok); color:var(--muted)}
+.pbnote.warn{border-left-color:var(--warn); color:var(--muted)}
+.pbnote.bad{border-left-color:var(--bad); color:var(--muted)}
+
 /* ---------- notes ---------- */
 .notes{padding-block:8px 40px}
 .notegrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px; margin-top:14px}
@@ -359,6 +375,12 @@ select:focus-visible{outline:2px solid var(--copper); outline-offset:1px}
       </div>
     </section>
   </div>
+
+  <section class="notes" id="buyinstead">
+    <p class="eyebrow">Buy instead?</p>
+    <h2 style="margin-top:2px">What a finished machine costs.</h2>
+    <div id="pblist"></div>
+  </section>
 
   <section class="notes">
     <p class="eyebrow">Traps this board sets</p>
@@ -696,6 +718,82 @@ function evaluate(){
 }
 
 
+
+/* ============ Costco prebuilts, read off listings 13 Sep 2026 ============ */
+/* These are OBSERVED prices from the user's own screenshots - the only
+   directly-sourced retail figures anywhere in this tool. */
+const PREBUILTS = [
+  {n:"MSI Aegis R2 AI",        cpu:"Core Ultra 7 265",  gpu:"RTX 5070 Ti",       vram:16, ram:24, ssd:1, price:1999, off:"$800 off", pick:"best4k"},
+  {n:"MSI Codex R2 AI",        cpu:"Core Ultra 7 265",  gpu:"RTX 5060 Ti 16 GB", vram:16, ram:24, ssd:1, price:1999, off:"$400 off", pick:"beaten"},
+  {n:"iBUYPOWER Element",      cpu:"Ryzen 7 9800X3D",   gpu:"RTX 5070 12 GB",    vram:12, ram:32, ssd:2, price:2299, pick:"bestcpu"},
+  {n:"iBUYPOWER Element",      cpu:"Core Ultra 7 265F", gpu:"RTX 5060 Ti 8 GB",  vram:8,  ram:32, ssd:2, price:1799},
+  {n:"Skytech Azure 3",        cpu:"Core Ultra 7 265K", gpu:"RTX 5060 Ti 8 GB",  vram:8,  ram:32, ssd:1, price:1599, pick:"value"},
+  {n:"ASUS ROG GM700",         cpu:"Ryzen 7 8700F",     gpu:"RTX 5060",          vram:8,  ram:32, ssd:1, price:1549},
+  {n:"CyberPowerPC Supreme",   cpu:"Core Ultra 5 250KF",gpu:"RTX 5060 Ti 8 GB",  vram:8,  ram:16, ssd:1, price:1549},
+  {n:"CyberPowerPC Xtreme",    cpu:"Core Ultra 5 225F", gpu:"RTX 5060",          vram:8,  ram:32, ssd:1, price:1499},
+  {n:"MSI Codex R2",           cpu:"Core Ultra 7 265",  gpu:"RTX 5060 Ti 8 GB",  vram:8,  ram:32, ssd:2, price:1499, off:"$400 off"},
+  {n:"iBUYPOWER Element",      cpu:"Ryzen 7 8700F",     gpu:"RTX 5060 Ti 8 GB",  vram:8,  ram:16, ssd:1, price:1499},
+  {n:"MSI Codex Z2",           cpu:"Ryzen 7 8700F",     gpu:"RTX 5060 Ti 8 GB",  vram:8,  ram:16, ssd:1, price:1399, off:"$500 off"},
+];
+
+const PICK_NOTE = {
+  best4k:  ["ok",   "Best for your 4K TV. Same $1,999 as the Codex below it, and the 5070 Ti is roughly a tier and a half faster. If you buy one at this price, buy this one."],
+  beaten:  ["warn", "Beaten on price by the row above. Identical $1,999 for a slower card - the only reason to pick it is if the Aegis is out of stock."],
+  bestcpu: ["ok",   "Fastest CPU here by a wide margin, plus 32 GB and 2 TB. The 5070's 12 GB is the weak point at 4K, but nothing else on this list pairs a 9800X3D with real storage."],
+  value:   ["ok",   "Best value if you can live with 8 GB of VRAM. 32 GB of DDR5-6000 and a strong CPU for $1,599 - and 32 GB is the part that actually fixes your complaint."],
+};
+
+function renderPrebuilts(cost){
+  const rows = PREBUILTS.map(b=>{
+    const flags=[];
+    if(b.ram<=16) flags.push(["bad","16 GB - same wall you have now"]);
+    if(b.vram<=8) flags.push(["warn","8 GB VRAM is thin on a 4K panel"]);
+    const pn = b.pick ? PICK_NOTE[b.pick] : null;
+    return `<tr>
+      <td><b>${b.n}</b><div class="pbsub">${b.cpu} &middot; ${b.gpu}</div>
+        ${pn?`<div class="pbnote ${pn[0]}">${pn[1]}</div>`:""}
+        ${flags.map(f=>`<div class="pbnote ${f[0]}">${f[1]}</div>`).join("")}</td>
+      <td class="num">${b.ram} GB</td>
+      <td class="num">${b.vram} GB</td>
+      <td class="num">${b.ssd} TB</td>
+      <td class="num"><b>$${b.price.toLocaleString()}</b>${b.off?`<div class="pbsub">${b.off}</div>`:""}</td>
+    </tr>`;
+  }).join("");
+
+  const cheapest = Math.min(...PREBUILTS.map(b=>b.price));
+  return `
+    <p class="cap">Prices read off Costco listings on 13 September 2026 &mdash; the only
+      directly-observed retail figures in this whole tool. Costco adds a free second year of
+      warranty, 90-day returns and lifetime phone support, which is worth real money against a
+      self-built machine.</p>
+    <div class="pbwrap">
+      <table class="pbtable">
+        <thead><tr><th>Machine</th><th class="num">RAM</th><th class="num">VRAM</th><th class="num">SSD</th><th class="num">Price</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div class="delta">
+      <b>Against your current selection:</b> your parts list is <b>$${cost}</b>; the cheapest
+      machine here is <b>$${cheapest.toLocaleString()}</b>.
+      ${cost < 400
+        ? `At this spend you are not in prebuilt territory and should not be. $${cost} fixes the
+           measured problem on the machine you own. Come back to this table only if you decide
+           you want a modern gaming PC, which is a different question from the freezing.`
+        : cost < cheapest
+          ? `You are $${(cheapest-cost).toLocaleString()} below the cheapest box, but you would
+             be keeping a 2017 case and a nine-year-old power supply. Worth pricing both.`
+          : `Your parts list now costs <b>more</b> than a complete machine with a warranty. This
+             is the point where the upgrade stops making sense.`}
+    </div>
+    <div class="delta">
+      <b>Two traps in this list.</b> Several boxes ship <b>16 GB of RAM</b> &mdash; exactly what
+      you have now and exactly what runs out. Buying one would reproduce your problem for $1,400,
+      and DDR5 is at triple price so fixing it later hurts. Several others ship <b>8 GB of VRAM</b>,
+      which on a 4K panel is a milder version of the squeeze the 1050 Ti already has. Insist on
+      32 GB of system memory; treat 16 GB VRAM as the target and 12 GB as acceptable.
+    </div>`;
+}
+
 /* ============ size view ============ */
 const CASE = { name:"Thermaltake ATX mid-tower", maxBoardW:305, maxBoardH:244, gpuClear:320, slots:7 };
 
@@ -984,11 +1082,14 @@ function paint(){
       <p><b>What you would lose:</b> ${keeping.length===1?"your case becomes a spare":"your case and the parts you kept become spares"}, and
         prebuilts often ship a weak PSU and locked BIOS of their own. <b>What you would gain:</b>
         current-generation everything, one warranty, and no afternoon with a screwdriver.</p>
+      <p><a href="#buyinstead" style="color:var(--copper)"><b>Real Costco prices are in the table below &mdash; jump to them.</b></a></p>
       <p><b>The honest middle:</b> the $125&ndash;260 end of this plan &mdash; SSD, then CPU &mdash;
         is still the best money on the page and nothing here changes that. This card is about the
         <em>far</em> end. If you are already past $600, compare before you commit.</p>`;
     rt.hidden=false;
   } else { rt.hidden=true; }
+
+  $("pblist").innerHTML = renderPrebuilts(r.cost);
 
   $("cost").textContent = "$"+r.cost;
   $("win11").textContent = r.win11?"Eligible":"Blocked";

@@ -41,7 +41,11 @@ and the pagefile sits on the 7200 rpm platter. That is the stall, caught in the 
 **Two things changed in the plan as a result:**
 
 1. **The BIOS flash moved from a caution to a hard prerequisite.** BIOS 3803 is from January
-   2018. Zen 3 needs 6042-era firmware. Flash it *while the Ryzen 1400 is still installed*.
+   2018; the Ryzen 5000 chips launched in November 2020. A 2018 BIOS holds no microcode for a
+   CPU that did not exist yet, so the board will not POST at all. Flash it *while the Ryzen
+   1400 is still installed* -- you need a working CPU in the socket to run the update, and
+   this board has no BIOS Flashback to recover from getting that backwards.
+   **Step-by-step: see `BIOS-FLASH-GUIDE.md`.**
 2. **The display is a 4K TV, and it is making the freezing worse.** A 4K desktop needs
    roughly four times the framebuffer and texture memory of 1080p. The 1050 Ti has 4 GB.
    When VRAM fills, the driver spills into system RAM -- already 11.9 GB of 15.9 in use --
@@ -173,6 +177,31 @@ to the drive cage before buying. Reference: RTX 3060 242 mm, RX 6700 XT 267 mm, 
 
 **M.2 length**: the number *is* the size. 2280 = 22 mm wide, 80 mm long. Your board drills
 one standoff, at 2280. A 22110 drive overhangs with nothing to screw into.
+
+## Real prebuilt prices (Costco, 13 Sept 2026)
+
+Observed from listings, not estimated. Costco adds a free second year of warranty, 90-day
+returns and lifetime phone support.
+
+| Machine | CPU | GPU | RAM | SSD | Price |
+|---|---|---|---|---|---|
+| **MSI Aegis R2 AI** | Ultra 7 265 | **RTX 5070 Ti** | 24 GB | 1 TB | **$1,999** (-$800) |
+| MSI Codex R2 AI | Ultra 7 265 | RTX 5060 Ti 16 GB | 24 GB | 1 TB | $1,999 (-$400) |
+| iBUYPOWER Element | **Ryzen 7 9800X3D** | RTX 5070 12 GB | 32 GB | 2 TB | $2,299 |
+| Skytech Azure 3 | Ultra 7 265K | RTX 5060 Ti 8 GB | 32 GB | 1 TB | $1,599 |
+| MSI Codex Z2 | Ryzen 7 8700F | RTX 5060 Ti 8 GB | **16 GB** | 1 TB | $1,399 (-$500) |
+
+**Best for the 4K TV:** the Aegis R2 AI. It is the *same $1,999* as the Codex R2 AI below it
+and the 5070 Ti is roughly a tier and a half faster. Catching that is worth $700 of value.
+
+**Two traps.** Several boxes ship **16 GB of RAM** -- exactly what you have and exactly what
+runs out; you would reproduce your problem for $1,400, and DDR5 is at triple price so fixing
+it later hurts. Several ship **8 GB of VRAM**, a milder version of the squeeze the 1050 Ti
+already has on a 4K panel. Insist on 32 GB system memory; target 16 GB VRAM, accept 12 GB.
+
+**The number that decides it:** the full upgrade path reaches **$1,380** and leaves you a 2017
+case and a nine-year-old PSU. The cheapest complete machine with a warranty is **$1,399**.
+Nineteen dollars apart. That is the whole argument against the far end of this plan.
 
 ## When to stop and buy a prebuilt instead
 
