@@ -117,6 +117,10 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02e
 :root.br .mapbox { background: radial-gradient(ellipse at 50% 40%, #16301f, var(--ink) 75%); }
 :root.br .heatbar i { background: repeating-linear-gradient(90deg, #009c3b 0 10px, #ffdf00 10px 20px, #002776 20px 30px); }
 :root.br .up.owned { background: #2a1a14; }
+:root.india { --ink: #120e0a; --panel: #1d1712; --panel-2: #271f17; --line: #44372a; --rage: #ff6b1a; --rage-2: #ffc23d; --mod: #3d7bff; --calm: #5a4d40; }
+:root.india .mapbox { background: radial-gradient(ellipse at 50% 40%, #2b2117, var(--ink) 75%); }
+:root.india .heatbar i { background: linear-gradient(180deg, #ff9933 0 33%, #ffffff 33% 66%, #138808 66%); }
+:root.india .up.owned { background: #2e1d12; }
 :root.tower .heatbar i { background: repeating-linear-gradient(45deg, #ddd, #ddd 6px, #888 6px, #888 12px); }
 .stage { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; }
 .mapbox { position: relative; background: radial-gradient(ellipse at 50% 40%, #171c27, var(--ink) 75%); border: 1px solid var(--line); overflow: hidden; min-height: 300px; }
@@ -366,6 +370,7 @@ const SCENARIOS = [
   { id: "mx", name: "Plata o Memes (Mexico)", desc: "Culiacán. Roast the cartels and the officials on their payroll. Every post raises the bounty on your head.", heatMult: 1.45, heatStart: 0, cashMult: 1.7, susc: 1.25, map: "mx", start: "narcotok", theme: "mx" },
   { id: "ca", name: "Sorry, Not Sorry (Canada)", desc: "Ottawa. Rage-bait the politest country on Earth. Push too far and they freeze your bank account. Politely.", heatMult: 1.4, heatStart: 0, cashMult: 1.6, susc: 1.15, map: "ca", start: "cbc", theme: "ca" },
   { id: "br", name: "Banned in Brazil", desc: "Brasília. The Supreme Court once switched off X for the whole country. Rage-bait the censors before they geo-block you personally.", heatMult: 1.45, heatStart: 0, cashMult: 1.6, susc: 1.25, map: "br", start: "court", theme: "br" },
+  { id: "india", name: "Internet Shutdown (India)", desc: "1.4 billion people, 900 million online, and the world record for internet shutdowns. Rage-bait the anchors and the IT cells before they switch off your district.", heatMult: 1.45, heatStart: 0, cashMult: 1.6, susc: 1.25, map: "india", start: "anchors", theme: "india" },
   { id: "election", name: "Election Year", desc: "Everyone is already on edge. Spread is fast, and so are the mods.", heatMult: 1.25, heatStart: 0.04, cashMult: 1.3, susc: 1.35 },
 ];
 const PLATFORMS = [
@@ -628,7 +633,27 @@ const BR_EDGES = [
   ["globo","militants"],["globo","influencers"],["globo","ultras"],["militants","cop"],["militants","ultras"],["militants","samba"],["cop","samba"],["cop","traffic"],
   ["influencers","ultras"],["influencers","unis"],["ultras","unis"],["ultras","capy"],["samba","capy"],["samba","traffic"],["unis","capy"],["capy","traffic"],
 ];
-const MAPS = { br: [BR_NODES, BR_EDGES], ca: [CA_NODES, CA_EDGES], mx: [MX_NODES, MX_EDGES], ai: [AI_NODES, AI_EDGES], ir: [IR_NODES, IR_EDGES], ru: [RU_NODES, RU_EDGES], cn: [CN_NODES, CN_EDGES], nuke: [NUKE_NODES, NUKE_EDGES], us: [NODES, EDGES], europe: [EURO_NODES, EURO_EDGES], nk: [NK_NODES, NK_EDGES], alpha: [ALPHA_NODES, ALPHA_EDGES] };
+// India: TV studios and Delhi up top, the internet in the middle, daily life below
+const INDIA_NODES = [
+  { id: "anchors",  name: "Primetime News Anchors",    x: 150, y: 120, pop: 3,   susc: 1.5, melt: 1.6, blurb: "Ten guests in boxes, everyone shouting, the anchor loudest. Calls it a debate." },
+  { id: "takedown", name: "Ministry Takedown Desk",    x: 430, y: 90,  pop: 0.5, susc: 1.4, melt: 1.4, blurb: "Sends platforms lists of posts to remove. The lists are longer every week." },
+  { id: "itcell",   name: "Party IT Cells",            x: 730, y: 110, pop: 4,   susc: 1.3, melt: 1.4, blurb: "Every party has one. Same hashtag, 40,000 accounts, posted at 9:00 sharp." },
+  { id: "whatsapp", name: "WhatsApp University Uncles", x: 290, y: 270, pop: 40, susc: 1.1, melt: 1.3, blurb: "'Good morning' image, a health tip that isn't true, and a forward that says 'share before deleted.'" },
+  { id: "unions",   name: "Campus Student Unions",     x: 580, y: 260, pop: 3,   susc: 1.4, melt: 1.5, blurb: "Twenty-eight years old, fourth PhD, has a dharna scheduled for Thursday." },
+  { id: "bollywood",name: "Bollywood Apology Department", x: 900, y: 260, pop: 1, susc: 1.3, melt: 1.5, blurb: "Every star says something, then posts a handwritten apology on Instagram within 6 hours." },
+  { id: "cricket",  name: "Cricket Fan Army",          x: 120, y: 420, pop: 30,  susc: 1.0, melt: 1.7, blurb: "Calmest people in the world, until someone criticizes a batsman. Then nobody is calm." },
+  { id: "kota",     name: "Coaching Institute Toppers", x: 420, y: 430, pop: 5,  susc: 1.2, melt: 1.3, blurb: "Studying 16 hours a day for an exam with 1.5 million applicants and 17,000 seats." },
+  { id: "aunties",  name: "Matrimonial Site Aunties",  x: 720, y: 430, pop: 8,   susc: 1.2, melt: 1.4, blurb: "Want to know your salary, your height, and why you're not married yet. In that order." },
+  { id: "blr",      name: "Bengaluru Traffic",         x: 260, y: 570, pop: 6,   susc: 1.1, melt: 1.4, blurb: "Two hours to drive 9 km. Everybody's on their phone. Everybody's coding in the car." },
+  { id: "callcenter", name: "Night-Shift Call Center", x: 580, y: 570, pop: 4,   susc: 1.0, melt: 1.3, blurb: "Answers American phone calls at 3 AM as 'Kevin.' Has seen everything. Mostly unimpressed." },
+  { id: "influencers", name: "Reels Influencers",      x: 900, y: 520, pop: 10,  susc: 1.3, melt: 1.4, blurb: "Moved to Reels the day TikTok got banned. Same dance, new app." },
+];
+const INDIA_EDGES = [
+  ["anchors","takedown"],["anchors","whatsapp"],["anchors","cricket"],["takedown","itcell"],["takedown","whatsapp"],["takedown","unions"],["itcell","unions"],["itcell","bollywood"],
+  ["whatsapp","unions"],["whatsapp","cricket"],["whatsapp","kota"],["unions","bollywood"],["unions","kota"],["unions","aunties"],["bollywood","aunties"],["bollywood","influencers"],
+  ["cricket","kota"],["cricket","blr"],["kota","aunties"],["kota","blr"],["aunties","callcenter"],["aunties","influencers"],["blr","callcenter"],["callcenter","influencers"],
+];
+const MAPS = { india: [INDIA_NODES, INDIA_EDGES], br: [BR_NODES, BR_EDGES], ca: [CA_NODES, CA_EDGES], mx: [MX_NODES, MX_EDGES], ai: [AI_NODES, AI_EDGES], ir: [IR_NODES, IR_EDGES], ru: [RU_NODES, RU_EDGES], cn: [CN_NODES, CN_EDGES], nuke: [NUKE_NODES, NUKE_EDGES], us: [NODES, EDGES], europe: [EURO_NODES, EURO_EDGES], nk: [NK_NODES, NK_EDGES], alpha: [ALPHA_NODES, ALPHA_EDGES] };
 
 // Upgrades. cur: "clout" or "cash". req: prerequisite id.
 const UPGRADES = {
@@ -690,6 +715,10 @@ const UPGRADES = {
     { id: "neymar",  name: "Say Neymar Is Overrated",  cost: 5, cur: "clout", fx: { severity: .45, infect: .3 }, only: "br", desc: "The one take that unites every football ultra in the country. Against you." },
     { id: "highway", name: "Ask About the Climate Summit Highway", cost: 9, cur: "clout", fx: { severity: .5, visibility: 1 }, only: "br", desc: "They cut down the rainforest to drive to the rainforest summit. You just asked a question." },
     { id: "capymeme",name: "Capybara Minister Meme",   cost: 13, cur: "clout", fx: { severity: .6, spread: .4, visibility: 2 }, only: "br", desc: "A capybara in a judge's robe, banning the internet. The Court opens a case about the capybara." },
+    { id: "remake",  name: "Say the Bollywood Remake Was Worse", cost: 3, cur: "clout", fx: { severity: .35, infect: .3 }, only: "india", desc: "It's a remake of a remake. You liked the original. The apology department is drafting." },
+    { id: "worstxi", name: "Post Your Cricket Worst XI", cost: 6, cur: "clout", fx: { severity: .5, infect: .3 }, only: "india", desc: "Eleven names, one captain. Thirty million fans, one target." },
+    { id: "louder",  name: "Out-Shout a Primetime Anchor", cost: 9, cur: "clout", fx: { severity: .5, visibility: 1 }, only: "india", desc: "Go on the debate show and be louder than him. Nobody has ever done this." },
+    { id: "goodmorning", name: "Reply-All to Every Good Morning Forward", cost: 12, cur: "clout", fx: { severity: .5, spread: .5, visibility: 1 }, only: "india", desc: "With a fact-check. In every family group. The uncles will never forgive you." },
     { id: "unhinged",name: "Full Unhinged Arc", cost: 25, cur: "clout", fx: { severity: 1, visibility: 3, cash: .5 }, req: "billboard", desc: "Livestream from a monster truck. Nobody knows what the bit is. Including you." },
   ],
   armor: [
@@ -729,6 +758,9 @@ const UPGRADES = {
     { id: "brlawyer",name: "Lawyer Who Golfs With a Justice", cost: 12000, cur: "cash", fx: { resist: 2 }, only: "br", desc: "Eighteen holes, one handshake, and your inquiry gets 'reviewed.'" },
     { id: "miami",   name: "Condo in Miami",           cost: 40000, cur: "cash", fx: { resist: 3, cash: .2 }, only: "br", desc: "Half of São Paulo already lives in Florida. You'll fit right in." },
     { id: "accounts",name: "Seventeen Backup Accounts", cost: 7, cur: "clout", fx: { resist: 1, lives: 1 }, only: "br", desc: "They geo-block one, sixteen are left. Gets you through one ban." },
+    { id: "simstack",name: "Stack of Cheap SIM Cards", cost: 2000,  cur: "cash", fx: { resist: 1, spread: .3 }, only: "india", desc: "Data costs almost nothing here. Twelve SIMs, twelve accounts, one meme." },
+    { id: "shutvpn", name: "Satellite Link for Shutdowns", cost: 15000, cur: "cash", fx: { resist: 2, lives: 1 }, only: "india", desc: "When they switch off your district, you keep posting. Saves you once." },
+    { id: "nri",     name: "NRI Cousin in New Jersey", cost: 35000, cur: "cash", fx: { resist: 3, cash: .3 }, only: "india", desc: "Posts your memes from Edison, NJ. Out of reach, and the family is proud of him." },
     { id: "dox",     name: "Burner Phone Discipline", cost: 5, cur: "clout", fx: { resist: 1 }, desc: "Paid in clout: you just have to stop posting your street." },
   ],
 };
@@ -949,6 +981,21 @@ const BR_EVENTS = [
   () => ({ msg: "Carnival week. Nobody in government is working, including the censors. Inquiry −5.", f: () => { S.heat = clamp(S.heat - 5, 0, 100); } }),
 ];
 
+const TICKER_INDIA = [
+  "Primetime debate reaches 140 decibels. Anchor still the loudest.",
+  "District internet switched off to stop one meme. Meme now on 40 million phones via Bluetooth.",
+  "WhatsApp forward claims onions cure Wi-Fi radiation. Shared 9 million times.",
+  "Bollywood star apologizes for an opinion he didn't have. Just in case.",
+  "Bengaluru commuter finishes a startup during one traffic jam. Raises Series A at the signal.",
+  "Matrimonial site aunty asks a groom's salary before his name.",
+  "Batsman out for a duck. 30 million fans reach for their phones.",
+];
+const INDIA_EVENTS = [
+  () => ({ msg: "The Takedown Desk sent X a list with your handle on it. Shutdown +6.", f: () => { S.heat = clamp(S.heat + 6, 0, 100); } }),
+  () => ({ msg: "The Indian diaspora in America found you. Superchats pour in from Texas and New Jersey.", f: () => { S.cash += 9000 * S.df.cash; } }),
+  () => ({ msg: "India won a cricket match. Nobody in government is reading posts tonight. Shutdown −5.", f: () => { S.heat = clamp(S.heat - 5, 0, 100); } }),
+];
+
 // built lazily: the tower lists are declared further down
 const SPECIAL_FOR = id => ({
   tower: { ticker: TICKER_TOWER, events: TOWER_EVENTS },
@@ -963,6 +1010,7 @@ const SPECIAL_FOR = id => ({
   mx: { ticker: TICKER_MX, events: MX_EVENTS },
   ca: { ticker: TICKER_CA, events: CA_EVENTS },
   br: { ticker: TICKER_BR, events: BR_EVENTS },
+  india: { ticker: TICKER_INDIA, events: INDIA_EVENTS },
 })[id];
 
 // Per-scenario wording: what the ban meter is, how you lose, how you win
@@ -1352,12 +1400,44 @@ FLAVOR.br = {
     [.8, "Even the capybaras look agitated."],
   ],
 };
+FLAVOR.india = {
+  watchOff: "Internet shutdown risk", watchOn: "Internet shutdown risk",
+  intro: h => `${h} goes live from Delhi. Somewhere a primetime anchor is already shouting about it.`,
+  firstNotice: h => `The Takedown Desk adds ${h} to this week's list. It's a long list.`, logNotice: "The government started watching your posts.",
+  life: h => `They switched off ${h}'s district. ${h} kept posting over satellite. Back online.`, lifeLog: "SHUTDOWN. Posted through it over satellite.",
+  lose: "Internet Shutdown",
+  loseBody: (h, d) => `On day ${d} they switched off the internet in your entire district to stop one meme. Four million people lost Wi-Fi, and every one of them blames you. The meme is still spreading over Bluetooth.`,
+  win: "The Whole Country Is Shouting",
+  winBody: h => `The anchors, the IT cells, the uncles and the cricket fans are all shouting at once, and for once it's about the same thing: ${h}. Nobody can hear the takedown orders. Buy "Run for President" next time to finish the job.`,
+  presTitle: h => `Prime Minister ${h.replace(/^@/, "")}`,
+  presBody: h => `The biggest election on Earth, 640 million votes, and ${h} won it with a cricket Worst XI. First order: no more internet shutdowns. Second: primetime debates have a volume limit. Third: the uncles have to fact-check before they forward.`,
+  modLabel: "Takedown notice — tap to dodge", modIcon: "✂",
+  chaosName: "Nation shouting",
+  tipping: h => `A primetime debate about ${h} gets so loud the studio windows crack. Every channel picks it up.`,
+  copsBusy: "The Takedown Desk is buried under ten million complaints about the cricket team. Your file waits.",
+  beats: [
+    [10, "Two news anchors start shouting at each other across channels. Live."],
+    [25, "WhatsApp University forwards your meme with 'share before deleted.' It is never deleted."],
+    [40, "IT cells from every party trend the same hashtag against you. By accident, they all agree."],
+    [55, "Cricket fans boycott a match over your Worst XI. The match goes on. Nobody watches."],
+    [70, "Bollywood issues a joint apology. Nobody knows what it's apologizing for."],
+    [85, "Bengaluru traffic stops completely. Everyone is reading your posts."],
+  ],
+  steps: h => [
+    [.05, `A primetime anchor shouts '${h}' for the first time. Not the last.`],
+    [.15, "Your meme reaches every family WhatsApp group. With a fake quote attached."],
+    [.3, `The Takedown Desk adds ${h} to a list sent to X.`],
+    [.5, "Campus unions and IT cells both denounce you, from opposite sides."],
+    [.7, "Matrimonial aunties are asking if you're single."],
+    [.8, "Even the night-shift call center reads your memes to Americans on hold."],
+  ],
+};
 const flavor = k => (FLAVOR[S.sc.id] && FLAVOR[S.sc.id][k]) || FLAVOR.default[k];
 
 // Setup-screen sections for the scenario picker
 const SCENARIO_GROUPS = [
   ["Home", ["standard", "tower", "campus", "election", "alpha"]],
-  ["World Tour", ["ca", "mx", "br", "europe", "cn", "ru", "ir", "nk"]],
+  ["World Tour", ["ca", "mx", "br", "europe", "india", "cn", "ru", "ir", "nk"]],
   ["Apocalypse", ["nuke", "ai"]],
 ];
 
@@ -1418,7 +1498,7 @@ $("setupForm").addEventListener("submit", e => {
   S = newGame();
   SFX.init(); setTimeout(() => SFX.play("news"), 60);
   Object.assign(shown, { clout: S.clout, cash: 0, infamy: 0 });
-  document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx", "ca", "br");
+  document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx", "ca", "br", "india");
   if (S.sc.theme) document.documentElement.classList.add(S.sc.theme);
   $("setup").hidden = true; $("game").hidden = false;
   $("sHandle").textContent = S.handle;
@@ -1825,7 +1905,7 @@ const TOWER_EVENTS = [
 function randomEvent() {
   const extra = SPECIAL_FOR(S.sc.id) ? SPECIAL_FOR(S.sc.id).events : [];
   // US-only gags stay out of the foreign maps
-  const base = ["nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx", "ca", "br"].includes(S.sc.id) ? EVENTS.slice(4, 6) : EVENTS;
+  const base = ["nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx", "ca", "br", "india"].includes(S.sc.id) ? EVENTS.slice(4, 6) : EVENTS;
   const pool = base.concat(extra, extra);
   const e = pool[Math.floor(Math.random() * pool.length)]();
   e.f(); log(`<b>Day ${S.day}</b> ${e.msg}`); ticker(e.msg);
@@ -2026,7 +2106,7 @@ function endGame(won) {
     const best = JSON.parse(localStorage.getItem("outrage-best") || "null");
     if (!best || affected > best.infamy) localStorage.setItem("outrage-best", JSON.stringify({ handle: S.handle, infamy: affected, cash: S.earned, day: S.day }));
   } catch (e) {}
-  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx", "ca", "br"); $("chaosBox").hidden = true; $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
+  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx", "ca", "br", "india"); $("chaosBox").hidden = true; $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
 }
 })();
 </script>
