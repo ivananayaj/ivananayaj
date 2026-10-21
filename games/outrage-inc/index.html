@@ -45,6 +45,9 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02e
 .choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
 .choice { text-align: left; background: var(--ink); border: 1px solid var(--line); padding: 10px 12px; min-height: 44px; display: flex; flex-direction: column; gap: 3px; }
 .choice b { font-weight: 800; }
+.sgroup { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.sgroup + .sgroup { margin-top: 6px; }
+.sgroup > .label { grid-column: 1 / -1; color: var(--rage-2); }
 .choice small { color: var(--dim); line-height: 1.35; }
 .choice[aria-pressed="true"] { border-color: var(--rage); box-shadow: inset 3px 0 0 var(--rage); background: var(--panel-2); }
 .go { background: var(--rage); color: var(--ink); border: 0; padding: 14px; font-family: var(--display); font-size: 24px; letter-spacing: .04em; text-transform: uppercase; min-height: 52px; }
@@ -1056,6 +1059,13 @@ FLAVOR.ai = {
 };
 const flavor = k => (FLAVOR[S.sc.id] && FLAVOR[S.sc.id][k]) || FLAVOR.default[k];
 
+// Setup-screen sections for the scenario picker
+const SCENARIO_GROUPS = [
+  ["Home", ["standard", "tower", "campus", "election", "alpha"]],
+  ["World Tour", ["europe", "cn", "ru", "ir", "nk"]],
+  ["Apocalypse", ["nuke", "ai"]],
+];
+
 // ============================================================
 // STATE
 // ============================================================
@@ -1092,7 +1102,10 @@ function renderChoices() {
   const groups = { scenario: SCENARIOS, platform: PLATFORMS, difficulty: DIFFS };
   document.querySelectorAll(".choices").forEach(box => {
     const g = box.dataset.group;
-    box.innerHTML = groups[g].map(o => `<button type="button" class="choice" data-id="${o.id}" aria-pressed="${pick[g] === o.id}"><b>${o.name}</b><small>${o.desc}</small></button>`).join("");
+    const card = o => `<button type="button" class="choice" data-id="${o.id}" aria-pressed="${pick[g] === o.id}"><b>${o.name}</b><small>${o.desc}</small></button>`;
+    box.innerHTML = g === "scenario"
+      ? SCENARIO_GROUPS.map(([title, ids]) => `<div class="sgroup" role="group" aria-label="${title}"><span class="label">${title}</span>${ids.map(id => card(SCENARIOS.find(o => o.id === id))).join("")}</div>`).join("")
+      : groups[g].map(card).join("");
     box.onclick = e => {
       const b = e.target.closest(".choice"); if (!b) return;
       pick[g] = b.dataset.id; renderChoices();
