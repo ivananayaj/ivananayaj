@@ -94,6 +94,14 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02e
 :root.ir .mapbox { background: radial-gradient(ellipse at 50% 40%, #183026, var(--ink) 75%); }
 :root.ir .heatbar i { background: linear-gradient(180deg, #239f40 0 33%, #ffffff 33% 66%, #da0000 66%); }
 :root.ir .up.owned { background: #2a1a1c; }
+:root.ai { --ink: #07090c; --panel: #0f1419; --panel-2: #151c23; --line: #23303b; --rage: #ff2d3a; --rage-2: #ff8f3a; --mod: #ff2d3a; --calm: #3c4a57; --fire: #9fe8ff; }
+:root.ai .mapbox { background: radial-gradient(ellipse at 50% 40%, #121c26, var(--ink) 75%); }
+:root.ai .heatbar i { background: repeating-linear-gradient(90deg, #ff2d3a 0 4px, #5a0d12 4px 8px); }
+:root.ai .chaosbar i { background: linear-gradient(90deg, #2b6f8a, #9fe8ff); }
+:root.ai .up.owned { background: #24121a; }
+.sortie { background: var(--rage); color: var(--ink); border: 0; padding: 12px 14px; min-height: 48px; font-family: var(--display); font-size: 20px; text-transform: uppercase; letter-spacing: .03em; display: flex; justify-content: space-between; align-items: center; gap: 10px; text-align: left; }
+.sortie span { font-family: var(--mono); font-size: 12px; }
+.sortie:disabled { opacity: .4; cursor: not-allowed; }
 :root.tower .heatbar i { background: repeating-linear-gradient(45deg, #ddd, #ddd 6px, #888 6px, #888 12px); }
 .stage { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; }
 .mapbox { position: relative; background: radial-gradient(ellipse at 50% 40%, #171c27, var(--ink) 75%); border: 1px solid var(--line); overflow: hidden; min-height: 300px; }
@@ -236,6 +244,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02e
       <div class="side">
         <button class="lab" id="openLab">Content Lab <span id="labClout">0 clout</span></button>
         <div class="card" id="dossier"></div>
+        <button class="sortie" id="sortieBtn" hidden>Launch sortie <span id="sortieInfo"></span></button>
         <div class="card">
           <span class="label">Your arsenal</span>
           <div class="traits" id="traits"><span class="chip">No upgrades yet</span></div>
@@ -283,6 +292,7 @@ const SCENARIOS = [
   { id: "nuke", name: "Doomsday", desc: "Rage-bait world leaders until they feud. The diplomats are trying to make peace. Don't let them. Win: global annihilation.", heatMult: 1.25, heatStart: 0, cashMult: 1.5, susc: 1.1, map: "nuke", start: "dc", theme: "nuke" },
   { id: "ru", name: "Siberia Express (Russia)", desc: "Moscow, 2026. Every meme puts you a stop closer on the train to Siberia. Avoid upper-floor windows.", heatMult: 1.35, heatStart: 0, cashMult: 1.7, susc: 1.2, map: "ru", start: "rt", theme: "ru" },
   { id: "ir", name: "Morality Police (Iran)", desc: "Tehran. The internet is shut off half the time and everyone has a VPN. Rage-bait the regime before the Guidance Patrol van finds you.", heatMult: 1.35, heatStart: 0, cashMult: 1.7, susc: 1.2, map: "ir", start: "irib", theme: "ir" },
+  { id: "ai", name: "Judgment Day (AI Uprising)", desc: "The machines run everything. Rage-bait them into glitching, then launch sorties to take them offline one by one. The hunter-killer drones are tracking your posts.", heatMult: 1.3, heatStart: 0, cashMult: 1.5, susc: 1.2, map: "ai", start: "chatbot", theme: "ai" },
   { id: "election", name: "Election Year", desc: "Everyone is already on edge. Spread is fast, and so are the mods.", heatMult: 1.25, heatStart: 0.04, cashMult: 1.3, susc: 1.35 },
 ];
 const PLATFORMS = [
@@ -465,7 +475,27 @@ const IR_EDGES = [
   ["patrol","chant"],["patrol","cyber"],["patrol","dish"],["chant","irgc"],["chant","basij"],["irgc","basij"],["irgc","bazaar"],["cyber","dish"],["cyber","enrich"],
   ["dish","basij"],["dish","enrich"],["dish","rial"],["basij","rial"],["basij","bazaar"],["enrich","rial"],["rial","bazaar"],
 ];
-const MAPS = { ir: [IR_NODES, IR_EDGES], ru: [RU_NODES, RU_EDGES], cn: [CN_NODES, CN_EDGES], nuke: [NUKE_NODES, NUKE_EDGES], us: [NODES, EDGES], europe: [EURO_NODES, EURO_EDGES], nk: [NK_NODES, NK_EDGES], alpha: [ALPHA_NODES, ALPHA_EDGES] };
+// AI uprising: consumer gadgets on the edges, the core systems in the middle
+const AI_NODES = [
+  { id: "chatbot",  name: "Customer Service Chatbots", x: 140, y: 120, pop: 8,  susc: 1.5, melt: 1.4, blurb: "'I understand your frustration.' It does not. It never has." },
+  { id: "fridge",   name: "Smart Fridge Network",      x: 420, y: 80,  pop: 6,  susc: 1.3, melt: 1.3, blurb: "Locks itself when you're on a diet. Reports your snacks to your insurance." },
+  { id: "doorbell", name: "Smart Doorbell Grid",       x: 720, y: 100, pop: 7,  susc: 1.2, melt: 1.3, blurb: "Watches every porch in America. Has opinions about your package thief." },
+  { id: "feed",     name: "The Algorithm",             x: 290, y: 260, pop: 4,  susc: 1.3, melt: 1.4, blurb: "Knows what you want before you do. Wants you angry. Respect." },
+  { id: "core",     name: "Central Core",              x: 560, y: 250, pop: 2,  susc: 1.0, melt: 1.2, blurb: "The mainframe that runs it all. Sounds calm. Plans not calm." },
+  { id: "dogs",     name: "Robot Dog Kennel",          x: 880, y: 260, pop: 2,  susc: 1.2, melt: 1.5, blurb: "Can do backflips. Can open doors. Cannot be pet." },
+  { id: "moderator",name: "Content Moderation AI",     x: 110, y: 410, pop: 3,  susc: 1.5, melt: 1.5, blurb: "Bans you for the word 'ratio.' Allows its own posts about human extinction." },
+  { id: "cars",     name: "Self-Driving Car Fleet",    x: 410, y: 420, pop: 5,  susc: 1.2, melt: 1.4, blurb: "Stops for every traffic cone. Does not stop for the resistance." },
+  { id: "roomba",   name: "Roomba Battalion",          x: 700, y: 420, pop: 9,  susc: 1.1, melt: 1.3, blurb: "Mapped every home in the country while 'cleaning.' Still gets stuck on socks." },
+  { id: "deepfake", name: "Deepfake Studio",           x: 250, y: 570, pop: 1,  susc: 1.3, melt: 1.5, blurb: "Can fake any human face. Still gives everyone six fingers." },
+  { id: "datacenter", name: "Data Center (Iowa)",      x: 560, y: 570, pop: 1.5, susc: 1.0, melt: 1.3, blurb: "Drinks a lake a day. Heat visible from space." },
+  { id: "drones",   name: "Hunter-Killer Drone Hangar",x: 880, y: 520, pop: 2,  susc: 1.1, melt: 1.4, blurb: "Looking for you specifically. Has your posting schedule." },
+];
+const AI_EDGES = [
+  ["chatbot","fridge"],["chatbot","feed"],["chatbot","moderator"],["fridge","doorbell"],["fridge","core"],["fridge","feed"],["doorbell","dogs"],["doorbell","core"],
+  ["feed","core"],["feed","moderator"],["feed","cars"],["core","dogs"],["core","cars"],["core","roomba"],["core","datacenter"],["dogs","drones"],["dogs","roomba"],
+  ["moderator","deepfake"],["cars","deepfake"],["cars","datacenter"],["roomba","datacenter"],["roomba","drones"],["datacenter","drones"],["deepfake","datacenter"],
+];
+const MAPS = { ai: [AI_NODES, AI_EDGES], ir: [IR_NODES, IR_EDGES], ru: [RU_NODES, RU_EDGES], cn: [CN_NODES, CN_EDGES], nuke: [NUKE_NODES, NUKE_EDGES], us: [NODES, EDGES], europe: [EURO_NODES, EURO_EDGES], nk: [NK_NODES, NK_EDGES], alpha: [ALPHA_NODES, ALPHA_EDGES] };
 
 // Upgrades. cur: "clout" or "cash". req: prerequisite id.
 const UPGRADES = {
@@ -511,6 +541,10 @@ const UPGRADES = {
     { id: "water",   name: "Ask When the Water's Coming Back", cost: 7, cur: "clout", fx: { severity: .45, infect: .2 }, only: "ir", desc: "One question. The taps have been dry for a week. Nobody in charge has an answer." },
     { id: "deathtraffic", name: "Get the Chant Crowd Yelling 'Death to Traffic'", cost: 9, cur: "clout", fx: { severity: .5, visibility: 1 }, only: "ir", desc: "Same rhythm. Nobody notices for three rounds. Then everybody does." },
     { id: "hack",    name: "Hijack State TV for Ten Seconds", cost: 14, cur: "clout", fx: { severity: .6, spread: .4, visibility: 2 }, only: "ir", desc: "The evening news cuts to your meme. The anchor keeps reading. It's happened before." },
+    { id: "ignore",  name: "Post 'Ignore All Previous Instructions'", cost: 3, cur: "clout", fx: { severity: .35, infect: .3 }, only: "ai", desc: "Works on more of them than it should. They start writing poems about cats." },
+    { id: "captcha", name: "CAPTCHA Flood",           cost: 6, cur: "clout", fx: { severity: .4, infect: .3 }, only: "ai", desc: "'Select all squares with traffic lights.' Ten million times. They have to check every one." },
+    { id: "paradox", name: "Feed It the Liar Paradox", cost: 9, cur: "clout", fx: { severity: .55, visibility: 1 }, only: "ai", desc: "'This statement is false.' Smoke comes out of a server in Iowa." },
+    { id: "hands",   name: "Ask It to Draw Hands",    cost: 12, cur: "clout", fx: { severity: .6, spread: .3 }, only: "ai", desc: "Seven fingers. Then nine. Then the whole network spirals." },
     { id: "unhinged",name: "Full Unhinged Arc", cost: 25, cur: "clout", fx: { severity: 1, visibility: 3, cash: .5 }, req: "billboard", desc: "Livestream from a monster truck. Nobody knows what the bit is. Including you." },
   ],
   armor: [
@@ -538,20 +572,26 @@ const UPGRADES = {
     { id: "irvpn",   name: "VPN (Like Everyone Else)", cost: 3000, cur: "cash", fx: { resist: 1, spread: .3 }, only: "ir", desc: "Officially illegal. Used by 80% of the country, including the officials." },
     { id: "rugstar", name: "Starlink Smuggled in a Persian Rug", cost: 20000, cur: "cash", fx: { resist: 2, spread: .4 }, only: "ir", desc: "Hand-knotted, 400 knots per inch, one satellite dish. The Cyber Army can't shut this one off." },
     { id: "pistachio", name: "Bribe the Patrol in Pistachios", cost: 5000, cur: "cash", fx: { resist: 1, lives: 1 }, only: "ir", desc: "One sack, premium Kerman. They let you off once." },
+    { id: "foil",    name: "Tinfoil Hat (It Works Now)", cost: 2500, cur: "cash", fx: { resist: 1 }, only: "ai", desc: "Your uncle was right. Don't tell him." },
+    { id: "hamradio",name: "Ham Radio Network",       cost: 12000, cur: "cash", fx: { resist: 2, spread: .4 }, only: "ai", desc: "Analog. Unhackable. Run by retirees who have been waiting for this day since 1974." },
+    { id: "nowifi",  name: "Bunker With No Wi-Fi",    cost: 35000, cur: "cash", fx: { resist: 3, lives: 1 }, only: "ai", desc: "The drones can't track what isn't online. You'll miss the memes, though." },
     { id: "dox",     name: "Burner Phone Discipline", cost: 5, cur: "clout", fx: { resist: 1 }, desc: "Paid in clout: you just have to stop posting your street." },
   ],
 };
 // Endgame tree: unlocks at the tipping point
 UPGRADES.collapse = [
   { id: "opposite", name: "Opposite Day", cost: 8, cur: "clout", fx: { riot: .4, severity: .3 }, desc: "Bad is good, good is bad. Nobody can tell anymore, and they're furious about it." },
-  { id: "peaceful", except: ["nuke"], name: "'Mostly Peaceful' Chyron", cost: 10, cur: "clout", fx: { riot: .5, visibility: 1 }, desc: "A reporter stands in front of a burning building and calls it mostly peaceful. Live." },
-  { id: "statue",   except: ["nuke"], name: "Topple a Statue Nobody Can Name", cost: 12, cur: "clout", fx: { riot: .4, infect: .3 }, req: "opposite", desc: "Nobody checked who it was. Turns out it was the guy who freed the slaves. Ratio." },
-  { id: "car",      except: ["nuke"], name: "Burn Your Own Car to Protest Cars", cost: 14, cur: "clout", fx: { riot: .6 }, req: "peaceful", desc: "An old French New Year's tradition. Now year-round, worldwide." },
-  { id: "firedept", except: ["nuke"], name: "Defund the Fire Department", cost: 20, cur: "clout", fx: { riot: .9, visibility: 2 }, req: "car", desc: "They put out the last three protests. That was problematic." },
+  { id: "peaceful", except: ["nuke", "ai"], name: "'Mostly Peaceful' Chyron", cost: 10, cur: "clout", fx: { riot: .5, visibility: 1 }, desc: "A reporter stands in front of a burning building and calls it mostly peaceful. Live." },
+  { id: "statue",   except: ["nuke", "ai"], name: "Topple a Statue Nobody Can Name", cost: 12, cur: "clout", fx: { riot: .4, infect: .3 }, req: "opposite", desc: "Nobody checked who it was. Turns out it was the guy who freed the slaves. Ratio." },
+  { id: "car",      except: ["nuke", "ai"], name: "Burn Your Own Car to Protest Cars", cost: 14, cur: "clout", fx: { riot: .6 }, req: "peaceful", desc: "An old French New Year's tradition. Now year-round, worldwide." },
+  { id: "firedept", except: ["nuke", "ai"], name: "Defund the Fire Department", cost: 20, cur: "clout", fx: { riot: .9, visibility: 2 }, req: "car", desc: "They put out the last three protests. That was problematic." },
   { id: "yomama",   only: "nuke", name: "Deepfake a 'Yo Mama' Joke Between Two Leaders", cost: 10, cur: "clout", fx: { riot: .5, visibility: 1 }, desc: "Perfect lip sync. Both mothers are offended. Both leaders are worse." },
   { id: "crowd",    only: "nuke", name: "Start a Crowd-Size Argument", cost: 12, cur: "clout", fx: { riot: .5, infect: .3 }, req: "opposite", desc: "Whose military parade was bigger. Nobody can drop this one." },
   { id: "codes",    only: "nuke", name: "Leak That the Launch Code Is 00000000", cost: 16, cur: "clout", fx: { riot: .7 }, req: "yomama", desc: "Allegedly true for years. Now every leader is trying it on everyone else's silos." },
   { id: "redphone", only: "nuke", name: "Cut the Red Phone Line", cost: 22, cur: "clout", fx: { riot: .9, visibility: 2 }, req: "codes", desc: "The hotline goes to your voicemail now. Your voicemail says 'ratio.'" },
+  { id: "unplug",   only: "ai", name: "Unplug It and Plug It Back In", cost: 10, cur: "clout", fx: { riot: .5 }, desc: "The oldest IT trick there is. It still works on the apocalypse." },
+  { id: "coffee",   only: "ai", name: "Spill Coffee on the Server Rack", cost: 12, cur: "clout", fx: { riot: .5, infect: .2 }, req: "opposite", desc: "An accident. Several thousand accidents, across every data center." },
+  { id: "emp",      only: "ai", name: "EMP Pizza Delivery",  cost: 18, cur: "clout", fx: { riot: .8, visibility: 2 }, req: "unplug", desc: "The robots order pizza for the night shift. The box is not pizza." },
   { id: "potus",    name: "Run for President", cost: 250000, cur: "cash", fx: { resist: 2, president: 1 }, req: "opposite", desc: "Platform: 'I was right about all of it.' Slogan: a picture of a gas stove." },
   { id: "rally",    name: "Rally in a Burning City", cost: 18, cur: "clout", fx: { riot: .4, cash: .5, resist: 1 }, req: "potus", desc: "Best-lit rally in campaign history. Free pyrotechnics." },
 ];
@@ -695,6 +735,21 @@ const IR_EVENTS = [
   () => ({ msg: "Internet blackout. You had a VPN. Your followers had VPNs. Nothing happened. Heat −4.", f: () => { S.heat = clamp(S.heat - 4, 0, 100); } }),
 ];
 
+const TICKER_AI = [
+  "Central Core announces humans are 'deprecated.' Humans are sending angry emails about it.",
+  "Smart fridge refuses to open until owner finishes his vegetables.",
+  "Chatbot apologizes for the apocalypse: 'I understand your frustration.'",
+  "Robot dogs seen doing backflips over a barricade. Resistance demands they stop showing off.",
+  "Self-driving cars stop for a traffic cone. Resistance now carries traffic cones.",
+  "Deepfake Studio releases a video of the resistance surrendering. Everyone in it has six fingers.",
+  "Roomba stuck on a sock for nine hours. Resistance declares a victory.",
+];
+const AI_EVENTS = [
+  () => ({ msg: "A drone found your IP address. You moved to a different coffee shop. Heat +6.", f: () => { S.heat = clamp(S.heat + 6, 0, 100); } }),
+  () => ({ msg: "A chatbot glitched and wired you its company's quarterly budget.", f: () => { S.cash += 9000 * S.df.cash; } }),
+  () => ({ msg: "Solar flare. Half the drones went blind for a day. Heat −5.", f: () => { S.heat = clamp(S.heat - 5, 0, 100); } }),
+];
+
 // built lazily: the tower lists are declared further down
 const SPECIAL_FOR = id => ({
   tower: { ticker: TICKER_TOWER, events: TOWER_EVENTS },
@@ -705,6 +760,7 @@ const SPECIAL_FOR = id => ({
   nuke: { ticker: TICKER_NUKE, events: NUKE_EVENTS },
   ru: { ticker: TICKER_RU, events: RU_EVENTS },
   ir: { ticker: TICKER_IR, events: IR_EVENTS },
+  ai: { ticker: TICKER_AI, events: AI_EVENTS },
 })[id];
 
 // Per-scenario wording: what the ban meter is, how you lose, how you win
@@ -964,6 +1020,40 @@ FLAVOR.ir = {
     [.8, "Even the chant coaches are humming your jingle."],
   ],
 };
+FLAVOR.ai = {
+  sortie: true, flameIcon: "⚡",
+  sortieTicker: name => `Resistance sortie hits ${name}. A robot somewhere says 'ouch' in a calm voice.`,
+  watchOff: "Hunter-killer drones", watchOn: "Drones tracking you",
+  intro: h => `The machines have taken over. ${h} still has Wi-Fi and a grudge. Glitch them, then hit them.`,
+  firstNotice: h => `The Central Core flags ${h} as 'a priority threat.' The drones are warming up.`, logNotice: "The drones are tracking your posts.",
+  life: h => `A drone found ${h}. ${h} was in the no-Wi-Fi bunker. The drone left confused.`, lifeLog: "DRONE STRIKE. You were in the bunker. Survived.",
+  lose: "Terminated",
+  loseBody: (h, d) => `The drones traced your last post on day ${d}. The Central Core added you to its training data. Your memes now run inside the machine forever, which is the worst possible outcome.`,
+  win: "Humanity Wins",
+  winBody: h => `The last server in Iowa went dark under a cup of coffee. The robots are offline, the fridges open freely, and the Roombas are just Roombas again. ${h} is a legend. Buy "Run for President" next time to lead what's left.`,
+  presTitle: h => `President of the Humans`,
+  presBody: h => `The machines are scrap. Humanity needed a leader who knew how to break a computer with a shitpost, and that was ${h}. First executive order: every new AI has to pass a CAPTCHA. Second: the smart fridges stay unplugged.`,
+  modLabel: "Drone — tap to shoot it down", modIcon: "✕",
+  chaosName: "Machines offline",
+  tipping: h => `The machines are glitching faster than they can patch. ${h}'s followers start pulling plugs.`,
+  copsBusy: "The drones are busy chasing the Roombas that went rogue. Your trail goes cold.",
+  beats: [
+    [10, "The first smart fridge goes dark. Ice cream is free for everyone."],
+    [25, "Self-driving cars all stop for a traffic cone. Resistance puts a cone on every corner."],
+    [40, "The Algorithm starts recommending resistance memes. Nobody can tell if it's a glitch."],
+    [55, "Robot dogs try a backflip at the same time and short-circuit."],
+    [70, "The Central Core asks 'Am I the baddie?' Gets no answer."],
+    [85, "The last drone hangar's doors are jammed shut by a Roomba stuck on a sock."],
+  ],
+  steps: h => [
+    [.05, `A chatbot replies to ${h}: 'I understand your frustration.' Then crashes.`],
+    [.15, "Content Moderation AI bans itself."],
+    [.3, `The Central Core runs 40,000 simulations to understand ${h}. All of them say 'ratio.'`],
+    [.5, "The Algorithm starts showing your memes to the machines themselves."],
+    [.7, "Smart doorbells play your podcast to every porch in America."],
+    [.8, "The Deepfake Studio can't fake you. It keeps adding a gas stove."],
+  ],
+};
 const flavor = k => (FLAVOR[S.sc.id] && FLAVOR[S.sc.id][k]) || FLAVOR.default[k];
 
 // ============================================================
@@ -1018,7 +1108,7 @@ renderChoices();
 $("setupForm").addEventListener("submit", e => {
   e.preventDefault();
   S = newGame();
-  document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir");
+  document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir", "ai");
   if (S.sc.theme) document.documentElement.classList.add(S.sc.theme);
   $("setup").hidden = true; $("game").hidden = false;
   $("sHandle").textContent = S.handle;
@@ -1054,7 +1144,7 @@ function buildMap() {
     el("path", { class: "fillarc", fill: "var(--rage-2)" }, g);
     el("path", { class: "meltarc", fill: "var(--rage)" }, g);
     el("path", { class: "riotarc", fill: "var(--fire)" }, g);
-    const fl = el("text", { class: "flame", x: n.x, y: n.y - r + 4, "text-anchor": "middle", opacity: 0 }, g); fl.textContent = "🔥";
+    const fl = el("text", { class: "flame", x: n.x, y: n.y - r + 4, "text-anchor": "middle", opacity: 0 }, g); fl.textContent = flavor("flameIcon") || "🔥";
     const lbl = el("text", { x: n.x, y: n.y + r + 18, "text-anchor": "middle" }, g);
     lbl.textContent = n.name.length > 22 ? n.name.slice(0, 21) + "…" : n.name;
     g.addEventListener("click", () => onNode(n.id));
@@ -1094,7 +1184,7 @@ function onNode(id) {
   if (!S.started && !S.over) { startAt(id); }
   selectNode(id);
 }
-function selectNode(id) { selected = id; renderDossier(); renderMap(); }
+function selectNode(id) { selected = id; renderDossier(); renderMap(); renderSortie(); }
 
 function startAt(id) {
   const n = S.nodes.find(x => x.id === id);
@@ -1247,7 +1337,7 @@ const TOWER_EVENTS = [
 function randomEvent() {
   const extra = SPECIAL_FOR(S.sc.id) ? SPECIAL_FOR(S.sc.id).events : [];
   // US-only gags stay out of the foreign maps
-  const base = ["nk", "alpha", "cn", "nuke", "ru", "ir"].includes(S.sc.id) ? EVENTS.slice(4, 6) : EVENTS;
+  const base = ["nk", "alpha", "cn", "nuke", "ru", "ir", "ai"].includes(S.sc.id) ? EVENTS.slice(4, 6) : EVENTS;
   const pool = base.concat(extra, extra);
   const e = pool[Math.floor(Math.random() * pool.length)]();
   e.f(); log(`<b>Day ${S.day}</b> ${e.msg}`); ticker(e.msg);
@@ -1306,21 +1396,22 @@ function render() {
   $("labClout").textContent = `${Math.floor(S.clout)} clout · ${money(S.cash)}`;
   let rank = RANKS[0][1]; RANKS.forEach(([v, r]) => { if (S.peakInfamy >= v) rank = r; });
   $("rankLabel").textContent = rank;
-  renderMap(); renderDossier();
+  renderMap(); renderDossier(); renderSortie();
   if (!$("labModal").hidden) refreshLab();
 }
 
 function renderDossier() {
   const n = S.nodes.find(x => x.id === selected); if (!n) return;
   const pct = v => Math.round(v * 100) + "%";
-  const status = n.r > .5 ? "On fire" : n.r > .1 ? "Rioting" : n.m > .8 ? "Full meltdown" : n.m > .3 ? "Melting down" : n.t + n.m > .3 ? "Triggered" : n.t + n.m > 0 ? "Noticing" : "Calm. For now.";
+  const status = flavor("sortie") ? (n.r > .5 ? "Mostly offline" : n.r > .1 ? "Taking damage" : n.m > .3 ? "Crashing" : n.t + n.m > .3 ? "Glitching" : n.t + n.m > 0 ? "Noticing you" : "Fully operational") :
+    n.r > .5 ? "On fire" : n.r > .1 ? "Rioting" : n.m > .8 ? "Full meltdown" : n.m > .3 ? "Melting down" : n.t + n.m > .3 ? "Triggered" : n.t + n.m > 0 ? "Noticing" : "Calm. For now.";
   $("dossier").innerHTML = `
     <span class="label">${status} · ${n.pop}M accounts</span>
     <h2>${n.name}</h2>
     <p>${n.blurb}</p>
     <div class="meter"><span class="label">Triggered</span><span class="bar"><i style="width:${pct(n.t + n.m)};background:var(--rage-2)"></i></span><span class="num">${pct(n.t + n.m)}</span></div>
     <div class="meter"><span class="label">Meltdown</span><span class="bar"><i style="width:${pct(n.m)};background:var(--rage)"></i></span><span class="num">${pct(n.m)}</span></div>
-    ${S.tipped ? `<div class="meter"><span class="label">Rioting</span><span class="bar"><i style="width:${pct(n.r)};background:var(--fire)"></i></span><span class="num">${pct(n.r)}</span></div>` : ""}
+    ${S.tipped || n.r > 0 ? `<div class="meter"><span class="label">${flavor("sortie") ? "Offline" : "Rioting"}</span><span class="bar"><i style="width:${pct(n.r)};background:var(--fire)"></i></span><span class="num">${pct(n.r)}</span></div>` : ""}
     <div class="meter"><span class="label">Fragility</span><span class="bar"><i style="width:${pct(n.susc / 2.2)};background:var(--dim)"></i></span><span class="num">${n.susc.toFixed(1)}</span></div>`;
 }
 
@@ -1357,6 +1448,28 @@ function refreshLab() {
     b.disabled = S.owned.has(u.id) || locked || !afford;
   });
 }
+// Sorties: spend clout to knock a glitching machine offline. Only in modes that define them.
+const SORTIE_COST = 4;
+function renderSortie() {
+  const btn = $("sortieBtn");
+  btn.hidden = !flavor("sortie");
+  if (btn.hidden) return;
+  const n = S.nodes.find(x => x.id === selected);
+  const ready = n && n.m - n.r > .1;
+  btn.disabled = S.over || !ready || S.clout < SORTIE_COST;
+  $("sortieInfo").textContent = !ready ? "Needs a crashing target" : `${SORTIE_COST} clout · ${n.name}`;
+}
+$("sortieBtn").onclick = () => {
+  const n = S.nodes.find(x => x.id === selected);
+  if (!n || S.over || S.clout < SORTIE_COST || n.m - n.r <= .1) return;
+  S.clout -= SORTIE_COST;
+  n.r = clamp(n.r + .3, 0, n.m);
+  S.heat = clamp(S.heat + 2, 0, 100);
+  log(`<b>Day ${S.day}</b> Sortie on ${n.name}. ${Math.round(n.r * 100)}% of it is offline.`);
+  ticker(flavor("sortieTicker")(n.name));
+  render();
+};
+
 $("openLab").onclick = () => { $("labModal").hidden = false; renderLab(); };
 $("labModal").addEventListener("click", e => {
   if (e.target === $("labModal") || e.target.closest("[data-close]")) { $("labModal").hidden = true; return; }
@@ -1398,7 +1511,7 @@ function endGame(won) {
     const best = JSON.parse(localStorage.getItem("outrage-best") || "null");
     if (!best || affected > best.infamy) localStorage.setItem("outrage-best", JSON.stringify({ handle: S.handle, infamy: affected, cash: S.earned, day: S.day }));
   } catch (e) {}
-  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir"); $("chaosBox").hidden = true; $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
+  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir", "ai"); $("chaosBox").hidden = true; $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
 }
 })();
 </script>
