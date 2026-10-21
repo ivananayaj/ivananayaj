@@ -113,6 +113,10 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02e
 :root.ca .mapbox { background: radial-gradient(ellipse at 50% 30%, #1d2833, var(--ink) 75%); }
 :root.ca .heatbar i { background: repeating-linear-gradient(90deg, #d52b1e 0 10px, #ffffff 10px 30px, #d52b1e 30px 40px); }
 :root.ca .up.owned { background: #2a1717; }
+:root.br { --ink: #0a120d; --panel: #121e16; --panel-2: #19291e; --line: #2a4231; --rage: #ff3b30; --rage-2: #ffdf00; --mod: #4f8dff; --calm: #47604f; }
+:root.br .mapbox { background: radial-gradient(ellipse at 50% 40%, #16301f, var(--ink) 75%); }
+:root.br .heatbar i { background: repeating-linear-gradient(90deg, #009c3b 0 10px, #ffdf00 10px 20px, #002776 20px 30px); }
+:root.br .up.owned { background: #2a1a14; }
 :root.tower .heatbar i { background: repeating-linear-gradient(45deg, #ddd, #ddd 6px, #888 6px, #888 12px); }
 .stage { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; }
 .mapbox { position: relative; background: radial-gradient(ellipse at 50% 40%, #171c27, var(--ink) 75%); border: 1px solid var(--line); overflow: hidden; min-height: 300px; }
@@ -224,6 +228,27 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02e
 .end > h2 { animation: slam .6s cubic-bezier(.2, 1.4, .4, 1) .2s both; }
 @keyframes rise { from { transform: translateY(14px); opacity: 0; } }
 @keyframes slam { from { transform: scale(1.9); opacity: 0; filter: blur(8px); } }
+/* round two: idle life and big moments */
+.bubble circle, .bubble text { animation: bob 1.6s ease-in-out infinite alternate; transform-box: fill-box; }
+@keyframes bob { to { transform: translateY(-5px); } }
+.bubble.expiring { animation: blink .5s steps(2) infinite; }
+@keyframes blink { 50% { opacity: .35; } }
+.node { transition: transform .18s ease-out; transform-box: fill-box; transform-origin: center; }
+.node:hover, .node:focus-visible { transform: scale(1.07); }
+.node.sel circle.base { animation: selpulse 1.4s ease-in-out infinite; }
+@keyframes selpulse { 50% { stroke-width: 6; } }
+.ember { pointer-events: none; transform-box: fill-box; animation: emberUp 1.4s ease-out forwards; }
+@keyframes emberUp { from { transform: translate(0, 0) scale(1); opacity: .95; } to { transform: translate(var(--dx), -70px) scale(.3); opacity: 0; } }
+#banner { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; opacity: 0; display: flex; flex-direction: column; gap: 4px; align-items: center; width: max-content; max-width: 90%; }
+#banner b { text-wrap: balance; font-family: var(--display); font-weight: 400; font-size: clamp(36px, 7vw, 76px); line-height: .9; text-transform: uppercase; color: var(--rage); text-shadow: 0 4px 0 var(--ink), 0 0 30px rgba(0, 0, 0, .7); }
+#banner span { font-family: var(--mono); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; background: var(--fg); color: var(--ink); padding: 4px 10px; }
+#banner.show { animation: bannerIn 2.6s cubic-bezier(.2, 1.3, .4, 1) forwards; }
+@keyframes bannerIn { 0% { opacity: 0; transform: translate(-50%, -50%) scale(2.2) rotate(-4deg); } 12% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-2deg); } 80% { opacity: 1; transform: translate(-50%, -50%) scale(1.02) rotate(-2deg); } 100% { opacity: 0; transform: translate(-50%, -62%) scale(1) rotate(-2deg); } }
+.stat .v.bump { animation: bump .35s ease-out; }
+@keyframes bump { 40% { transform: scale(1.18); } }
+.stat .v { transform-origin: left center; }
+#rankLabel.bump { animation: rankUp .8s ease-out; transform-origin: left center; }
+@keyframes rankUp { 0%, 60% { color: var(--cash); transform: scale(1.15); } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
@@ -275,6 +300,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02e
     <div class="stage">
       <div class="mapbox">
         <svg id="map" viewBox="0 0 1000 620" role="img" aria-label="Outrage network map"></svg>
+        <div id="banner" aria-hidden="true"><b id="bannerTitle"></b><span id="bannerSub"></span></div>
         <div class="maphint" id="maphint">Pick where your first post drops. Tap a community.</div>
         <div class="controls" role="group" aria-label="Game speed">
           <button data-speed="0" aria-label="Pause">II</button>
@@ -338,6 +364,7 @@ const SCENARIOS = [
   { id: "ai", name: "Judgment Day (AI Uprising)", desc: "The machines run everything. Rage-bait them into glitching, then launch sorties to take them offline one by one. The hunter-killer drones are tracking your posts.", heatMult: 1.3, heatStart: 0, cashMult: 1.5, susc: 1.2, map: "ai", start: "chatbot", theme: "ai" },
   { id: "mx", name: "Plata o Memes (Mexico)", desc: "Culiacán. Roast the cartels and the officials on their payroll. Every post raises the bounty on your head.", heatMult: 1.45, heatStart: 0, cashMult: 1.7, susc: 1.25, map: "mx", start: "narcotok", theme: "mx" },
   { id: "ca", name: "Sorry, Not Sorry (Canada)", desc: "Ottawa. Rage-bait the politest country on Earth. Push too far and they freeze your bank account. Politely.", heatMult: 1.4, heatStart: 0, cashMult: 1.6, susc: 1.15, map: "ca", start: "cbc", theme: "ca" },
+  { id: "br", name: "Banned in Brazil", desc: "Brasília. The Supreme Court once switched off X for the whole country. Rage-bait the censors before they geo-block you personally.", heatMult: 1.45, heatStart: 0, cashMult: 1.6, susc: 1.25, map: "br", start: "court", theme: "br" },
   { id: "election", name: "Election Year", desc: "Everyone is already on edge. Spread is fast, and so are the mods.", heatMult: 1.25, heatStart: 0.04, cashMult: 1.3, susc: 1.35 },
 ];
 const PLATFORMS = [
@@ -580,7 +607,27 @@ const CA_EDGES = [
   ["apology","condo"],["apology","bikes"],["apology","timmies"],["condo","oqlf"],["condo","timmies"],["condo","syrup"],["oqlf","syrup"],["oqlf","banks"],
   ["bikes","hockey"],["timmies","hockey"],["timmies","geese"],["timmies","syrup"],["syrup","banks"],["syrup","geese"],["hockey","geese"],["geese","banks"],
 ];
-const MAPS = { ca: [CA_NODES, CA_EDGES], mx: [MX_NODES, MX_EDGES], ai: [AI_NODES, AI_EDGES], ir: [IR_NODES, IR_EDGES], ru: [RU_NODES, RU_EDGES], cn: [CN_NODES, CN_EDGES], nuke: [NUKE_NODES, NUKE_EDGES], us: [NODES, EDGES], europe: [EURO_NODES, EURO_EDGES], nk: [NK_NODES, NK_EDGES], alpha: [ALPHA_NODES, ALPHA_EDGES] };
+// Brazil: Brasília up top, Rio and São Paulo in the middle, the culture below
+const BR_NODES = [
+  { id: "court",    name: "Supreme Court Censorship Desk", x: 150, y: 120, pop: 0.5, susc: 1.5, melt: 1.6, blurb: "Banned X for the entire country in 2024. Fined people R$50,000 a day for using a VPN to read it." },
+  { id: "fakenews", name: "Fake News Inquiry",         x: 430, y: 90,  pop: 1,   susc: 1.4, melt: 1.4, blurb: "Open since 2019. Investigates everything. Has never closed." },
+  { id: "planalto", name: "Planalto Palace Staffers",  x: 730, y: 110, pop: 1.5, susc: 1.2, melt: 1.4, blurb: "Brasília was built in the middle of nowhere on purpose. It shows." },
+  { id: "globo",    name: "Telenovela Writers' Room",  x: 290, y: 270, pop: 3,   susc: 1.2, melt: 1.5, blurb: "Turn every scandal into a 200-episode drama. Yours is getting a twin brother plot." },
+  { id: "militants",name: "Party Militants WhatsApp",  x: 580, y: 260, pop: 8,   susc: 1.3, melt: 1.3, blurb: "Red shirts, red flags, 900 forwarded voice notes a day." },
+  { id: "cop",      name: "Climate Summit Delegates",  x: 900, y: 260, pop: 0.5, susc: 1.3, melt: 1.5, blurb: "Cut a highway through the Amazon so they could get to the climate summit." },
+  { id: "influencers", name: "Copacabana Influencers", x: 120, y: 420, pop: 6, susc: 1.3, melt: 1.4, blurb: "Ring light, sunset, 40 takes of the same 'candid' photo." },
+  { id: "ultras",   name: "Football Ultras",           x: 420, y: 430, pop: 10,  susc: 1.1, melt: 1.6, blurb: "Calm, reasonable people. Unless you mention their club. Or any club." },
+  { id: "samba",    name: "Carnival Samba Schools",    x: 720, y: 430, pop: 4,   susc: 1.0, melt: 1.4, blurb: "Practice all year for one night. Will absolutely make a float about you." },
+  { id: "unis",     name: "Federal University Collectives", x: 260, y: 570, pop: 3, susc: 1.4, melt: 1.3, blurb: "On strike more than in class. Have a manifesto about the cafeteria." },
+  { id: "capy",     name: "Capybara Fan Club",         x: 580, y: 570, pop: 2,   susc: 0.8, melt: 1.1, blurb: "The calmest animal on Earth. Its fans are not." },
+  { id: "traffic",  name: "São Paulo Traffic Jam",     x: 900, y: 520, pop: 12,  susc: 1.0, melt: 1.3, blurb: "180 kilometers long on a good day. Everyone in it is on their phone. Everyone in it sees your memes." },
+];
+const BR_EDGES = [
+  ["court","fakenews"],["court","globo"],["court","influencers"],["fakenews","planalto"],["fakenews","globo"],["fakenews","militants"],["planalto","militants"],["planalto","cop"],
+  ["globo","militants"],["globo","influencers"],["globo","ultras"],["militants","cop"],["militants","ultras"],["militants","samba"],["cop","samba"],["cop","traffic"],
+  ["influencers","ultras"],["influencers","unis"],["ultras","unis"],["ultras","capy"],["samba","capy"],["samba","traffic"],["unis","capy"],["capy","traffic"],
+];
+const MAPS = { br: [BR_NODES, BR_EDGES], ca: [CA_NODES, CA_EDGES], mx: [MX_NODES, MX_EDGES], ai: [AI_NODES, AI_EDGES], ir: [IR_NODES, IR_EDGES], ru: [RU_NODES, RU_EDGES], cn: [CN_NODES, CN_EDGES], nuke: [NUKE_NODES, NUKE_EDGES], us: [NODES, EDGES], europe: [EURO_NODES, EURO_EDGES], nk: [NK_NODES, NK_EDGES], alpha: [ALPHA_NODES, ALPHA_EDGES] };
 
 // Upgrades. cur: "clout" or "cash". req: prerequisite id.
 const UPGRADES = {
@@ -638,6 +685,10 @@ const UPGRADES = {
     { id: "starbucks", name: "Order a Double-Double at Starbucks", cost: 5, cur: "clout", fx: { severity: .4, infect: .2 }, only: "ca", desc: "On camera. In Toronto. The Tim Hortons Lineup has seen it." },
     { id: "pasta",   name: "Put 'Pasta' on a Montreal Menu", cost: 8, cur: "clout", fx: { severity: .5, visibility: 1 }, only: "ca", desc: "In English. In large type. The Language Police are on their way with a ruler." },
     { id: "fiftyfirst", name: "Call It the 51st State", cost: 12, cur: "clout", fx: { severity: .6, spread: .4, visibility: 2 }, only: "ca", desc: "Five words. The whole country stops being polite for a week." },
+    { id: "vpnx",    name: "Post on X Through a VPN",  cost: 4, cur: "clout", fx: { severity: .35, infect: .3 }, only: "br", desc: "Technically a R$50,000-a-day fine. Technically everyone did it anyway." },
+    { id: "neymar",  name: "Say Neymar Is Overrated",  cost: 5, cur: "clout", fx: { severity: .45, infect: .3 }, only: "br", desc: "The one take that unites every football ultra in the country. Against you." },
+    { id: "highway", name: "Ask About the Climate Summit Highway", cost: 9, cur: "clout", fx: { severity: .5, visibility: 1 }, only: "br", desc: "They cut down the rainforest to drive to the rainforest summit. You just asked a question." },
+    { id: "capymeme",name: "Capybara Minister Meme",   cost: 13, cur: "clout", fx: { severity: .6, spread: .4, visibility: 2 }, only: "br", desc: "A capybara in a judge's robe, banning the internet. The Court opens a case about the capybara." },
     { id: "unhinged",name: "Full Unhinged Arc", cost: 25, cur: "clout", fx: { severity: 1, visibility: 3, cash: .5 }, req: "billboard", desc: "Livestream from a monster truck. Nobody knows what the bit is. Including you." },
   ],
   armor: [
@@ -674,6 +725,9 @@ const UPGRADES = {
     { id: "goosejacket", name: "Canada Goose Jacket",  cost: 4000,  cur: "cash", fx: { resist: 1 }, only: "ca", desc: "Warm, expensive, and the geese hate it. Bank compliance thinks you're one of them." },
     { id: "mattress",name: "Cash Under the Mattress", cost: 10000, cur: "cash", fx: { resist: 1, lives: 1 }, only: "ca", desc: "In loonies and toonies. Can't freeze what isn't in a bank. Saves you once." },
     { id: "alberta", name: "Move to Alberta",        cost: 35000, cur: "cash", fx: { resist: 3, cash: .2 }, only: "ca", desc: "Big trucks, no sales tax, and nobody there answers Ottawa's calls." },
+    { id: "brlawyer",name: "Lawyer Who Golfs With a Justice", cost: 12000, cur: "cash", fx: { resist: 2 }, only: "br", desc: "Eighteen holes, one handshake, and your inquiry gets 'reviewed.'" },
+    { id: "miami",   name: "Condo in Miami",           cost: 40000, cur: "cash", fx: { resist: 3, cash: .2 }, only: "br", desc: "Half of São Paulo already lives in Florida. You'll fit right in." },
+    { id: "accounts",name: "Seventeen Backup Accounts", cost: 7, cur: "clout", fx: { resist: 1, lives: 1 }, only: "br", desc: "They geo-block one, sixteen are left. Gets you through one ban." },
     { id: "dox",     name: "Burner Phone Discipline", cost: 5, cur: "clout", fx: { resist: 1 }, desc: "Paid in clout: you just have to stop posting your street." },
   ],
 };
@@ -879,6 +933,21 @@ const CA_EVENTS = [
   () => ({ msg: "The Online Harms bill died on the order paper again. Freeze −5.", f: () => { S.heat = clamp(S.heat - 5, 0, 100); } }),
 ];
 
+const TICKER_BR = [
+  "Supreme Court orders a post removed. Post now has 40 million views.",
+  "Fake News Inquiry enters its seventh year. Inquiry has opened an inquiry into itself.",
+  "Climate summit delegates take a highway through the rainforest to talk about the rainforest.",
+  "Telenovela adds a character based on you. He has an evil twin. The twin is also you.",
+  "Football ultras riot after a 0-0 draw. Both sides claim victory.",
+  "São Paulo traffic jam sets new record. Drivers have started a small town.",
+  "Capybara spotted in the Supreme Court parking lot. Nobody is surprised.",
+];
+const BR_EVENTS = [
+  () => ({ msg: "A justice ordered your account 'under review.' Inquiry +6.", f: () => { S.heat = clamp(S.heat + 6, 0, 100); } }),
+  () => ({ msg: "Brazilians in Florida discovered you. Pix payments flood in.", f: () => { S.cash += 9000 * S.df.cash; } }),
+  () => ({ msg: "Carnival week. Nobody in government is working, including the censors. Inquiry −5.", f: () => { S.heat = clamp(S.heat - 5, 0, 100); } }),
+];
+
 // built lazily: the tower lists are declared further down
 const SPECIAL_FOR = id => ({
   tower: { ticker: TICKER_TOWER, events: TOWER_EVENTS },
@@ -892,6 +961,7 @@ const SPECIAL_FOR = id => ({
   ai: { ticker: TICKER_AI, events: AI_EVENTS },
   mx: { ticker: TICKER_MX, events: MX_EVENTS },
   ca: { ticker: TICKER_CA, events: CA_EVENTS },
+  br: { ticker: TICKER_BR, events: BR_EVENTS },
 })[id];
 
 // Per-scenario wording: what the ban meter is, how you lose, how you win
@@ -1249,12 +1319,44 @@ FLAVOR.ca = {
     [.8, "The geese have picked you as their leader."],
   ],
 };
+FLAVOR.br = {
+  watchOff: "Supreme Court inquiry", watchOn: "Supreme Court inquiry",
+  intro: h => `${h} goes live from Rio. Somewhere in Brasília, a justice opens a fresh case file.`,
+  firstNotice: h => `The Fake News Inquiry adds ${h} to the list. It's a long list. It's been open since 2019.`, logNotice: "The Supreme Court opened an inquiry into you.",
+  life: h => `${h} got geo-blocked. Account number two of seventeen is live.`, lifeLog: "GEO-BLOCKED. Switched to a backup account.",
+  lose: "Banned in Brazil",
+  loseBody: (h, d) => `On day ${d} a justice ordered your account blocked nationwide, plus a fine for anyone who reads you through a VPN. You're in Miami now. The telenovela about you is in its third season.`,
+  win: "Carnival of Chaos",
+  winBody: h => `The whole country lost it at once. The ultras, the samba schools and the Party militants are all marching, and they're all mad at ${h}. The censors gave up and went to the beach. Buy "Run for President" next time to finish the job.`,
+  presTitle: h => `Presidente ${h.replace(/^@/, "")}`,
+  presBody: h => `Brazil voted ${h} in by a landslide, mostly out of spite. First decree: X stays on, permanently. Second: the Fake News Inquiry is finally closed. Third: the capybara is the new Minister of Calm.`,
+  modLabel: "Court order — tap to appeal", modIcon: "⚖",
+  chaosName: "Carnival of chaos",
+  tipping: h => `A samba school builds a float mocking ${h}. Another school builds one mocking the first. Carnival turns into a meme war.`,
+  copsBusy: "The censors are stuck in the São Paulo traffic jam. Your inquiry stalls.",
+  beats: [
+    [10, "Football ultras chant your meme in the stands. Both sides. At each other."],
+    [25, "The telenovela writers give up on the script and air your memes for a full episode."],
+    [40, "Capybaras wander into Brasília. Nobody can tell if it's a protest."],
+    [55, "The climate summit delegates are stuck on their own highway."],
+    [70, "The Supreme Court tries to ban the internet again. The internet bans it back."],
+    [85, "Carnival is declared year-round. Nobody shows up to work, including the government."],
+  ],
+  steps: h => [
+    [.05, `A justice's aide screenshots ${h}. Then asks for the screenshot to be removed.`],
+    [.15, "The Party militants forward your meme 900 times. To complain about it."],
+    [.3, `A Supreme Court ruling quotes ${h} in full, so now it's in the official record.`],
+    [.5, "Neymar likes your post by accident. The ultras go to war with themselves."],
+    [.7, "The São Paulo traffic jam is a fan club now."],
+    [.8, "Even the capybaras look agitated."],
+  ],
+};
 const flavor = k => (FLAVOR[S.sc.id] && FLAVOR[S.sc.id][k]) || FLAVOR.default[k];
 
 // Setup-screen sections for the scenario picker
 const SCENARIO_GROUPS = [
   ["Home", ["standard", "tower", "campus", "election", "alpha"]],
-  ["World Tour", ["ca", "mx", "europe", "cn", "ru", "ir", "nk"]],
+  ["World Tour", ["ca", "mx", "br", "europe", "cn", "ru", "ir", "nk"]],
   ["Apocalypse", ["nuke", "ai"]],
 ];
 
@@ -1313,7 +1415,8 @@ renderChoices();
 $("setupForm").addEventListener("submit", e => {
   e.preventDefault();
   S = newGame();
-  document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx", "ca");
+  Object.assign(shown, { clout: S.clout, cash: 0, infamy: 0 });
+  document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx", "ca", "br");
   if (S.sc.theme) document.documentElement.classList.add(S.sc.theme);
   $("setup").hidden = true; $("game").hidden = false;
   $("sHandle").textContent = S.handle;
@@ -1380,6 +1483,38 @@ function spreadFx(src, dst) {
   const a = dot.animate([{ transform: `translate(${src.x}px, ${src.y}px)` }, { transform: `translate(${dst.x}px, ${dst.y}px)` }], { duration: 520, easing: "ease-in" });
   a.onfinish = () => { dot.remove(); shock(dst); };
 }
+function banner(title, sub, color) {
+  if (reduceMotion) return;
+  $("bannerTitle").textContent = title;
+  $("bannerTitle").style.color = color || "";
+  $("bannerSub").textContent = sub || "";
+  $("bannerSub").hidden = !sub;
+  restart($("banner"), "show");
+}
+// rising sparks from burning nodes
+let lastEmber = 0;
+function embers(now) {
+  if (now - lastEmber < 120 || !$("fx")) return;
+  lastEmber = now;
+  const hot = S.nodes.filter(n => n.r > .25);
+  if (!hot.length || $("fx").childElementCount > 80) return;
+  const n = hot[Math.floor(Math.random() * hot.length)];
+  const r = radius(n);
+  const c = el("circle", { class: "ember", cx: n.x + rnd(-r * .7, r * .7), cy: n.y - rnd(0, r * .6), r: rnd(1.5, 3.5), fill: Math.random() < .5 ? "var(--fire)" : "var(--rage-2)", style: `--dx:${rnd(-24, 24).toFixed(0)}px` }, $("fx"));
+  setTimeout(() => c.remove(), 1450);
+}
+// stat numbers count toward their real value
+const shown = { clout: 0, cash: 0, infamy: 0 };
+function tickStats() {
+  const target = { clout: S.clout, cash: S.cash, infamy: S.nodes.reduce((s, n) => s + (n.t + n.m) * n.pop, 0) * 1e6 };
+  for (const k in shown) {
+    const d = target[k] - shown[k];
+    shown[k] = Math.abs(d) < Math.max(.5, Math.abs(target[k]) * .001) ? target[k] : shown[k] + d * .18;
+  }
+  $("sClout").textContent = Math.floor(shown.clout);
+  $("sCash").textContent = money(shown.cash);
+  $("sInfamy").textContent = fmt(shown.infamy);
+}
 function restart(node, cls) { node.classList.remove(cls); void node.getBoundingClientRect(); node.classList.add(cls); }
 function jolt(color) {
   if (reduceMotion) return;
@@ -1423,8 +1558,10 @@ function drawArcs(n, snap) {
   g.querySelector(".meltarc").setAttribute("d", arc(n.x, n.y, r, n.vr, n.vm));
   g.querySelector(".fillarc").setAttribute("d", arc(n.x, n.y, r, n.vm, n.vm + n.vt));
 }
-function animateArcs() {
+function animateArcs(now) {
   if (S && !$("game").hidden && !reduceMotion) {
+    tickStats();
+    if (!S.over) embers(now || 0);
     S.nodes.forEach(n => {
       let moved = false;
       for (const [v, k] of [["vt", "t"], ["vm", "m"], ["vr", "r"]]) {
@@ -1504,6 +1641,7 @@ function tick() {
     ticker(flavor("tipping")(S.handle), true);
     $("chaosBox").hidden = false;
     jolt("var(--rage-2)");
+    banner("Tipping point", "The meltdown left the internet", "var(--rage-2)");
   }
   S.chaos = clamp(riotShare / .7 * 100, 0, 100);
 
@@ -1518,6 +1656,7 @@ function tick() {
     S.heatOn = true;
     log(`<b>Day ${S.day}</b> ${flavor("logNotice")}`);
     ticker(flavor("firstNotice")(S.handle), true);
+    if (S.day > 0) banner("They noticed you", flavor("watchOn"), "var(--mod)");
   }
   if (S.heatOn) {
     const meltShare = melted / total;
@@ -1532,7 +1671,7 @@ function tick() {
   if (Math.random() < .42) spawnBubble("rage");
   if (melted > .3 && Math.random() < .22) spawnBubble("cash");
   if (S.heatOn && Math.random() < .18) spawnBubble("mod");
-  S.bubbles = S.bubbles.filter(b => { if (S.day - b.born > 7) { b.node.remove(); return false; } return true; });
+  S.bubbles = S.bubbles.filter(b => { if (S.day - b.born > 7) { b.node.remove(); return false; } if (S.day - b.born >= 5) b.node.classList.add("expiring"); return true; });
 
   // events, milestones, ticker
   if (S.day % 9 === 0) randomEvent();
@@ -1549,6 +1688,7 @@ function tick() {
     if (st.lives > 0) {
       st.lives--; S.heat = 60;
       jolt("var(--mod)");
+      banner(flavor("lifeLog").split(".")[0], "Extra life used", "var(--mod)");
       log(`<b>Day ${S.day}</b> ${flavor("lifeLog")}`);
       ticker(flavor("life")(S.handle), true);
     } else return endGame(false);
@@ -1599,7 +1739,7 @@ const TOWER_EVENTS = [
 function randomEvent() {
   const extra = SPECIAL_FOR(S.sc.id) ? SPECIAL_FOR(S.sc.id).events : [];
   // US-only gags stay out of the foreign maps
-  const base = ["nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx", "ca"].includes(S.sc.id) ? EVENTS.slice(4, 6) : EVENTS;
+  const base = ["nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx", "ca", "br"].includes(S.sc.id) ? EVENTS.slice(4, 6) : EVENTS;
   const pool = base.concat(extra, extra);
   const e = pool[Math.floor(Math.random() * pool.length)]();
   e.f(); log(`<b>Day ${S.day}</b> ${e.msg}`); ticker(e.msg);
@@ -1640,9 +1780,16 @@ function spawnBubble(kind) {
 function render() {
   const affected = S.nodes.reduce((s, n) => s + (n.t + n.m) * n.pop, 0) * 1e6;
   $("sDay").textContent = S.day;
-  $("sInfamy").textContent = fmt(affected);
-  $("sClout").textContent = Math.floor(S.clout);
-  $("sCash").textContent = money(S.cash);
+  if (reduceMotion) {
+    $("sInfamy").textContent = fmt(affected);
+    $("sClout").textContent = Math.floor(S.clout);
+    $("sCash").textContent = money(S.cash);
+  } else {
+    // bump the number when it jumps by a noticeable amount
+    if (S.clout - (S.lastClout ?? S.clout) >= 2) restart($("sClout"), "bump");
+    if (S.cash - (S.lastCash ?? S.cash) >= 1000) restart($("sCash"), "bump");
+  }
+  S.lastClout = S.clout; S.lastCash = S.cash;
   if (flavor("credit")) {
     // shown as a score that counts down from 1,000
     $("sHeat").textContent = Math.max(0, Math.round(1000 - S.heat * 10)).toLocaleString();
@@ -1657,7 +1804,8 @@ function render() {
   document.querySelector(".mapbox").classList.toggle("burning", S.chaos > 30);
   $("heatLabel").textContent = S.heatOn ? flavor("watchOn") : flavor("watchOff");
   $("labClout").textContent = `${Math.floor(S.clout)} clout · ${money(S.cash)}`;
-  let rank = RANKS[0][1]; RANKS.forEach(([v, r]) => { if (S.peakInfamy >= v) rank = r; });
+  let rank = RANKS[0][1], rankIdx = 0; RANKS.forEach(([v, r], i) => { if (S.peakInfamy >= v) { rank = r; rankIdx = i; } });
+  if (rankIdx > (S.rankIdx || 0)) { S.rankIdx = rankIdx; banner(rank, "New rank", "var(--cash)"); restart($("rankLabel"), "bump"); }
   $("rankLabel").textContent = rank;
   renderMap(); renderDossier(); renderSortie();
   if (!$("labModal").hidden) refreshLab();
@@ -1767,6 +1915,7 @@ document.querySelectorAll("[data-speed]").forEach(b => b.onclick = () => setSpee
 // ---------- end ----------
 function endGame(won) {
   S.over = true; setSpeed(0); $("labModal").hidden = true; render();
+  $("banner").classList.remove("show");
   const affected = S.nodes.reduce((s, n) => s + (n.t + n.m) * n.pop, 0) * 1e6;
   const pres = won && S.st.president > 0;
   const title = won ? (pres ? flavor("presTitle")(S.handle) : flavor("win")) : flavor("lose");
@@ -1783,7 +1932,7 @@ function endGame(won) {
     const best = JSON.parse(localStorage.getItem("outrage-best") || "null");
     if (!best || affected > best.infamy) localStorage.setItem("outrage-best", JSON.stringify({ handle: S.handle, infamy: affected, cash: S.earned, day: S.day }));
   } catch (e) {}
-  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx", "ca"); $("chaosBox").hidden = true; $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
+  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx", "ca", "br"); $("chaosBox").hidden = true; $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
 }
 })();
 </script>
