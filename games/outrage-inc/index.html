@@ -307,6 +307,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02e
           <button data-speed="1" aria-pressed="true" aria-label="Normal speed">1×</button>
           <button data-speed="2" aria-label="Double speed">2×</button>
           <button data-speed="4" aria-label="Quad speed">4×</button>
+          <button id="muteBtn" aria-label="Mute sound">🔊</button>
         </div>
       </div>
       <div class="side">
@@ -1402,7 +1403,7 @@ function renderChoices() {
       : groups[g].map(card).join("");
     box.onclick = e => {
       const b = e.target.closest(".choice"); if (!b) return;
-      pick[g] = b.dataset.id; renderChoices();
+      pick[g] = b.dataset.id; renderChoices(); SFX.init(); SFX.play("click");
     };
   });
   try {
@@ -1415,6 +1416,7 @@ renderChoices();
 $("setupForm").addEventListener("submit", e => {
   e.preventDefault();
   S = newGame();
+  SFX.init(); setTimeout(() => SFX.play("news"), 60);
   Object.assign(shown, { clout: S.clout, cash: 0, infamy: 0 });
   document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx", "ca", "br");
   if (S.sc.theme) document.documentElement.classList.add(S.sc.theme);
@@ -1461,6 +1463,88 @@ function buildMap() {
   el("g", { id: "bubbles" }, svg);
   el("g", { id: "fx" }, svg);
 }
+
+// ---------- sound ----------
+// Every sound is synthesized with Web Audio, so nothing loads from the network.
+// The context starts on the first click (browsers block audio before that).
+const SFX = (() => {
+  let ctx = null, master = null, muted = false;
+  const last = {};
+  try { muted = localStorage.getItem("outrage-muted") === "1"; } catch (e) {}
+  function init() {
+    if (ctx) { if (ctx.state === "suspended") ctx.resume(); return; }
+    try {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      master = ctx.createGain(); master.gain.value = .32; master.connect(ctx.destination);
+    } catch (e) { ctx = null; }
+  }
+  function tone(freq, dur, o = {}) {
+    const t = ctx.currentTime + (o.delay || 0);
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.type = o.type || "sine";
+    osc.frequency.setValueAtTime(freq, t);
+    if (o.slide) osc.frequency.exponentialRampToValueAtTime(o.slide, t + dur);
+    if (o.wobble) { const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = o.wobble; lg.gain.value = freq * .04; lfo.connect(lg).connect(osc.frequency); lfo.start(t); lfo.stop(t + dur + .05); }
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(o.vol ?? .4, t + (o.attack || .006));
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    osc.connect(g).connect(master);
+    osc.start(t); osc.stop(t + dur + .05);
+  }
+  function noise(dur, o = {}) {
+    const t = ctx.currentTime + (o.delay || 0);
+    const buf = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * dur), ctx.sampleRate);
+    const d = buf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = o.filter || "lowpass";
+    f.frequency.setValueAtTime(o.from || 2000, t); f.frequency.exponentialRampToValueAtTime(o.to || 200, t + dur);
+    const g = ctx.createGain(); g.gain.setValueAtTime(o.vol ?? .4, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    src.connect(f).connect(g).connect(master); src.start(t); src.stop(t + dur);
+  }
+  const notes = (fs, step, o) => fs.forEach((f, i) => tone(f, i === fs.length - 1 ? (o.end || .3) : (o.len || .12), { ...o, delay: i * step }));
+  const sounds = {
+    click() { tone(1400, .03, { type: "square", vol: .05 }); },
+    pop() { tone(500 + Math.random() * 120, .13, { slide: 1100, vol: .35 }); },
+    coin() { tone(988, .07, { type: "square", vol: .14 }); tone(1319, .28, { type: "square", vol: .14, delay: .07 }); },
+    whoosh() { noise(.32, { filter: "bandpass", from: 3500, to: 300, vol: .35 }); },
+    spread() { tone(120, .22, { slide: 55, vol: .45 }); tone(700, .09, { type: "triangle", vol: .16, delay: .04, slide: 1100 }); },
+    buy() { notes([523, 659, 784], .065, { type: "triangle", vol: .28, end: .22 }); },
+    news() { tone(880, .11, { type: "square", vol: .1 }); tone(660, .22, { type: "square", vol: .1, delay: .12 }); },
+    rank() { notes([523, 659, 784, 1047], .09, { type: "square", vol: .12, end: .45 }); },
+    warn() { tone(220, .14, { type: "square", vol: .14 }); tone(220, .14, { type: "square", vol: .14, delay: .2 }); },
+    siren() { for (let i = 0; i < 3; i++) tone(650, .28, { type: "sawtooth", vol: .1, slide: 1050, delay: i * .28 }); },
+    boom() { noise(1.4, { from: 1400, to: 40, vol: .7 }); tone(90, 1.2, { slide: 28, vol: .55 }); },
+    zap() { tone(1900, .22, { type: "sawtooth", slide: 110, vol: .15 }); noise(.14, { filter: "highpass", from: 5000, to: 1500, vol: .14 }); },
+    win() { notes([392, 523, 659, 784, 1047], .11, { type: "square", vol: .13, end: .9 }); tone(523, .9, { type: "triangle", vol: .12, delay: .44 }); },
+    lose() { [392, 370, 349].forEach((f, i) => tone(f, .36, { type: "sawtooth", vol: .13, delay: i * .4 })); tone(330, 1.2, { type: "sawtooth", vol: .13, delay: 1.2, slide: 290, wobble: 6 }); },
+  };
+  return {
+    init,
+    play(name) {
+      if (muted || !ctx || ctx.state !== "running") return;
+      const now = performance.now();
+      if (now - (last[name] || 0) < 90) return;   // keep 4× speed from turning into noise
+      last[name] = now;
+      try { sounds[name](); } catch (e) {}
+    },
+    toggle() {
+      muted = !muted;
+      try { localStorage.setItem("outrage-muted", muted ? "1" : "0"); } catch (e) {}
+      if (!muted) init();
+      return muted;
+    },
+    get muted() { return muted; },
+  };
+})();
+function renderMute() {
+  $("muteBtn").textContent = SFX.muted ? "🔇" : "🔊";
+  $("muteBtn").setAttribute("aria-label", SFX.muted ? "Unmute sound" : "Mute sound");
+}
+$("muteBtn").onclick = () => { SFX.toggle(); renderMute(); SFX.play("click"); };
+document.addEventListener("keydown", e => { if ((e.key === "m" || e.key === "M") && !e.target.closest("input")) { SFX.toggle(); renderMute(); } });
+// any first click unlocks audio
+document.addEventListener("pointerdown", () => SFX.init(), { once: true });
+renderMute();
 
 // ---------- effects ----------
 const reduceMotion = (() => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } })();
@@ -1585,6 +1669,7 @@ function startAt(id) {
   const n = S.nodes.find(x => x.id === id);
   n.t = .02; S.started = true;
   shock(n); setTimeout(() => shock(n), 180);
+  SFX.play("spread");
   $("maphint").textContent = "";
   log(`<b>Day ${S.day}</b> First post drops in ${n.name}. Somebody already screenshotted it.`);
   ticker(`${S.handle} posts something in ${n.name}. Nobody is okay.`);
@@ -1616,6 +1701,7 @@ function tick() {
       if (lvl > .12 && dst.t + dst.m === 0 && Math.random() < 0.05 * st.spread * lvl * dst.susc) {
         dst.t = .01;
         spreadFx(src, dst);
+        SFX.play("spread");
         S.clout += 2 * S.df.clout;
         log(`<b>Day ${S.day}</b> ${dst.name} found out. +2 clout.`);
         ticker(dst.blurb);
@@ -1640,7 +1726,7 @@ function tick() {
     log(`<b>Day ${S.day}</b> TIPPING POINT. The meltdown left the internet. The 🔥 Collapse tab is open in the Content Lab.`);
     ticker(flavor("tipping")(S.handle), true);
     $("chaosBox").hidden = false;
-    jolt("var(--rage-2)");
+    jolt("var(--rage-2)"); SFX.play("boom");
     banner("Tipping point", "The meltdown left the internet", "var(--rage-2)");
   }
   S.chaos = clamp(riotShare / .7 * 100, 0, 100);
@@ -1656,7 +1742,7 @@ function tick() {
     S.heatOn = true;
     log(`<b>Day ${S.day}</b> ${flavor("logNotice")}`);
     ticker(flavor("firstNotice")(S.handle), true);
-    if (S.day > 0) banner("They noticed you", flavor("watchOn"), "var(--mod)");
+    if (S.day > 0) { banner("They noticed you", flavor("watchOn"), "var(--mod)"); SFX.play("warn"); }
   }
   if (S.heatOn) {
     const meltShare = melted / total;
@@ -1687,7 +1773,7 @@ function tick() {
   if (S.heat >= 100) {
     if (st.lives > 0) {
       st.lives--; S.heat = 60;
-      jolt("var(--mod)");
+      jolt("var(--mod)"); SFX.play("siren");
       banner(flavor("lifeLog").split(".")[0], "Extra life used", "var(--mod)");
       log(`<b>Day ${S.day}</b> ${flavor("lifeLog")}`);
       ticker(flavor("life")(S.handle), true);
@@ -1764,9 +1850,9 @@ function spawnBubble(kind) {
   const b = { node: g, born: S.day, kind };
   const collect = () => {
     if (!S.bubbles.includes(b)) return;
-    if (kind === "rage") { const c = Math.round(rnd(2, 4) * S.df.clout); S.clout += c; floater(x, y, `+${c} clout`, "var(--rage)"); }
-    if (kind === "cash") { const c = Math.round((1500 + S.earned * .02) * S.df.cash); S.cash += c; floater(x, y, `+${money(c)}`, "var(--cash)"); }
-    if (kind === "mod") { S.heat = clamp(S.heat - 1.5, 0, 100); floater(x, y, flavor("credit") ? "+15 credit" : "−heat", "var(--mod)"); }
+    if (kind === "rage") { const c = Math.round(rnd(2, 4) * S.df.clout); S.clout += c; floater(x, y, `+${c} clout`, "var(--rage)"); SFX.play("pop"); }
+    if (kind === "cash") { const c = Math.round((1500 + S.earned * .02) * S.df.cash); S.cash += c; floater(x, y, `+${money(c)}`, "var(--cash)"); SFX.play("coin"); }
+    if (kind === "mod") { S.heat = clamp(S.heat - 1.5, 0, 100); floater(x, y, flavor("credit") ? "+15 credit" : "−heat", "var(--mod)"); SFX.play("whoosh"); }
     g.remove(); S.bubbles = S.bubbles.filter(x => x !== b); render();
   };
   g.addEventListener("click", collect);
@@ -1798,14 +1884,17 @@ function render() {
     $("sHeat").textContent = Math.floor(S.heat) + "%";
     $("heatFill").style.width = S.heat + "%";
   }
-  document.querySelector(".stat.heat").classList.toggle("danger", S.heat >= 80 && !S.over);
+  const danger = S.heat >= 80 && !S.over;
+  if (danger && !S.inDanger) SFX.play("warn");
+  S.inDanger = danger;
+  document.querySelector(".stat.heat").classList.toggle("danger", danger);
   $("chaosFill").style.width = S.chaos + "%";
   $("chaosLabel").textContent = flavor("chaosText") ? flavor("chaosText")(S.chaos) : `${flavor("chaosName")} ${Math.floor(S.chaos)}%`;
   document.querySelector(".mapbox").classList.toggle("burning", S.chaos > 30);
   $("heatLabel").textContent = S.heatOn ? flavor("watchOn") : flavor("watchOff");
   $("labClout").textContent = `${Math.floor(S.clout)} clout · ${money(S.cash)}`;
   let rank = RANKS[0][1], rankIdx = 0; RANKS.forEach(([v, r], i) => { if (S.peakInfamy >= v) { rank = r; rankIdx = i; } });
-  if (rankIdx > (S.rankIdx || 0)) { S.rankIdx = rankIdx; banner(rank, "New rank", "var(--cash)"); restart($("rankLabel"), "bump"); }
+  if (rankIdx > (S.rankIdx || 0)) { S.rankIdx = rankIdx; SFX.play("rank"); banner(rank, "New rank", "var(--cash)"); restart($("rankLabel"), "bump"); }
   $("rankLabel").textContent = rank;
   renderMap(); renderDossier(); renderSortie();
   if (!$("labModal").hidden) refreshLab();
@@ -1833,9 +1922,11 @@ function log(html) {
 }
 function ticker(msg, big) {
   $("ticker").textContent = msg.replaceAll("{h}", S ? S.handle : "you");
+  if (big && reduceMotion) SFX.play("news");
   if (reduceMotion) return;
   restart($("ticker"), "in");
   if (big) restart(document.querySelector(".ticker b"), "flash");
+  if (big) SFX.play("news");
 }
 
 // ---------- Content Lab ----------
@@ -1880,7 +1971,7 @@ $("sortieBtn").onclick = () => {
   if (!n || S.over || S.clout < SORTIE_COST || n.m - n.r <= .1) return;
   S.clout -= SORTIE_COST;
   n.r = clamp(n.r + .3, 0, n.m);
-  shock(n); floater(n.x, n.y - radius(n), "SORTIE", "var(--fire)");
+  shock(n); floater(n.x, n.y - radius(n), "SORTIE", "var(--fire)"); SFX.play("zap");
   S.heat = clamp(S.heat + 2, 0, 100);
   log(`<b>Day ${S.day}</b> Sortie on ${n.name}. ${Math.round(n.r * 100)}% of it is offline.`);
   ticker(flavor("sortieTicker")(n.name));
@@ -1890,7 +1981,7 @@ $("sortieBtn").onclick = () => {
 $("openLab").onclick = () => { $("labModal").hidden = false; renderLab(); };
 $("labModal").addEventListener("click", e => {
   if (e.target === $("labModal") || e.target.closest("[data-close]")) { $("labModal").hidden = true; return; }
-  const tab = e.target.closest("[data-tab]"); if (tab) { labTab = tab.dataset.tab; renderLab(); return; }
+  const tab = e.target.closest("[data-tab]"); if (tab) { labTab = tab.dataset.tab; renderLab(); SFX.play("click"); return; }
   const b = e.target.closest("[data-up]"); if (!b || b.disabled) return;
   const u = Object.values(UPGRADES).flat().find(x => x.id === b.dataset.up);
   if (u.cur === "clout") S.clout -= u.cost; else S.cash -= u.cost;
@@ -1901,6 +1992,7 @@ $("labModal").addEventListener("click", e => {
   render(); renderLab();
   const card = $("labGrid").querySelector(`[data-up="${u.id}"]`);
   if (card && !reduceMotion) card.classList.add("bought");
+  SFX.play("buy");
 });
 document.addEventListener("keydown", e => { if (e.key === "Escape") $("labModal").hidden = true; });
 
@@ -1910,7 +2002,7 @@ function setSpeed(v) {
   if (v > 0) timer = setInterval(tick, 900 / v);
   document.querySelectorAll("[data-speed]").forEach(b => b.setAttribute("aria-pressed", +b.dataset.speed === v));
 }
-document.querySelectorAll("[data-speed]").forEach(b => b.onclick = () => setSpeed(+b.dataset.speed));
+document.querySelectorAll("[data-speed]").forEach(b => b.onclick = () => { setSpeed(+b.dataset.speed); SFX.play("click"); });
 
 // ---------- end ----------
 function endGame(won) {
@@ -1928,6 +2020,8 @@ function endGame(won) {
     <button class="go" id="again">Run it back</button>`;
   $("endModal").hidden = false;
   jolt(won ? "var(--rage)" : "var(--mod)");
+  // Doomsday's win is the world ending, so it gets the explosion first
+  if (won && S.sc.id === "nuke") { SFX.play("boom"); setTimeout(() => SFX.play("win"), 900); } else SFX.play(won ? "win" : "lose");
   try {
     const best = JSON.parse(localStorage.getItem("outrage-best") || "null");
     if (!best || affected > best.infamy) localStorage.setItem("outrage-best", JSON.stringify({ handle: S.handle, infamy: affected, cash: S.earned, day: S.day }));
