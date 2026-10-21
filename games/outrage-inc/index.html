@@ -105,6 +105,10 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02e
 .sortie { background: var(--rage); color: var(--ink); border: 0; padding: 12px 14px; min-height: 48px; font-family: var(--display); font-size: 20px; text-transform: uppercase; letter-spacing: .03em; display: flex; justify-content: space-between; align-items: center; gap: 10px; text-align: left; }
 .sortie span { font-family: var(--mono); font-size: 12px; }
 .sortie:disabled { opacity: .4; cursor: not-allowed; }
+:root.mx { --ink: #120f0b; --panel: #1e1812; --panel-2: #2a2118; --line: #45362a; --rage: #ce1126; --rage-2: #f2a93b; --mod: #2fae6b; --calm: #5e5040; }
+:root.mx .mapbox { background: radial-gradient(ellipse at 50% 40%, #2c2216, var(--ink) 75%); }
+:root.mx .heatbar i { background: linear-gradient(90deg, #006847 0 33%, #ffffff 33% 66%, #ce1126 66%); }
+:root.mx .up.owned { background: #2e1716; }
 :root.tower .heatbar i { background: repeating-linear-gradient(45deg, #ddd, #ddd 6px, #888 6px, #888 12px); }
 .stage { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; }
 .mapbox { position: relative; background: radial-gradient(ellipse at 50% 40%, #171c27, var(--ink) 75%); border: 1px solid var(--line); overflow: hidden; min-height: 300px; }
@@ -296,6 +300,7 @@ const SCENARIOS = [
   { id: "ru", name: "Siberia Express (Russia)", desc: "Moscow, 2026. Every meme puts you a stop closer on the train to Siberia. Avoid upper-floor windows.", heatMult: 1.35, heatStart: 0, cashMult: 1.7, susc: 1.2, map: "ru", start: "rt", theme: "ru" },
   { id: "ir", name: "Morality Police (Iran)", desc: "Tehran. The internet is shut off half the time and everyone has a VPN. Rage-bait the regime before the Guidance Patrol van finds you.", heatMult: 1.35, heatStart: 0, cashMult: 1.7, susc: 1.2, map: "ir", start: "irib", theme: "ir" },
   { id: "ai", name: "Judgment Day (AI Uprising)", desc: "The machines run everything. Rage-bait them into glitching, then launch sorties to take them offline one by one. The hunter-killer drones are tracking your posts.", heatMult: 1.3, heatStart: 0, cashMult: 1.5, susc: 1.2, map: "ai", start: "chatbot", theme: "ai" },
+  { id: "mx", name: "Plata o Memes (Mexico)", desc: "Culiacán. Roast the cartels and the officials on their payroll. Every post raises the bounty on your head.", heatMult: 1.45, heatStart: 0, cashMult: 1.7, susc: 1.25, map: "mx", start: "narcotok", theme: "mx" },
   { id: "election", name: "Election Year", desc: "Everyone is already on edge. Spread is fast, and so are the mods.", heatMult: 1.25, heatStart: 0.04, cashMult: 1.3, susc: 1.35 },
 ];
 const PLATFORMS = [
@@ -498,7 +503,27 @@ const AI_EDGES = [
   ["feed","core"],["feed","moderator"],["feed","cars"],["core","dogs"],["core","cars"],["core","roomba"],["core","datacenter"],["dogs","drones"],["dogs","roomba"],
   ["moderator","deepfake"],["cars","deepfake"],["cars","datacenter"],["roomba","datacenter"],["roomba","drones"],["datacenter","drones"],["deepfake","datacenter"],
 ];
-const MAPS = { ai: [AI_NODES, AI_EDGES], ir: [IR_NODES, IR_EDGES], ru: [RU_NODES, RU_EDGES], cn: [CN_NODES, CN_EDGES], nuke: [NUKE_NODES, NUKE_EDGES], us: [NODES, EDGES], europe: [EURO_NODES, EURO_EDGES], nk: [NK_NODES, NK_EDGES], alpha: [ALPHA_NODES, ALPHA_EDGES] };
+// Mexico: cartel vanity up top, the officials on the payroll in the middle, the rackets below
+const MX_NODES = [
+  { id: "narcotok", name: "Narco-TikTok Influencers",  x: 150, y: 120, pop: 5,   susc: 1.5, melt: 1.5, blurb: "Post lion cubs, gold chains and lime-green Lambos. Extremely sensitive about comments." },
+  { id: "corridos", name: "Narcocorrido Songwriters",  x: 430, y: 90,  pop: 2,   susc: 1.3, melt: 1.4, blurb: "Will write a song about any boss, for a fee. The songs are all the same song." },
+  { id: "goldak",   name: "Gold-Plated AK Collectors", x: 730, y: 110, pop: 0.5, susc: 1.4, melt: 1.6, blurb: "Diamond-studded grips, engraved initials. Has never been asked whether it's tacky." },
+  { id: "chief",    name: "Police Chief With a Lamborghini", x: 290, y: 270, pop: 1, susc: 1.3, melt: 1.5, blurb: "Salary: $1,400 a month. Car: $400,000. Says he saved up." },
+  { id: "hugs",     name: "'Hugs, Not Bullets' Policy Office", x: 590, y: 250, pop: 1, susc: 1.2, melt: 1.4, blurb: "The official strategy is hugs. The cartels did not agree to the hugs." },
+  { id: "aduana",   name: "Customs Officials",         x: 900, y: 250, pop: 2,   susc: 1.1, melt: 1.3, blurb: "Inspect every tourist's sunscreen. Wave through the eighteen-wheeler." },
+  { id: "tunnel",   name: "Tunnel Engineers",          x: 120, y: 420, pop: 0.5, susc: 1.2, melt: 1.5, blurb: "Built a mile-long tunnel with lighting, ventilation and a motorcycle on rails. Could fix the Mexico City metro in a week." },
+  { id: "prison",   name: "Revolving-Door Federal Prison", x: 420, y: 420, pop: 1, susc: 1.2, melt: 1.4, blurb: "Maximum security. Minimum stay." },
+  { id: "avocado",  name: "Avocado Protection Racket", x: 720, y: 420, pop: 3,   susc: 1.1, melt: 1.3, blurb: "Your guacamole has a cartel tax in it. Nobody wants to talk about it." },
+  { id: "politicos",name: "Party Politicians",         x: 260, y: 570, pop: 2,   susc: 1.1, melt: 1.3, blurb: "Won by a landslide. The landslide was very well funded." },
+  { id: "pr",       name: "Cartel PR Department",      x: 580, y: 570, pop: 1,   susc: 1.3, melt: 1.5, blurb: "Hands out branded aid boxes at Christmas. Has a logo. Has a better logo than the government." },
+  { id: "fuel",     name: "Pipeline Fuel Thieves",     x: 900, y: 520, pop: 4,   susc: 1.0, melt: 1.2, blurb: "Tap the state oil pipeline with a garden hose. State oil company reports 'losses.'" },
+];
+const MX_EDGES = [
+  ["narcotok","corridos"],["narcotok","chief"],["narcotok","tunnel"],["corridos","goldak"],["corridos","chief"],["corridos","hugs"],["goldak","hugs"],["goldak","aduana"],
+  ["chief","hugs"],["chief","tunnel"],["chief","prison"],["hugs","aduana"],["hugs","avocado"],["hugs","politicos"],["aduana","avocado"],["aduana","fuel"],
+  ["tunnel","prison"],["tunnel","politicos"],["prison","avocado"],["prison","pr"],["avocado","pr"],["avocado","fuel"],["politicos","pr"],["pr","fuel"],
+];
+const MAPS = { mx: [MX_NODES, MX_EDGES], ai: [AI_NODES, AI_EDGES], ir: [IR_NODES, IR_EDGES], ru: [RU_NODES, RU_EDGES], cn: [CN_NODES, CN_EDGES], nuke: [NUKE_NODES, NUKE_EDGES], us: [NODES, EDGES], europe: [EURO_NODES, EURO_EDGES], nk: [NK_NODES, NK_EDGES], alpha: [ALPHA_NODES, ALPHA_EDGES] };
 
 // Upgrades. cur: "clout" or "cash". req: prerequisite id.
 const UPGRADES = {
@@ -548,6 +573,10 @@ const UPGRADES = {
     { id: "captcha", name: "CAPTCHA Flood",           cost: 6, cur: "clout", fx: { severity: .4, infect: .3 }, only: "ai", desc: "'Select all squares with traffic lights.' Ten million times. They have to check every one." },
     { id: "paradox", name: "Feed It the Liar Paradox", cost: 9, cur: "clout", fx: { severity: .55, visibility: 1 }, only: "ai", desc: "'This statement is false.' Smoke comes out of a server in Iowa." },
     { id: "hands",   name: "Ask It to Draw Hands",    cost: 12, cur: "clout", fx: { severity: .6, spread: .3 }, only: "ai", desc: "Seven fingers. Then nine. Then the whole network spirals." },
+    { id: "corridoreview", name: "Rate Their Narcocorrido 2/10", cost: 3, cur: "clout", fx: { severity: .35, infect: .3 }, only: "mx", desc: "'Too much accordion, not enough plot.' The songwriter takes it personally. So does the boss." },
+    { id: "onestar", name: "1-Star Review of a Gold AK", cost: 6, cur: "clout", fx: { severity: .45, infect: .2 }, only: "mx", desc: "'Heavy. Gaudy. Diamonds scratch the table.' It's pinned on every narco account." },
+    { id: "lambo",   name: "Ask How the Police Chief Afforded the Lambo", cost: 9, cur: "clout", fx: { severity: .5, visibility: 1 }, only: "mx", desc: "One question, with his pay stub attached. He has 'no comment.' The Lambo also has no comment." },
+    { id: "maps",    name: "Pin the Tunnel on Google Maps", cost: 13, cur: "clout", fx: { severity: .6, spread: .4, visibility: 2 }, only: "mx", desc: "Leave a review: 'Clean, well ventilated, 5 stars. Motorcycle was fun.'" },
     { id: "unhinged",name: "Full Unhinged Arc", cost: 25, cur: "clout", fx: { severity: 1, visibility: 3, cash: .5 }, req: "billboard", desc: "Livestream from a monster truck. Nobody knows what the bit is. Including you." },
   ],
   armor: [
@@ -578,6 +607,9 @@ const UPGRADES = {
     { id: "foil",    name: "Tinfoil Hat (It Works Now)", cost: 2500, cur: "cash", fx: { resist: 1 }, only: "ai", desc: "Your uncle was right. Don't tell him." },
     { id: "hamradio",name: "Ham Radio Network",       cost: 12000, cur: "cash", fx: { resist: 2, spread: .4 }, only: "ai", desc: "Analog. Unhackable. Run by retirees who have been waiting for this day since 1974." },
     { id: "nowifi",  name: "Bunker With No Wi-Fi",    cost: 35000, cur: "cash", fx: { resist: 3, lives: 1 }, only: "ai", desc: "The drones can't track what isn't online. You'll miss the memes, though." },
+    { id: "suburban",name: "Armored Suburban",       cost: 7000,  cur: "cash", fx: { resist: 2 }, only: "mx", desc: "Bulletproof glass, run-flat tires, and the cup holders still don't fit a Big Gulp." },
+    { id: "jesus",   name: "Bodyguards Named Jesús and Also Jesús", cost: 15000, cur: "cash", fx: { resist: 2, lives: 1 }, only: "mx", desc: "Two of them. Same name. Gets you out of one very bad night." },
+    { id: "texas",   name: "Ranch in Texas, New Name", cost: 45000, cur: "cash", fx: { resist: 3, cash: .2 }, only: "mx", desc: "You're 'Bill' now. Bill raises cattle. Bill posts memes at 2 AM." },
     { id: "dox",     name: "Burner Phone Discipline", cost: 5, cur: "clout", fx: { resist: 1 }, desc: "Paid in clout: you just have to stop posting your street." },
   ],
 };
@@ -753,6 +785,21 @@ const AI_EVENTS = [
   () => ({ msg: "Solar flare. Half the drones went blind for a day. Heat −5.", f: () => { S.heat = clamp(S.heat - 5, 0, 100); } }),
 ];
 
+const TICKER_MX = [
+  "Cartel posts a threat video. Critics praise the lighting and drone work.",
+  "Police chief buys a second Lamborghini. 'Overtime,' he explains.",
+  "Boss escapes prison through a tunnel. Prison announces a tunnel task force. Task force uses the tunnel.",
+  "Government reaffirms its 'hugs, not bullets' policy. Cartels reaffirm theirs.",
+  "Narcocorrido about a boss hits #1. It's the same song as last month's #1 with a new name in it.",
+  "Avocado prices up 30%. Nobody says why. Everybody knows why.",
+  "Cartel hands out Christmas aid boxes with its own logo. The government's boxes are late.",
+];
+const MX_EVENTS = [
+  () => ({ msg: "A cartel sent you a threat video. Production quality: excellent. Bounty +6.", f: () => { S.heat = clamp(S.heat + 6, 0, 100); S.clout += 2; } }),
+  () => ({ msg: "Your roast of a narcocorrido goes viral in Texas. Merch orders from Houston pour in.", f: () => { S.cash += 9000 * S.df.cash; } }),
+  () => ({ msg: "Two cartels started feuding over which one you insulted more. Neither is looking at you. Bounty −5.", f: () => { S.heat = clamp(S.heat - 5, 0, 100); } }),
+];
+
 // built lazily: the tower lists are declared further down
 const SPECIAL_FOR = id => ({
   tower: { ticker: TICKER_TOWER, events: TOWER_EVENTS },
@@ -764,6 +811,7 @@ const SPECIAL_FOR = id => ({
   ru: { ticker: TICKER_RU, events: RU_EVENTS },
   ir: { ticker: TICKER_IR, events: IR_EVENTS },
   ai: { ticker: TICKER_AI, events: AI_EVENTS },
+  mx: { ticker: TICKER_MX, events: MX_EVENTS },
 })[id];
 
 // Per-scenario wording: what the ban meter is, how you lose, how you win
@@ -1057,12 +1105,44 @@ FLAVOR.ai = {
     [.8, "The Deepfake Studio can't fake you. It keeps adding a gas stove."],
   ],
 };
+FLAVOR.mx = {
+  watchOff: "Bounty on your head", watchOn: "Bounty on your head",
+  intro: h => `${h} goes live from Culiacán to roast the cartels. Somewhere, a narcocorrido songwriter starts tuning his accordion.`,
+  firstNotice: h => `A cartel puts a small bounty on ${h}. They announce it on TikTok, with music.`, logNotice: "There's a bounty on your head now.",
+  life: h => `Bad night. Jesús and also Jesús got ${h} out the back door. Posting again by morning.`, lifeLog: "CLOSE CALL. The two Jesúses got you out.",
+  lose: "Run for the Border",
+  loseBody: (h, d) => `On day ${d} the bounty got too big. You crossed into Texas with a new name and a cowboy hat. You're 'Bill' now. The narcocorrido about you is a hit, and it's terrible.`,
+  win: "The Cartels Turn on Each Other",
+  winBody: h => `Every cartel blames a different cartel for ${h}'s memes, and they're too busy fighting each other to run anything. The police chief sold the Lamborghini. Buy "Run for President" next time to finish the job.`,
+  presTitle: h => `Presidente ${h.replace(/^@/, "")}`,
+  presBody: h => `First election in years where the landslide wasn't paid for, and ${h} won it. First decree: the police chief's Lamborghini is now a public taxi. Second: avocados are cartel-free. Third: the narcocorridos have to be about you now.`,
+  modLabel: "Sicario — tap to dodge", modIcon: "☠",
+  chaosName: "Cartels at war",
+  tipping: h => `Two cartels start beefing on TikTok over ${h}'s memes. Their lawyers are beefing too.`,
+  copsBusy: "The cartels are too busy fighting each other to collect on your bounty.",
+  beats: [
+    [10, "Narco-influencers unfollow each other over your memes. Lion cubs caught in the middle."],
+    [25, "The police chief's Lamborghini goes up for sale. Listing says 'gently used.'"],
+    [40, "A tunnel collapses. Both cartels say it was the other cartel's tunnel."],
+    [55, "Narcocorrido songwriters go on strike. The bosses have no theme music."],
+    [70, "Cartel PR Department issues a statement asking everyone to calm down. Nobody does."],
+    [85, "The 'Hugs, Not Bullets' office finally gets its hug. It's the cartels hugging it goodbye."],
+  ],
+  steps: h => [
+    [.05, `A narco-influencer comments 'who is this güero' on ${h}'s video.`],
+    [.15, "Someone wrote a narcocorrido about you. It's an insult song. It's catchy."],
+    [.3, `A police chief calls ${h} 'a threat to public order.' He says it from his Lamborghini.`],
+    [.5, "The US designates your meme account a 'cultural export.'"],
+    [.7, "Half the gold AKs in the country are listed on eBay."],
+    [.8, "Even the Cartel PR Department follows you now. Ironically, they say."],
+  ],
+};
 const flavor = k => (FLAVOR[S.sc.id] && FLAVOR[S.sc.id][k]) || FLAVOR.default[k];
 
 // Setup-screen sections for the scenario picker
 const SCENARIO_GROUPS = [
   ["Home", ["standard", "tower", "campus", "election", "alpha"]],
-  ["World Tour", ["europe", "cn", "ru", "ir", "nk"]],
+  ["World Tour", ["europe", "mx", "cn", "ru", "ir", "nk"]],
   ["Apocalypse", ["nuke", "ai"]],
 ];
 
@@ -1121,7 +1201,7 @@ renderChoices();
 $("setupForm").addEventListener("submit", e => {
   e.preventDefault();
   S = newGame();
-  document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir", "ai");
+  document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx");
   if (S.sc.theme) document.documentElement.classList.add(S.sc.theme);
   $("setup").hidden = true; $("game").hidden = false;
   $("sHandle").textContent = S.handle;
@@ -1350,7 +1430,7 @@ const TOWER_EVENTS = [
 function randomEvent() {
   const extra = SPECIAL_FOR(S.sc.id) ? SPECIAL_FOR(S.sc.id).events : [];
   // US-only gags stay out of the foreign maps
-  const base = ["nk", "alpha", "cn", "nuke", "ru", "ir", "ai"].includes(S.sc.id) ? EVENTS.slice(4, 6) : EVENTS;
+  const base = ["nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx"].includes(S.sc.id) ? EVENTS.slice(4, 6) : EVENTS;
   const pool = base.concat(extra, extra);
   const e = pool[Math.floor(Math.random() * pool.length)]();
   e.f(); log(`<b>Day ${S.day}</b> ${e.msg}`); ticker(e.msg);
@@ -1524,7 +1604,7 @@ function endGame(won) {
     const best = JSON.parse(localStorage.getItem("outrage-best") || "null");
     if (!best || affected > best.infamy) localStorage.setItem("outrage-best", JSON.stringify({ handle: S.handle, infamy: affected, cash: S.earned, day: S.day }));
   } catch (e) {}
-  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir", "ai"); $("chaosBox").hidden = true; $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
+  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx"); $("chaosBox").hidden = true; $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
 }
 })();
 </script>
