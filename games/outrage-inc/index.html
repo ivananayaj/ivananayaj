@@ -121,6 +121,11 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02e
 .up .cost { font-family: var(--mono); font-weight: 700; }
 .up.owned { border-color: var(--rage); background: #2a1512; }
 :root.tower .up.owned { background: #2c1414; }
+:root.euro { --panel: #121a2b; --panel-2: #18223a; --line: #283657; --mod: #2f6bff; --calm: #46557a; }
+:root.euro .mapbox { background: radial-gradient(ellipse at 50% 40%, #142040, var(--ink) 75%); }
+/* British police Battenburg markings */
+:root.euro .heatbar i { background: repeating-linear-gradient(90deg, #f5d300 0 12px, #1f4fd8 12px 24px); }
+:root.euro .up.owned { background: #1b1f3a; }
 .up.owned .cost { color: var(--rage); }
 .up:disabled { opacity: .45; cursor: not-allowed; }
 .up.locked { opacity: .35; }
@@ -237,6 +242,7 @@ const SCENARIOS = [
   { id: "standard", name: "Standard Timeline", desc: "2026. The algorithm is neutral-ish. Mods are slow.", heatMult: 1, heatStart: 0.08, cashMult: 1, susc: 1 },
   { id: "tower", name: "The High Tower", desc: "Alt-history: the Ministry of Online Safety runs the internet. They watch from day one. Forbidden posts pay 1.75×.", heatMult: 1.55, heatStart: 0, cashMult: 1.75, susc: 1.1 },
   { id: "campus", name: "Campus Siege", desc: "You start at the Campus Quad. Students are primed. HR is extra sensitive.", heatMult: 1.1, heatStart: 0.05, cashMult: 1.1, susc: 1, forceStart: "campus" },
+  { id: "europe", name: "Speech Police (Europe)", desc: "Post from the UK and EU. Police watch from day one and arrest you at your door. Americans pay 2× to watch.", heatMult: 1.3, heatStart: 0, cashMult: 2, susc: 1.25, map: "europe", start: "guardian" },
   { id: "election", name: "Election Year", desc: "Everyone is already on edge. Spread is fast, and so are the mods.", heatMult: 1.25, heatStart: 0.04, cashMult: 1.3, susc: 1.35 },
 ];
 const PLATFORMS = [
@@ -276,6 +282,30 @@ const EDGES = [
   ["mastodon","latenight"],["ngo","glue"],["ngo","mastodon"],["portland","ngo"],["twitch","reddit"],
 ];
 
+// Europe map: UK on the left, the continent on the right
+const EURO_NODES = [
+  { id: "guardian", name: "Guardian Comment Section", x: 120, y: 120, pop: 9,   susc: 1.4, melt: 1.3, blurb: "Comments open for 45 minutes before being closed 'due to the nature of the topic.'" },
+  { id: "bbc",      name: "BBC Newsroom",            x: 300, y: 90,  pop: 4,   susc: 1.1, melt: 1.3, blurb: "Will cover your post as 'a row erupted' and interview someone who is upset." },
+  { id: "ofcom",    name: "Ofcom Compliance Desk",   x: 330, y: 250, pop: 1,   susc: 1.2, melt: 1.5, blurb: "Sends a 47-page letter to a forum with three users. One of them is a cat." },
+  { id: "beat",     name: "Officers on the Twitter Beat", x: 110, y: 300, pop: 2, susc: 1.3, melt: 1.6, blurb: "Will knock on your door about a tweet. Will not come out about your stolen bike." },
+  { id: "labour",   name: "Party WhatsApp Group",    x: 220, y: 430, pop: 1.5, susc: 1.0, melt: 1.4, blurb: "Drafting a strongly worded statement. Draft 31." },
+  { id: "scot",     name: "Hate-Crime Reporting Centre", x: 120, y: 540, pop: 1, susc: 1.5, melt: 1.4, blurb: "Open around the clock. Accepts reports about things you said in 2011." },
+  { id: "brussels", name: "Brussels Regulators",     x: 560, y: 160, pop: 3,   susc: 1.2, melt: 1.2, blurb: "Drafting a regulation to regulate the regulation of your memes." },
+  { id: "berlin",   name: "Berlin Insult Prosecutors", x: 760, y: 110, pop: 2, susc: 1.3, melt: 1.5, blurb: "A dedicated unit for memes that are mean to ministers. Very busy unit." },
+  { id: "paris",    name: "Paris Café Intellectuals", x: 520, y: 360, pop: 3,  susc: 1.0, melt: 1.4, blurb: "Will write 30 pages on why your meme is the death of the Enlightenment." },
+  { id: "sweden",   name: "Stockholm Feminist Policy Desk", x: 850, y: 80, pop: 2, susc: 1.2, melt: 1.3, blurb: "Has a strategy document about you. It has a logo." },
+  { id: "dutch",    name: "Dutch Climate Collective", x: 680, y: 270, pop: 2,  susc: 1.4, melt: 1.6, blurb: "Glued to a Vermeer. Again." },
+  { id: "dublin",   name: "Dublin Hate-Speech Bill Committee", x: 370, y: 540, pop: 1, susc: 1.1, melt: 1.3, blurb: "The bill keeps getting shelved. The committee keeps meeting." },
+  { id: "madrid",   name: "Ministry of Equality, Madrid", x: 650, y: 500, pop: 2.5, susc: 1.1, melt: 1.4, blurb: "Issuing a public awareness campaign about your gas stove." },
+  { id: "eurotw",   name: "🇪🇺-in-Bio Federalists",  x: 880, y: 360, pop: 6,   susc: 1.3, melt: 1.3, blurb: "Every bio has the flag. Every post is about America." },
+];
+const EURO_EDGES = [
+  ["guardian","bbc"],["guardian","beat"],["guardian","ofcom"],["bbc","ofcom"],["beat","ofcom"],["beat","labour"],["beat","scot"],["labour","scot"],
+  ["labour","ofcom"],["labour","dublin"],["scot","dublin"],["ofcom","brussels"],["bbc","brussels"],["brussels","berlin"],["brussels","paris"],
+  ["brussels","dutch"],["berlin","sweden"],["berlin","dutch"],["sweden","eurotw"],["dutch","eurotw"],["paris","madrid"],["paris","dutch"],
+  ["dublin","paris"],["madrid","eurotw"],["guardian","eurotw"],
+];
+
 // Upgrades. cur: "clout" or "cash". req: prerequisite id.
 const UPGRADES = {
   reach: [
@@ -296,6 +326,9 @@ const UPGRADES = {
     { id: "tears",   name: "Liberal Tears Mug Line", cost: 9, cur: "clout", fx: { severity: .3, cash: .4 }, req: "canada", desc: "Ceramic, dishwasher safe, sells out every restock." },
     { id: "billboard", name: "Billboard: 'It's Okay to Like Gas Stoves'", cost: 15, cur: "clout", fx: { severity: .6, visibility: 2, infect: .3 }, req: "tears", desc: "Off I-5. In Portland. Local news covers it for a week." },
     { id: "roast",   name: "Reads Their Unhinged TikToks in a Monotone", cost: 14, cur: "clout", fx: { severity: .5, infect: .3 }, req: "woman", desc: "No commentary. Just read them back. They melt faster than if you'd argued." },
+    { id: "moron",   name: "Meme Calling a Minister a Moron", cost: 6, cur: "clout", fx: { severity: .45, visibility: 1 }, only: "europe", desc: "One cartoon. Prosecutors open a file before lunch." },
+    { id: "flag",    name: "Hang a Flag From a Lamppost", cost: 5, cur: "clout", fx: { severity: .3, infect: .3 }, only: "europe", desc: "Your own country's flag. Somehow this is a whole news cycle." },
+    { id: "buffer",  name: "Think Silently in a Buffer Zone", cost: 12, cur: "clout", fx: { severity: .6, visibility: 2 }, only: "europe", desc: "No sign. No words. Just standing there, thinking. They have a law for that." },
     { id: "unhinged",name: "Full Unhinged Arc", cost: 25, cur: "clout", fx: { severity: 1, visibility: 3, cash: .5 }, req: "billboard", desc: "Livestream from a monster truck. Nobody knows what the bit is. Including you." },
   ],
   armor: [
@@ -306,6 +339,9 @@ const UPGRADES = {
     { id: "pills",   name: "Sponsor: Mystery Brain Pills", cost: 6000, cur: "cash", fx: { cash: .7, visibility: 1 }, req: "merch", desc: "'Clinically formulated.' By whom is unclear. Pays great." },
     { id: "server",  name: "Self-Hosted Server",   cost: 60000,  cur: "cash", fx: { resist: 3 }, req: "lawyer", desc: "Can't deplatform a guy who owns the platform." },
     { id: "patron",  name: "Free-Speech Billionaire Friend", cost: 140000, cur: "cash", fx: { resist: 4, spread: .3 }, req: "server", desc: "One reply from him and the mods get very quiet." },
+    { id: "vpn",     name: "VPN Set to Texas",     cost: 3000,   cur: "cash", fx: { resist: 1 }, only: "europe", desc: "As far as the Online Safety Act knows, you're a cattle rancher." },
+    { id: "florida", name: "Post Only From Florida", cost: 45000, cur: "cash", fx: { resist: 3, cash: .3 }, only: "europe", desc: "Hard to knock on a door in Tampa. Also, no income tax." },
+    { id: "congress",name: "A US Congressman Tweets About Your Case", cost: 14, cur: "clout", fx: { resist: 2, spread: .4 }, only: "europe", desc: "Now it's a diplomatic incident. The knock gets more polite." },
     { id: "dox",     name: "Burner Phone Discipline", cost: 5, cur: "clout", fx: { resist: 1 }, desc: "Paid in clout: you just have to stop posting your street." },
   ],
 };
@@ -343,6 +379,56 @@ const TICKER_TOWER = [
   "Grandmother detained for sharing {h} post on Facebook. Released with a pamphlet.",
 ];
 
+const TICKER_EUROPE = [
+  "Police: 'Think before you post.' Burglary unit unavailable for comment.",
+  "Pensioner questioned over a Facebook post. His shed was robbed the same week. Nobody came.",
+  "Brussels fines a platform €200M for a joke it did not find funny.",
+  "Officer tells man to 'check his thinking.' Man asks which thinking.",
+  "Ofcom sends {h} a letter. {h} frames it.",
+  "Prosecutors raid a flat over a meme. The meme is now everywhere.",
+  "Guardian columnist: 'Free speech has gone too far, and here are 2,000 words about it.'",
+  "Commission announces task force on 'disinformation.' Task force's first report is classified.",
+  "Americans in the replies: 'Are you guys okay?'",
+];
+const EURO_EVENTS = [
+  () => ({ msg: "Two officers knocked on your door to 'have a chat' about a tweet. Heat +6.", f: () => { S.heat = clamp(S.heat + 6, 0, 100); S.clout += 3; } }),
+  () => ({ msg: "Your arrest video hit 40M views in America. Merch orders from Ohio flood in.", f: () => { S.cash += 9000 * S.df.cash; S.st.spread += .1; } }),
+  () => ({ msg: "The EU passed a new online safety directive. Reach down.", f: () => { S.st.infect = Math.max(.6, S.st.infect - .15); } }),
+  () => ({ msg: "A US State Department official called your case 'concerning.' Heat −5.", f: () => { S.heat = clamp(S.heat - 5, 0, 100); } }),
+];
+
+// Per-scenario wording: what the ban meter is, how you lose, how you win
+const FLAVOR = {
+  default: {
+    watchOff: "Trust & Safety: not watching yet", watchOn: "Trust & Safety ban progress",
+    firstNotice: h => `Trust & Safety team schedules an all-hands about ${h}.`, logNotice: "Trust &amp; Safety opened a ticket on you.",
+    life: h => `${h} banned. ${h}2 appears 40 minutes later with more followers.`, lifeLog: "BANNED. Back up on the backup account within the hour.",
+    lose: "Permabanned", win: "Total Meltdown",
+    loseBody: (h, d) => `Trust & Safety finally got you on day ${d}. Your Substack still makes $11 a month. Try more ban armor or a lower-visibility build.`,
+    winBody: h => `Ninety percent of the outrage network is in full meltdown. Three cable panels, one Senate hearing, and a GoFundMe for flights to Canada that nobody used. ${h} is now a verb.`,
+    modLabel: "Report — tap to dodge",
+  },
+  tower: {
+    watchOff: "Ministry: watching", watchOn: "Ministry deplatform order",
+    intro: h => `Ministry of Online Safety: 'We are aware of ${h}. We are always aware.'`,
+    firstNotice: h => `The Ministry has assigned a dedicated case officer to ${h}.`,
+    lose: "Disappeared",
+    loseBody: (h, d) => `The Ministry's deplatform order went through on day ${d}. Your memes still circulate on thumb drives. Legends never die. They just get de-indexed.`,
+    winBody: h => `The Ministry of Online Safety declared a national emergency, went on state TV to denounce ${h}, and lost the room. The Tower falls to a gas-stove meme.`,
+  },
+  europe: {
+    watchOff: "Police: watching", watchOn: "Knock at the door",
+    intro: h => `Police remind the public that 'offensive' posts may be a crime. ${h} takes that as a challenge.`,
+    firstNotice: h => `A detective has been assigned to ${h}'s timeline. Full time.`, logNotice: "The police opened a file on your posts.",
+    life: h => `${h} arrested at 6 AM over a post. Bailed by lunch. Posting by dinner.`, lifeLog: "ARRESTED. Bailed out and back online the same day.",
+    lose: "Arrested at 6 AM",
+    loseBody: (h, d) => `Six officers, one doorbell camera, day ${d}. The charge sheet quotes your meme in full, which means the court has now published it. Get a VPN, or get to Florida.`,
+    winBody: h => `Ninety percent of Europe's speech-police network is in meltdown. Brussels drafted an emergency regulation named after ${h}. The video of the press conference did 200M views in America.`,
+    modLabel: "Police van — tap to dodge",
+  },
+};
+const flavor = k => (FLAVOR[S.sc.id] && FLAVOR[S.sc.id][k]) || FLAVOR.default[k];
+
 // ============================================================
 // STATE
 // ============================================================
@@ -366,7 +452,8 @@ function newGame() {
     sc, pf, df, st,
     day: 0, clout: 3, cash: 0, heat: sc.heatStart > 0 ? 0 : 1, heatOn: sc.heatStart === 0,
     owned: new Set(), started: false, over: false, bubbles: [], bid: 0, peakInfamy: 0, earned: 0,
-    nodes: NODES.map(n => ({ ...n, t: 0, m: 0, susc: n.susc * sc.susc * (sc.id === "campus" && (n.id === "campus" || n.id === "hr") ? 1.5 : 1) })),
+    edges: sc.map === "europe" ? EURO_EDGES : EDGES,
+    nodes: (sc.map === "europe" ? EURO_NODES : NODES).map(n => ({ ...n, t: 0, m: 0, susc: n.susc * sc.susc * (sc.id === "campus" && (n.id === "campus" || n.id === "hr") ? 1.5 : 1) })),
     milestones: new Set(),
   };
 }
@@ -395,13 +482,14 @@ $("setupForm").addEventListener("submit", e => {
   e.preventDefault();
   S = newGame();
   document.documentElement.classList.toggle("tower", S.sc.id === "tower");
+  document.documentElement.classList.toggle("euro", S.sc.id === "europe");
   $("setup").hidden = true; $("game").hidden = false;
   $("sHandle").textContent = S.handle;
   buildMap();
   log(`<b>Day 0</b> ${S.handle} goes live on ${S.pf.name}. Scenario: ${S.sc.name}.`);
-  if (S.sc.id === "tower") ticker("Ministry of Online Safety: 'We are aware of " + S.handle + ". We are always aware.'");
+  if (flavor("intro")) ticker(flavor("intro")(S.handle));
   if (S.sc.forceStart) { startAt(S.sc.forceStart); }
-  selectNode(S.sc.forceStart || "campus");
+  selectNode(S.sc.forceStart || S.sc.start || "campus");
   setSpeed(1);
   render();
 });
@@ -416,8 +504,8 @@ const radius = n => 16 + Math.sqrt(n.pop) * 6;
 function buildMap() {
   const svg = $("map"); svg.innerHTML = "";
   const gE = el("g", { id: "edges" }, svg);
-  EDGES.forEach(([a, b]) => {
-    const A = NODES.find(n => n.id === a), B = NODES.find(n => n.id === b);
+  S.edges.forEach(([a, b]) => {
+    const A = S.nodes.find(n => n.id === a), B = S.nodes.find(n => n.id === b);
     el("line", { x1: A.x, y1: A.y, x2: B.x, y2: B.y, class: "edge", "data-a": a, "data-b": b }, gE);
   });
   const gN = el("g", { id: "nodes" }, svg);
@@ -493,7 +581,7 @@ function tick() {
     n.m = clamp(n.m + melt, 0, 1);
   });
   // cross-community jumps
-  EDGES.forEach(([a, b]) => {
+  S.edges.forEach(([a, b]) => {
     const A = S.nodes.find(n => n.id === a), B = S.nodes.find(n => n.id === b);
     [[A, B], [B, A]].forEach(([src, dst]) => {
       const lvl = src.t + src.m;
@@ -524,8 +612,8 @@ function tick() {
   // trust & safety
   if (!S.heatOn && affected / total > S.sc.heatStart) {
     S.heatOn = true;
-    log(`<b>Day ${S.day}</b> Trust &amp; Safety opened a ticket on you.`);
-    ticker(S.sc.id === "tower" ? "The Ministry has assigned a dedicated case officer to " + S.handle + "." : "Trust & Safety team schedules an all-hands about " + S.handle + ".");
+    log(`<b>Day ${S.day}</b> ${flavor("logNotice")}`);
+    ticker(flavor("firstNotice")(S.handle));
   }
   if (S.heatOn) {
     const meltShare = melted / total;
@@ -543,7 +631,8 @@ function tick() {
   // events, milestones, ticker
   if (S.day % 9 === 0) randomEvent();
   if (S.day % 4 === 0) {
-    const list = S.sc.id === "tower" && Math.random() < .55 ? TICKER_TOWER : TICKER_GENERIC;
+    const special = { tower: TICKER_TOWER, europe: TICKER_EUROPE }[S.sc.id];
+    const list = special && Math.random() < .6 ? special : TICKER_GENERIC;
     ticker(list[Math.floor(Math.random() * list.length)]);
   }
   milestones(melted / total);
@@ -552,8 +641,8 @@ function tick() {
   if (S.heat >= 100) {
     if (st.lives > 0) {
       st.lives--; S.heat = 60;
-      log(`<b>Day ${S.day}</b> BANNED. Back up on the backup account within the hour.`);
-      ticker(`${S.handle} banned. ${S.handle}2 appears 40 minutes later with more followers.`);
+      log(`<b>Day ${S.day}</b> ${flavor("lifeLog")}`);
+      ticker(flavor("life")(S.handle));
     } else return endGame(false);
   }
   if (melted / total >= .9) return endGame(true);
@@ -581,7 +670,8 @@ const EVENTS = [
   () => ({ msg: "A billionaire replied '!!' to your post.", f: () => { S.st.spread += .15; S.clout += 2; } }),
   () => ({ msg: "Algorithm update. Reach down for a bit.", f: () => { S.st.infect = Math.max(.6, S.st.infect - .1); } }),
   () => ({ msg: "Your mom found your account. She thinks it's funny.", f: () => { S.clout += 2; } }),
-  () => ({ msg: "Late-night host does a whole segment on you. Ratings: up.", f: () => { const n = S.nodes.find(x => x.id === "latenight"); if (n.t + n.m === 0) n.t = .02; S.st.visibility += .5; } }),
+  () => ({ msg: "Late-night host does a whole segment on you. Ratings: up.", f: () => { const n = S.nodes.find(x => x.id === "latenight"); if (n && n.t + n.m === 0) n.t = .02; S.st.visibility += .5; } }),
+  () => ({ msg: "Ofcom emailed demanding you take a post down. You live in Ohio. You framed the email.", f: () => { S.clout += 4; S.st.visibility += .5; } }),
   () => ({ msg: "Advertisers 'pause' on your platform. Merch sales spike in response.", f: () => { S.cash += 6000 * S.st.cash; } }),
 ];
 const TOWER_EVENTS = [
@@ -590,7 +680,7 @@ const TOWER_EVENTS = [
   () => ({ msg: "A Content Compliance Officer visited your aunt's Facebook.", f: () => { S.clout += 4; } }),
 ];
 function randomEvent() {
-  const pool = S.sc.id === "tower" ? EVENTS.concat(TOWER_EVENTS, TOWER_EVENTS) : EVENTS;
+  const pool = S.sc.id === "tower" ? EVENTS.concat(TOWER_EVENTS, TOWER_EVENTS) : S.sc.id === "europe" ? EVENTS.concat(EURO_EVENTS, EURO_EVENTS) : EVENTS;
   const e = pool[Math.floor(Math.random() * pool.length)]();
   e.f(); log(`<b>Day ${S.day}</b> ${e.msg}`); ticker(e.msg);
 }
@@ -608,7 +698,7 @@ function spawnBubble(kind) {
   const x = n.x + rnd(-r, r), y = n.y - r - rnd(10, 30);
   const colors = { rage: "var(--rage)", cash: "var(--cash)", mod: "var(--mod)" };
   const labels = { rage: "!", cash: "$", mod: "⚑" };
-  const g = el("g", { class: "bubble", tabindex: 0, role: "button", "aria-label": kind === "mod" ? "Report — tap to dodge" : kind + " bubble" }, $("bubbles"));
+  const g = el("g", { class: "bubble", tabindex: 0, role: "button", "aria-label": kind === "mod" ? flavor("modLabel") : kind + " bubble" }, $("bubbles"));
   el("circle", { cx: x, cy: y, r: 20, fill: colors[kind] }, g);
   const t = el("text", { x, y: y + 1 }, g); t.textContent = labels[kind];
   const b = { node: g, born: S.day, kind };
@@ -635,8 +725,7 @@ function render() {
   $("sCash").textContent = money(S.cash);
   $("sHeat").textContent = Math.floor(S.heat) + "%";
   $("heatFill").style.width = S.heat + "%";
-  const tower = S.sc.id === "tower";
-  $("heatLabel").textContent = !S.heatOn ? (tower ? "Ministry: watching" : "Trust & Safety: not watching yet") : (tower ? "Ministry deplatform order" : "Trust & Safety ban progress");
+  $("heatLabel").textContent = S.heatOn ? flavor("watchOn") : flavor("watchOff");
   $("labClout").textContent = `${Math.floor(S.clout)} clout · ${money(S.cash)}`;
   let rank = RANKS[0][1]; RANKS.forEach(([v, r]) => { if (S.peakInfamy >= v) rank = r; });
   $("rankLabel").textContent = rank;
@@ -668,7 +757,7 @@ function ticker(msg) { $("ticker").textContent = msg.replaceAll("{h}", S ? S.han
 function renderLab() {
   $("labWallet").textContent = `${Math.floor(S.clout)} clout · ${money(S.cash)}`;
   $("labTabs").innerHTML = TABS.map(t => `<button role="tab" aria-selected="${labTab === t.id}" data-tab="${t.id}">${t.name}</button>`).join("");
-  $("labGrid").innerHTML = UPGRADES[labTab].map(u => {
+  $("labGrid").innerHTML = UPGRADES[labTab].filter(u => !u.only || u.only === S.sc.id).map(u => {
     const owned = S.owned.has(u.id);
     const locked = u.req && !S.owned.has(u.req);
     const afford = u.cur === "clout" ? S.clout >= u.cost : S.cash >= u.cost;
@@ -717,11 +806,8 @@ document.querySelectorAll("[data-speed]").forEach(b => b.onclick = () => setSpee
 function endGame(won) {
   S.over = true; setSpeed(0); render();
   const affected = S.nodes.reduce((s, n) => s + (n.t + n.m) * n.pop, 0) * 1e6;
-  const tower = S.sc.id === "tower";
-  const title = won ? "Total Meltdown" : (tower ? "Disappeared" : "Permabanned");
-  const body = won
-    ? (tower ? `The Ministry of Online Safety declared a national emergency, went on state TV to denounce ${S.handle}, and lost the room. The Tower falls to a gas-stove meme.` : `Ninety percent of the outrage network is in full meltdown. Three cable panels, one Senate hearing, and a GoFundMe for flights to Canada that nobody used. ${S.handle} is now a verb.`)
-    : (tower ? `The Ministry's deplatform order went through on day ${S.day}. Your memes still circulate on thumb drives. Legends never die. They just get de-indexed.` : `Trust & Safety finally got you on day ${S.day}. Your Substack still makes $11 a month. Try more ban armor or a lower-visibility build.`);
+  const title = won ? flavor("win") : flavor("lose");
+  const body = won ? flavor("winBody")(S.handle) : flavor("loseBody")(S.handle, S.day);
   $("endBody").innerHTML = `
     <span class="label">${S.sc.name} · ${S.pf.name} · ${S.df.name}</span>
     <h2 style="color:${won ? "var(--rage)" : "var(--mod)"}">${title}</h2>
@@ -733,7 +819,7 @@ function endGame(won) {
     const best = JSON.parse(localStorage.getItem("outrage-best") || "null");
     if (!best || affected > best.infamy) localStorage.setItem("outrage-best", JSON.stringify({ handle: S.handle, infamy: affected, cash: S.earned, day: S.day }));
   } catch (e) {}
-  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower"); $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
+  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower", "euro"); $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
 }
 })();
 </script>
