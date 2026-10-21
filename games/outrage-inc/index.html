@@ -1,0 +1,739 @@
+<title>Outrage Inc.</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+/* Layout: war-room console. Stat strip on top, network map center, dossier + content lab on the side, news ticker at the bottom. */
+:root {
+  --ink: #0d0f14;
+  --panel: #161a22;
+  --panel-2: #1f2430;
+  --line: #2e3443;
+  --fg: #ece7dc;
+  --dim: #8b90a0;
+  --rage: #ff3b2f;
+  --rage-2: #ff8a1f;
+  --cash: #f2c230;
+  --calm: #4b5670;
+  --mod: #3aa0ff;
+  --display: "Anton", "Impact", "Arial Narrow", sans-serif;
+  --body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+:root.tower { --rage: #e0242f; --panel: #1a1414; --panel-2: #241b1b; --line: #3d2c2c; --mod: #c9c9c9; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--ink); color: var(--fg); font-family: var(--body); font-size: 14px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--cash); outline-offset: 2px; }
+.wrap { max-width: 1280px; margin: 0 auto; padding-block: 12px 20px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 12px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02em; margin: 0; text-wrap: balance; }
+.label { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* ---------- setup screen ---------- */
+#setup { display: grid; gap: 20px; grid-template-columns: 1.1fr 1fr; align-items: start; }
+.hero h1 { font-size: clamp(56px, 10vw, 120px); line-height: .88; text-transform: uppercase; }
+.hero h1 span { color: var(--rage); display: block; }
+.hero p { max-width: 52ch; line-height: 1.55; color: #cfc9bd; }
+.hero .tag { display: inline-block; font-family: var(--mono); font-size: 12px; background: var(--rage); color: var(--ink); padding: 4px 8px; font-weight: 700; margin-bottom: 14px; }
+.form { background: var(--panel); border: 1px solid var(--line); padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field input { background: var(--ink); border: 1px solid var(--line); color: var(--fg); padding: 12px; font-family: var(--mono); font-size: 15px; min-height: 44px; }
+.choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.choice { text-align: left; background: var(--ink); border: 1px solid var(--line); padding: 10px 12px; min-height: 44px; display: flex; flex-direction: column; gap: 3px; }
+.choice b { font-weight: 800; }
+.choice small { color: var(--dim); line-height: 1.35; }
+.choice[aria-pressed="true"] { border-color: var(--rage); box-shadow: inset 3px 0 0 var(--rage); background: var(--panel-2); }
+.go { background: var(--rage); color: var(--ink); border: 0; padding: 14px; font-family: var(--display); font-size: 24px; letter-spacing: .04em; text-transform: uppercase; min-height: 52px; }
+.go:hover { filter: brightness(1.1); }
+.best { font-family: var(--mono); font-size: 12px; color: var(--dim); }
+
+/* ---------- game screen ---------- */
+#game { display: flex; flex-direction: column; gap: 12px; }
+.stats { display: grid; grid-template-columns: auto repeat(4, minmax(0, 1fr)) minmax(180px, 1.6fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.stat { background: var(--panel); padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.stat .v { font-family: var(--mono); font-size: 20px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stat.who .v { font-family: var(--display); font-weight: 400; font-size: 22px; }
+.stat .v.cash { color: var(--cash); }
+.stat .v.rage { color: var(--rage-2); }
+.heatbar { height: 10px; background: var(--ink); border: 1px solid var(--line); margin-top: 6px; position: relative; overflow: hidden; }
+.heatbar i { position: absolute; inset: 0 auto 0 0; background: repeating-linear-gradient(45deg, var(--mod), var(--mod) 6px, #2b6fb5 6px, #2b6fb5 12px); transition: width .4s; }
+:root.tower .heatbar i { background: repeating-linear-gradient(45deg, #ddd, #ddd 6px, #888 6px, #888 12px); }
+.stage { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; }
+.mapbox { position: relative; background: radial-gradient(ellipse at 50% 40%, #171c27, var(--ink) 75%); border: 1px solid var(--line); overflow: hidden; min-height: 300px; }
+:root.tower .mapbox { background: radial-gradient(ellipse at 50% 40%, #241616, var(--ink) 75%); }
+#map { display: block; width: 100%; height: auto; }
+.maphint { position: absolute; left: 12px; top: 10px; right: 12px; font-family: var(--mono); font-size: 12px; color: var(--cash); pointer-events: none; }
+.controls { position: absolute; right: 10px; bottom: 10px; display: flex; gap: 4px; }
+.controls button { background: var(--panel); border: 1px solid var(--line); min-width: 44px; min-height: 44px; font-family: var(--mono); font-weight: 700; }
+.controls button[aria-pressed="true"] { background: var(--fg); color: var(--ink); }
+.side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.card { background: var(--panel); border: 1px solid var(--line); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.card h2 { font-size: 26px; line-height: 1; }
+.card p { margin: 0; color: #cfc9bd; line-height: 1.45; }
+.meter { display: grid; grid-template-columns: 90px 1fr 46px; align-items: center; gap: 8px; font-size: 12px; }
+.meter .bar { height: 8px; background: var(--ink); position: relative; }
+.meter .bar i { position: absolute; inset: 0 auto 0 0; }
+.lab { background: var(--fg); color: var(--ink); border: 0; padding: 14px; font-family: var(--display); font-size: 22px; text-transform: uppercase; letter-spacing: .03em; min-height: 52px; display: flex; justify-content: space-between; align-items: center; }
+.lab span { font-family: var(--mono); font-size: 13px; }
+.traits { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-family: var(--mono); font-size: 11px; padding: 3px 7px; border: 1px solid var(--line); color: var(--dim); }
+.chip.on { border-color: var(--rage); color: var(--fg); }
+.ticker { background: var(--fg); color: var(--ink); display: flex; align-items: stretch; overflow: hidden; min-height: 40px; }
+.ticker b { background: var(--rage); color: var(--ink); font-family: var(--display); font-weight: 400; font-size: 18px; padding: 8px 12px; flex: none; display: flex; align-items: center; letter-spacing: .04em; }
+.ticker .feed { flex: 1; min-width: 0; padding: 10px 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.log { max-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
+.log div { color: var(--dim); line-height: 1.35; }
+.log div b { color: var(--fg); font-family: var(--mono); font-weight: 400; }
+
+/* nodes */
+.node circle.base { stroke: var(--ink); stroke-width: 2; }
+.node text { font-family: var(--mono); font-size: 13px; fill: var(--fg); paint-order: stroke; stroke: var(--ink); stroke-width: 4px; pointer-events: none; }
+.node { cursor: pointer; }
+.node.sel circle.base { stroke: var(--cash); stroke-width: 4; }
+.node.melt circle.ring { animation: throb 1.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes throb { 50% { transform: scale(1.18); opacity: .25; } }
+.edge { stroke: var(--line); stroke-width: 2; }
+.edge.hot { stroke: var(--rage-2); stroke-dasharray: 6 6; animation: flow 1s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -12; } }
+.bubble { cursor: pointer; }
+.bubble circle { stroke: var(--ink); stroke-width: 3; }
+.bubble text { font-family: var(--display); font-size: 22px; fill: var(--ink); pointer-events: none; text-anchor: middle; dominant-baseline: central; }
+.bubble { animation: pop .25s ease-out; transform-box: fill-box; transform-origin: center; }
+@keyframes pop { from { transform: scale(.2); } }
+
+/* modal */
+.modal { position: fixed; inset: 0; background: rgba(5, 6, 9, .82); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 20; }
+.sheet { background: var(--panel); border: 1px solid var(--line); width: min(920px, 100%); max-height: calc(100% - 32px); display: flex; flex-direction: column; }
+.sheet header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.sheet header h2 { font-size: 30px; }
+.tabs { display: flex; gap: 4px; padding: 10px 16px 0; flex-wrap: wrap; }
+.tabs button { background: transparent; border: 1px solid var(--line); border-bottom: 0; padding: 10px 14px; min-height: 44px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; font-size: 12px; }
+.tabs button[aria-selected="true"] { background: var(--panel-2); color: var(--cash); }
+.grid { padding: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; overflow-y: auto; background: var(--panel-2); }
+.up { text-align: left; background: var(--ink); border: 1px solid var(--line); padding: 12px; display: flex; flex-direction: column; gap: 6px; min-height: 44px; }
+.up b { font-size: 15px; }
+.up small { color: var(--dim); line-height: 1.4; }
+.up .fx { font-family: var(--mono); font-size: 11px; color: var(--rage-2); }
+.up .cost { font-family: var(--mono); font-weight: 700; }
+.up.owned { border-color: var(--rage); background: #2a1512; }
+:root.tower .up.owned { background: #2c1414; }
+.up.owned .cost { color: var(--rage); }
+.up:disabled { opacity: .45; cursor: not-allowed; }
+.up.locked { opacity: .35; }
+.x { background: transparent; border: 1px solid var(--line); min-width: 44px; min-height: 44px; font-size: 18px; }
+.end { text-align: center; padding: 28px 20px; display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.end h2 { font-size: clamp(40px, 8vw, 72px); line-height: .9; text-transform: uppercase; }
+.end p { max-width: 50ch; color: #cfc9bd; line-height: 1.5; margin: 0; }
+.end .score { font-family: var(--mono); font-size: 14px; display: grid; grid-template-columns: auto auto; gap: 4px 18px; text-align: left; }
+
+@media (max-width: 900px) {
+  #setup { grid-template-columns: 1fr; }
+  .stage { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat.who, .stat.heat { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+
+<div class="wrap">
+  <!-- ======================= SETUP ======================= -->
+  <section id="setup">
+    <div class="hero">
+      <div class="tag">A PARODY GAME · ALL CHARACTERS FICTIONAL</div>
+      <h1>Outrage<span>Inc.</span></h1>
+      <p>You are one account with a webcam and a ring light. Your goal: post the takes that make the online left lose its collective mind, community by community, until the whole outrage network is in full meltdown. Every meltdown pays. Every meltdown also gets the attention of Trust &amp; Safety. Max out the meltdown before they max out your ban.</p>
+      <p>Pick a starting community, collect the <b style="color:var(--rage)">rage</b>, <b style="color:var(--cash)">cash</b>, and <b style="color:var(--mod)">report</b> bubbles, and spend them in the Content Lab.</p>
+      <div class="best" id="bestScore"></div>
+    </div>
+    <form class="form" id="setupForm">
+      <div class="field">
+        <label class="label" for="handle">Your handle</label>
+        <input id="handle" maxlength="20" value="@GasStoveGuy" autocomplete="off">
+      </div>
+      <div class="field">
+        <span class="label">Scenario</span>
+        <div class="choices" data-group="scenario"></div>
+      </div>
+      <div class="field">
+        <span class="label">Home platform</span>
+        <div class="choices" data-group="platform"></div>
+      </div>
+      <div class="field">
+        <span class="label">How unhinged</span>
+        <div class="choices" data-group="difficulty"></div>
+      </div>
+      <button class="go" type="submit" id="startBtn">Go live</button>
+    </form>
+  </section>
+
+  <!-- ======================= GAME ======================= -->
+  <section id="game" hidden>
+    <div class="stats">
+      <div class="stat who"><span class="label" id="rankLabel">Reply Guy</span><span class="v" id="sHandle">@handle</span></div>
+      <div class="stat"><span class="label">Day</span><span class="v num" id="sDay">0</span></div>
+      <div class="stat"><span class="label">Losing it</span><span class="v num rage" id="sInfamy">0</span></div>
+      <div class="stat"><span class="label">Clout</span><span class="v num" id="sClout">0</span></div>
+      <div class="stat"><span class="label">Bank</span><span class="v num cash" id="sCash">$0</span></div>
+      <div class="stat heat"><span class="label" id="heatLabel">Trust &amp; Safety: not watching yet</span><span class="v num" id="sHeat">0%</span><div class="heatbar"><i id="heatFill" style="width:0%"></i></div></div>
+    </div>
+
+    <div class="stage">
+      <div class="mapbox">
+        <svg id="map" viewBox="0 0 1000 620" role="img" aria-label="Outrage network map"></svg>
+        <div class="maphint" id="maphint">Pick where your first post drops. Tap a community.</div>
+        <div class="controls" role="group" aria-label="Game speed">
+          <button data-speed="0" aria-label="Pause">II</button>
+          <button data-speed="1" aria-pressed="true" aria-label="Normal speed">1×</button>
+          <button data-speed="2" aria-label="Double speed">2×</button>
+          <button data-speed="4" aria-label="Quad speed">4×</button>
+        </div>
+      </div>
+      <div class="side">
+        <button class="lab" id="openLab">Content Lab <span id="labClout">0 clout</span></button>
+        <div class="card" id="dossier"></div>
+        <div class="card">
+          <span class="label">Your arsenal</span>
+          <div class="traits" id="traits"><span class="chip">No upgrades yet</span></div>
+        </div>
+        <div class="card">
+          <span class="label">Feed</span>
+          <div class="log" id="log"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ticker" aria-live="polite"><b>BREAKING</b><div class="feed" id="ticker">Nothing has happened yet. Enjoy it.</div></div>
+  </section>
+</div>
+
+<div class="modal" id="labModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="labTitle">
+    <header>
+      <h2 id="labTitle">Content Lab</h2>
+      <div class="num" id="labWallet"></div>
+      <button class="x" data-close aria-label="Close">✕</button>
+    </header>
+    <div class="tabs" role="tablist" id="labTabs"></div>
+    <div class="grid" id="labGrid"></div>
+  </div>
+</div>
+
+<div class="modal" id="endModal" hidden>
+  <div class="sheet"><div class="end" id="endBody"></div></div>
+</div>
+
+<script>
+(() => {
+// ============================================================
+// DATA
+// ============================================================
+const SCENARIOS = [
+  { id: "standard", name: "Standard Timeline", desc: "2026. The algorithm is neutral-ish. Mods are slow.", heatMult: 1, heatStart: 0.08, cashMult: 1, susc: 1 },
+  { id: "tower", name: "The High Tower", desc: "Alt-history: the Ministry of Online Safety runs the internet. They watch from day one. Forbidden posts pay 1.75×.", heatMult: 1.55, heatStart: 0, cashMult: 1.75, susc: 1.1 },
+  { id: "campus", name: "Campus Siege", desc: "You start at the Campus Quad. Students are primed. HR is extra sensitive.", heatMult: 1.1, heatStart: 0.05, cashMult: 1.1, susc: 1, forceStart: "campus" },
+  { id: "election", name: "Election Year", desc: "Everyone is already on edge. Spread is fast, and so are the mods.", heatMult: 1.25, heatStart: 0.04, cashMult: 1.3, susc: 1.35 },
+];
+const PLATFORMS = [
+  { id: "x", name: "X", desc: "+Reach. Your quote-tweets travel.", mod: { infect: .25, spread: .25 } },
+  { id: "tiktok", name: "TikTok", desc: "+Infect. Gen Z spreads it for you.", mod: { infect: .45, visibility: 1 } },
+  { id: "pod", name: "Podcast", desc: "+Severity. Three-hour episodes cut deep.", mod: { severity: .5 } },
+  { id: "rumble", name: "Rumble", desc: "+Ban armor. Slower spread.", mod: { resist: 2, infect: -.15 } },
+];
+const DIFFS = [
+  { id: "normie", name: "Normie", desc: "Mods are lazy. Payouts are normal.", heat: .7, cash: 1, clout: 1 },
+  { id: "based", name: "Based", desc: "Fair fight. Payouts 1.25×.", heat: 1, cash: 1.25, clout: 1 },
+  { id: "unhinged", name: "Unhinged", desc: "Mods are on Adderall. Payouts 2×, clout 1.3×.", heat: 1.35, cash: 2, clout: 1.3 },
+];
+
+// pop in millions; susc = how easily triggered; melt = how fast they go nuclear
+const NODES = [
+  { id: "campus",   name: "Campus Quad",            x: 170, y: 150, pop: 19,  susc: 1.4, melt: 1.3, blurb: "Undergrads with a free afternoon and a poster-board budget." },
+  { id: "bsky",     name: "Bluesky Refugee Camp",   x: 470, y: 90,  pop: 12,  susc: 1.6, melt: 1.5, blurb: "Left X in protest. Still posts screenshots of X all day." },
+  { id: "reddit",   name: "Reddit Power Mods",      x: 760, y: 120, pop: 8,   susc: 1.3, melt: 1.2, blurb: "Moderate 400 subreddits. Have not seen the sun since 2019." },
+  { id: "newsroom", name: "Newsroom Slack",         x: 640, y: 270, pop: 3,   susc: 1.2, melt: 1.4, blurb: "Will write a 4,000-word explainer about a meme you made in 9 seconds." },
+  { id: "hr",       name: "Corporate HR",           x: 330, y: 290, pop: 6,   susc: 1.0, melt: 1.1, blurb: "Has a mandatory training module about you now." },
+  { id: "hollywood",name: "Hollywood Twitter",      x: 850, y: 340, pop: 2,   susc: 1.1, melt: 1.6, blurb: "Records a teary iPhone video from a $14M kitchen." },
+  { id: "faculty",  name: "Faculty Lounge",         x: 90,  y: 330, pop: 4,   susc: 1.2, melt: 1.2, blurb: "Tenured. Unfireable. Extremely online." },
+  { id: "winemoms", name: "Wine Mom Facebook Group",x: 230, y: 470, pop: 15,  susc: 0.9, melt: 1.3, blurb: "Slow to anger. Impossible to calm down once angry." },
+  { id: "glue",     name: "Climate Glue Squad",     x: 470, y: 420, pop: 1,   susc: 1.5, melt: 1.8, blurb: "Already superglued to something. Triggering is a formality." },
+  { id: "mastodon", name: "Mastodon Instance #4,117",x: 610, y: 520, pop: 1.5, susc: 1.3, melt: 1.4, blurb: "Seventeen users. Twelve content warnings per post." },
+  { id: "latenight",name: "Late-Night Writers' Room",x: 820, y: 500, pop: 0.5, susc: 1.0, melt: 1.5, blurb: "Need a new villain for the monologue. Thanks for volunteering." },
+  { id: "dc",       name: "DC Staffer Group Chats", x: 880, y: 205, pop: 2.5, susc: 0.8, melt: 1.1, blurb: "Will leak your posts to Politico 'on background.'" },
+  { id: "portland", name: "Portland",               x: 80,  y: 560, pop: 2.4, susc: 1.1, melt: 1.4, blurb: "Keeps a megaphone in the car for occasions like you." },
+  { id: "ngo",      name: "Nonprofit Industrial Complex", x: 400, y: 570, pop: 5, susc: 0.9, melt: 1.2, blurb: "Can turn your tweet into a $2M grant proposal." },
+  { id: "twitch",   name: "Leftist Twitch Streams", x: 300, y: 70,  pop: 3,   susc: 1.3, melt: 1.5, blurb: "Will react to your clip for six hours. Live. With donations." },
+];
+const EDGES = [
+  ["campus","faculty"],["campus","twitch"],["campus","hr"],["campus","bsky"],["twitch","bsky"],["bsky","reddit"],["bsky","newsroom"],["bsky","hr"],
+  ["reddit","dc"],["reddit","newsroom"],["newsroom","dc"],["newsroom","hollywood"],["newsroom","latenight"],["hollywood","latenight"],["dc","hollywood"],
+  ["hr","winemoms"],["hr","glue"],["faculty","portland"],["faculty","hr"],["winemoms","portland"],["winemoms","ngo"],["glue","mastodon"],["glue","newsroom"],
+  ["mastodon","latenight"],["ngo","glue"],["ngo","mastodon"],["portland","ngo"],["twitch","reddit"],
+];
+
+// Upgrades. cur: "clout" or "cash". req: prerequisite id.
+const UPGRADES = {
+  reach: [
+    { id: "memes",   name: "Meme Page",            cost: 3,  cur: "clout", fx: { infect: .3 }, desc: "Low-res, high-impact. Boomers and zoomers both share it." },
+    { id: "qt",      name: "Quote-Tweet Bait",     cost: 6,  cur: "clout", fx: { spread: .4 }, req: "memes", desc: "They screenshot you to dunk on you. Every dunk is free distribution." },
+    { id: "clips",   name: "Clip Farm",            cost: 8,  cur: "clout", fx: { infect: .4, visibility: 1 }, req: "memes", desc: "Forty vertical edits a day of your worst three seconds." },
+    { id: "pods",    name: "Podcast Circuit",      cost: 10, cur: "clout", fx: { infect: .3, severity: .2 }, req: "clips", desc: "Two-hour episodes with every guy who owns a mic and a flag." },
+    { id: "algo",    name: "Algorithm Whisperer",  cost: 14, cur: "clout", fx: { spread: .6, infect: .3 }, req: "qt", desc: "You know exactly which words make the feed panic." },
+    { id: "collab",  name: "Collab With a Bigger Account", cost: 18, cur: "clout", fx: { infect: .6, spread: .4, visibility: 1 }, req: "pods", desc: "Two grifters, one stream, triple the reach." },
+    { id: "bots",    name: "Accused of Being a Russian Bot", cost: 12, cur: "clout", fx: { spread: .5, visibility: 1 }, req: "algo", desc: "Not true. Doesn't matter. The accusation goes viral for you." },
+  ],
+  takes: [
+    { id: "gas",     name: "Gas Stove Defense",    cost: 2,  cur: "clout", fx: { severity: .25 }, desc: "Cook a steak on a gas stove. Caption: 'Come and take it.'" },
+    { id: "burger",  name: "Lunch Is a Cheeseburger", cost: 3, cur: "clout", fx: { severity: .2, infect: .1 }, req: "gas", desc: "Just eat a burger near a vegan, on camera, slowly." },
+    { id: "canada",  name: "GoFundMe: Help Them Move to Canada", cost: 6, cur: "clout", fx: { severity: .35, infect: .2 }, req: "burger", desc: "They keep promising. You're just helping them follow through." },
+    { id: "changemind", name: "'Change My Mind' Table", cost: 8, cur: "clout", fx: { severity: .4, visibility: 1 }, req: "burger", desc: "A folding table on the Quad and a GoPro. Easiest content on Earth." },
+    { id: "woman",   name: "Ask 'What Is a Woman?'", cost: 10, cur: "clout", fx: { severity: .5, infect: .2, visibility: 1 }, req: "changemind", desc: "Four words. Six-hour meltdown. Somehow nobody has an answer yet." },
+    { id: "tears",   name: "Liberal Tears Mug Line", cost: 9, cur: "clout", fx: { severity: .3, cash: .4 }, req: "canada", desc: "Ceramic, dishwasher safe, sells out every restock." },
+    { id: "billboard", name: "Billboard: 'It's Okay to Like Gas Stoves'", cost: 15, cur: "clout", fx: { severity: .6, visibility: 2, infect: .3 }, req: "tears", desc: "Off I-5. In Portland. Local news covers it for a week." },
+    { id: "roast",   name: "Reads Their Unhinged TikToks in a Monotone", cost: 14, cur: "clout", fx: { severity: .5, infect: .3 }, req: "woman", desc: "No commentary. Just read them back. They melt faster than if you'd argued." },
+    { id: "unhinged",name: "Full Unhinged Arc", cost: 25, cur: "clout", fx: { severity: 1, visibility: 3, cash: .5 }, req: "billboard", desc: "Livestream from a monster truck. Nobody knows what the bit is. Including you." },
+  ],
+  armor: [
+    { id: "merch",   name: "Merch Store",          cost: 4000,   cur: "cash", fx: { cash: .5 }, desc: "Hats, shirts, a flag. Every meltdown becomes inventory turnover." },
+    { id: "superchat",name: "Super Chats On",      cost: 9000,   cur: "cash", fx: { cash: .6 }, desc: "They pay $5 to call you a fascist in red text. You read it on air." },
+    { id: "backup",  name: "Backup Account Network", cost: 15000, cur: "cash", fx: { resist: 1, lives: 1 }, desc: "Get banned once? Come back from @GasStoveGuy2 with 60% heat." },
+    { id: "lawyer",  name: "Lawyer on Retainer",   cost: 25000,  cur: "cash", fx: { resist: 2 }, desc: "Every takedown gets a cease-and-desist in return." },
+    { id: "pills",   name: "Sponsor: Mystery Brain Pills", cost: 6000, cur: "cash", fx: { cash: .7, visibility: 1 }, req: "merch", desc: "'Clinically formulated.' By whom is unclear. Pays great." },
+    { id: "server",  name: "Self-Hosted Server",   cost: 60000,  cur: "cash", fx: { resist: 3 }, req: "lawyer", desc: "Can't deplatform a guy who owns the platform." },
+    { id: "patron",  name: "Free-Speech Billionaire Friend", cost: 140000, cur: "cash", fx: { resist: 4, spread: .3 }, req: "server", desc: "One reply from him and the mods get very quiet." },
+    { id: "dox",     name: "Burner Phone Discipline", cost: 5, cur: "clout", fx: { resist: 1 }, desc: "Paid in clout: you just have to stop posting your street." },
+  ],
+};
+const TABS = [
+  { id: "reach", name: "Reach", sub: "How far it spreads" },
+  { id: "takes", name: "Takes", sub: "How hard they melt" },
+  { id: "armor", name: "Armor & Money", sub: "Stay up, get paid" },
+];
+
+const RANKS = [
+  [0, "Reply Guy"], [50000, "Local Menace"], [400000, "Problematic"], [2e6, "Subject of a Think Piece"],
+  [8e6, "Threat to Democracy"], [20e6, "Literally Hitler (per 14 op-eds)"], [40e6, "Subject of a Senate Hearing"], [70e6, "Final Boss of the Internet"],
+];
+
+const TICKER_GENERIC = [
+  "Local barista updates bio to 'resisting.'",
+  "Mastodon instance defederates from itself after heated vote.",
+  "Professor cancels finals so students can 'process the discourse.'",
+  "Op-ed asks: is it okay to still enjoy brunch right now?",
+  "Wine Mom group bans the word 'based' after a 300-comment thread.",
+  "Bluesky user posts screenshot of X with caption 'leaving X.' Again.",
+  "Newsroom staff walk out over a meme. Walk back in for lunch.",
+  "Reddit mod locks thread, bans OP, bans self by accident.",
+  "Climate activists glue themselves to a printer showing your tweet.",
+  "Late-night host cancels monologue to just stare into camera for nine minutes.",
+  "Nonprofit launches $2M initiative to study 'the {h} phenomenon.'",
+  "Twitch streamer reacts to {h} for 11 hours, sets donation record, blames {h}.",
+];
+const TICKER_TOWER = [
+  "Ministry of Online Safety reminds citizens: laughing is a reportable offense.",
+  "Content Compliance Officers seize thumb drive full of {h} memes.",
+  "State broadcaster airs 4-hour special: 'Why Gas Stoves Are Violence.'",
+  "Underground meme couriers smuggle {h} posts across state lines.",
+  "Ministry announces 'Joy Licensing.' Applications open Monday.",
+  "Grandmother detained for sharing {h} post on Facebook. Released with a pamphlet.",
+];
+
+// ============================================================
+// STATE
+// ============================================================
+const pick = { scenario: "standard", platform: "x", difficulty: "based" };
+let S = null;
+let speed = 1, timer = null, selected = null, labTab = "reach";
+const $ = id => document.getElementById(id);
+const fmt = n => n >= 1e9 ? (n/1e9).toFixed(2)+"B" : n >= 1e6 ? (n/1e6).toFixed(1)+"M" : n >= 1e3 ? (n/1e3).toFixed(1)+"K" : Math.floor(n).toString();
+const money = n => "$" + fmt(n);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const rnd = (a, b) => a + Math.random() * (b - a);
+
+function newGame() {
+  const sc = SCENARIOS.find(s => s.id === pick.scenario);
+  const pf = PLATFORMS.find(p => p.id === pick.platform);
+  const df = DIFFS.find(d => d.id === pick.difficulty);
+  const st = { infect: 1, spread: 1, severity: .15, visibility: 0, resist: 0, cash: 1, lives: 0 };
+  for (const k in pf.mod) st[k] += pf.mod[k];
+  return {
+    handle: ($("handle").value.trim() || "@GasStoveGuy").replace(/^([^@])/, "@$1"),
+    sc, pf, df, st,
+    day: 0, clout: 3, cash: 0, heat: sc.heatStart > 0 ? 0 : 1, heatOn: sc.heatStart === 0,
+    owned: new Set(), started: false, over: false, bubbles: [], bid: 0, peakInfamy: 0, earned: 0,
+    nodes: NODES.map(n => ({ ...n, t: 0, m: 0, susc: n.susc * sc.susc * (sc.id === "campus" && (n.id === "campus" || n.id === "hr") ? 1.5 : 1) })),
+    milestones: new Set(),
+  };
+}
+
+// ============================================================
+// SETUP UI
+// ============================================================
+function renderChoices() {
+  const groups = { scenario: SCENARIOS, platform: PLATFORMS, difficulty: DIFFS };
+  document.querySelectorAll(".choices").forEach(box => {
+    const g = box.dataset.group;
+    box.innerHTML = groups[g].map(o => `<button type="button" class="choice" data-id="${o.id}" aria-pressed="${pick[g] === o.id}"><b>${o.name}</b><small>${o.desc}</small></button>`).join("");
+    box.onclick = e => {
+      const b = e.target.closest(".choice"); if (!b) return;
+      pick[g] = b.dataset.id; renderChoices();
+    };
+  });
+  try {
+    const best = JSON.parse(localStorage.getItem("outrage-best") || "null");
+    $("bestScore").textContent = best ? `Personal best: ${best.handle} — ${fmt(best.infamy)} melted down, ${money(best.cash)} banked, day ${best.day}.` : "";
+  } catch (e) {}
+}
+renderChoices();
+
+$("setupForm").addEventListener("submit", e => {
+  e.preventDefault();
+  S = newGame();
+  document.documentElement.classList.toggle("tower", S.sc.id === "tower");
+  $("setup").hidden = true; $("game").hidden = false;
+  $("sHandle").textContent = S.handle;
+  buildMap();
+  log(`<b>Day 0</b> ${S.handle} goes live on ${S.pf.name}. Scenario: ${S.sc.name}.`);
+  if (S.sc.id === "tower") ticker("Ministry of Online Safety: 'We are aware of " + S.handle + ". We are always aware.'");
+  if (S.sc.forceStart) { startAt(S.sc.forceStart); }
+  selectNode(S.sc.forceStart || "campus");
+  setSpeed(1);
+  render();
+});
+
+// ============================================================
+// MAP
+// ============================================================
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent) { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e; }
+const radius = n => 16 + Math.sqrt(n.pop) * 6;
+
+function buildMap() {
+  const svg = $("map"); svg.innerHTML = "";
+  const gE = el("g", { id: "edges" }, svg);
+  EDGES.forEach(([a, b]) => {
+    const A = NODES.find(n => n.id === a), B = NODES.find(n => n.id === b);
+    el("line", { x1: A.x, y1: A.y, x2: B.x, y2: B.y, class: "edge", "data-a": a, "data-b": b }, gE);
+  });
+  const gN = el("g", { id: "nodes" }, svg);
+  S.nodes.forEach(n => {
+    const g = el("g", { class: "node", "data-id": n.id, tabindex: 0, role: "button", "aria-label": n.name }, gN);
+    const r = radius(n);
+    el("circle", { class: "ring", cx: n.x, cy: n.y, r: r + 6, fill: "none", stroke: "var(--rage)", "stroke-width": 3, opacity: 0 }, g);
+    el("circle", { class: "base", cx: n.x, cy: n.y, r, fill: "var(--calm)" }, g);
+    el("path", { class: "fillarc", fill: "var(--rage-2)" }, g);
+    el("path", { class: "meltarc", fill: "var(--rage)" }, g);
+    const lbl = el("text", { x: n.x, y: n.y + r + 18, "text-anchor": "middle" }, g);
+    lbl.textContent = n.name.length > 22 ? n.name.slice(0, 21) + "…" : n.name;
+    g.addEventListener("click", () => onNode(n.id));
+    g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onNode(n.id); } });
+  });
+  el("g", { id: "bubbles" }, svg);
+}
+
+// pie-slice path from 0 to frac of a circle
+function arc(cx, cy, r, f0, f1) {
+  if (f1 - f0 <= 0.001) return "";
+  if (f1 - f0 >= 0.999) return `M${cx - r},${cy}a${r},${r} 0 1,0 ${2*r},0a${r},${r} 0 1,0 ${-2*r},0`;
+  const a0 = f0 * 2 * Math.PI - Math.PI / 2, a1 = f1 * 2 * Math.PI - Math.PI / 2;
+  const large = (f1 - f0) > .5 ? 1 : 0;
+  return `M${cx},${cy}L${cx + r*Math.cos(a0)},${cy + r*Math.sin(a0)}A${r},${r} 0 ${large},1 ${cx + r*Math.cos(a1)},${cy + r*Math.sin(a1)}Z`;
+}
+
+function renderMap() {
+  S.nodes.forEach(n => {
+    const g = document.querySelector(`.node[data-id="${n.id}"]`);
+    const r = radius(n);
+    g.querySelector(".meltarc").setAttribute("d", arc(n.x, n.y, r, 0, n.m));
+    g.querySelector(".fillarc").setAttribute("d", arc(n.x, n.y, r, n.m, n.m + n.t));
+    g.classList.toggle("sel", selected === n.id);
+    g.classList.toggle("melt", n.m > .5);
+    g.querySelector(".ring").setAttribute("opacity", n.m > .5 ? .8 : 0);
+  });
+  document.querySelectorAll(".edge").forEach(e => {
+    const a = S.nodes.find(n => n.id === e.dataset.a), b = S.nodes.find(n => n.id === e.dataset.b);
+    e.classList.toggle("hot", (a.t + a.m > .15 && b.t + b.m > 0) || (b.t + b.m > .15 && a.t + a.m > 0));
+  });
+}
+
+function onNode(id) {
+  if (!S.started && !S.over) { startAt(id); }
+  selectNode(id);
+}
+function selectNode(id) { selected = id; renderDossier(); renderMap(); }
+
+function startAt(id) {
+  const n = S.nodes.find(x => x.id === id);
+  n.t = .02; S.started = true;
+  $("maphint").textContent = "";
+  log(`<b>Day ${S.day}</b> First post drops in ${n.name}. Somebody already screenshotted it.`);
+  ticker(`${S.handle} posts something in ${n.name}. Nobody is okay.`);
+}
+
+// ============================================================
+// SIM
+// ============================================================
+function tick() {
+  if (!S.started || S.over) return;
+  S.day++;
+  const st = S.st;
+
+  // within-community spread and meltdown
+  S.nodes.forEach(n => {
+    if (n.t + n.m <= 0) return;
+    const h = 1 - n.t - n.m;
+    const grow = 0.07 * st.infect * n.susc * (n.t + n.m * .6 + .004) * h;
+    const melt = 0.035 * st.severity * n.melt * n.t;
+    n.t = clamp(n.t + grow - melt, 0, 1);
+    n.m = clamp(n.m + melt, 0, 1);
+  });
+  // cross-community jumps
+  EDGES.forEach(([a, b]) => {
+    const A = S.nodes.find(n => n.id === a), B = S.nodes.find(n => n.id === b);
+    [[A, B], [B, A]].forEach(([src, dst]) => {
+      const lvl = src.t + src.m;
+      if (lvl > .12 && dst.t + dst.m === 0 && Math.random() < 0.05 * st.spread * lvl * dst.susc) {
+        dst.t = .01;
+        S.clout += 2 * S.df.clout;
+        log(`<b>Day ${S.day}</b> ${dst.name} found out. +2 clout.`);
+        ticker(dst.blurb);
+      }
+    });
+  });
+  // rare long-range jump once spread is strong (screenshots travel)
+  if (st.spread > 1.8 && Math.random() < .02 * st.spread) {
+    const cold = S.nodes.filter(n => n.t + n.m === 0);
+    if (cold.length) { const c = cold[Math.floor(Math.random() * cold.length)]; c.t = .01; log(`<b>Day ${S.day}</b> A screenshot jumped straight into ${c.name}.`); }
+  }
+
+  const affected = S.nodes.reduce((s, n) => s + (n.t + n.m) * n.pop, 0);
+  const melted = S.nodes.reduce((s, n) => s + n.m * n.pop, 0);
+  const total = S.nodes.reduce((s, n) => s + n.pop, 0);
+
+  // money
+  const income = melted * 110 * st.cash * S.sc.cashMult * S.df.cash;
+  S.cash += income; S.earned += income;
+  S.clout += 0.15 * S.df.clout;
+  S.peakInfamy = Math.max(S.peakInfamy, affected * 1e6);
+
+  // trust & safety
+  if (!S.heatOn && affected / total > S.sc.heatStart) {
+    S.heatOn = true;
+    log(`<b>Day ${S.day}</b> Trust &amp; Safety opened a ticket on you.`);
+    ticker(S.sc.id === "tower" ? "The Ministry has assigned a dedicated case officer to " + S.handle + "." : "Trust & Safety team schedules an all-hands about " + S.handle + ".");
+  }
+  if (S.heatOn) {
+    const meltShare = melted / total;
+    const raw = (0.22 + 0.11 * st.visibility + 2.0 * meltShare * st.severity + 0.9 * (affected / total)) * S.sc.heatMult * S.df.heat;
+    const armor = clamp(1 - st.resist * 0.06, 0.3, 1);
+    S.heat = clamp(S.heat + raw * armor, 0, 100);
+  }
+
+  // bubbles
+  if (Math.random() < .42) spawnBubble("rage");
+  if (melted > .3 && Math.random() < .22) spawnBubble("cash");
+  if (S.heatOn && Math.random() < .18) spawnBubble("mod");
+  S.bubbles = S.bubbles.filter(b => { if (S.day - b.born > 7) { b.node.remove(); return false; } return true; });
+
+  // events, milestones, ticker
+  if (S.day % 9 === 0) randomEvent();
+  if (S.day % 4 === 0) {
+    const list = S.sc.id === "tower" && Math.random() < .55 ? TICKER_TOWER : TICKER_GENERIC;
+    ticker(list[Math.floor(Math.random() * list.length)]);
+  }
+  milestones(melted / total);
+
+  // end conditions
+  if (S.heat >= 100) {
+    if (st.lives > 0) {
+      st.lives--; S.heat = 60;
+      log(`<b>Day ${S.day}</b> BANNED. Back up on the backup account within the hour.`);
+      ticker(`${S.handle} banned. ${S.handle}2 appears 40 minutes later with more followers.`);
+    } else return endGame(false);
+  }
+  if (melted / total >= .9) return endGame(true);
+  render();
+}
+
+function milestones(share) {
+  const steps = [
+    [.05, "Cable news runs a chyron with your handle misspelled."],
+    [.15, "A college offers a seminar on you. It's waitlisted."],
+    [.3, "Op-ed: 'Is " + S.handle + " the most dangerous person in America?' (Answer: yes, says op-ed.)"],
+    [.5, "Senator demands hearings on 'the " + S.handle + " problem.'"],
+    [.7, "Half the internet has blocked you. The other half is watching them do it."],
+    [.8, "People are talking about leaving the country. Again. You set up the GoFundMe."],
+  ];
+  steps.forEach(([lvl, msg]) => {
+    if (share >= lvl && !S.milestones.has(lvl)) { S.milestones.add(lvl); ticker(msg); log(`<b>Day ${S.day}</b> ${msg}`); S.clout += 3; }
+  });
+}
+
+const EVENTS = [
+  () => ({ msg: "A verified blue check ratio'd you. Their followers came to look.", f: () => { S.st.infect += .1; S.clout += 3; } }),
+  () => ({ msg: "A watchdog nonprofit published a 9-part thread about you. Free advertising.", f: () => { S.st.visibility += 1; S.heat = clamp(S.heat + 4, 0, 100); S.nodes.forEach(n => { if (n.t + n.m > 0) n.t = clamp(n.t + .04, 0, 1 - n.m); }); } }),
+  () => ({ msg: "Mattress company DMs you about a sponsorship.", f: () => { S.cash += 3000 * S.df.cash; } }),
+  () => ({ msg: "A billionaire replied '!!' to your post.", f: () => { S.st.spread += .15; S.clout += 2; } }),
+  () => ({ msg: "Algorithm update. Reach down for a bit.", f: () => { S.st.infect = Math.max(.6, S.st.infect - .1); } }),
+  () => ({ msg: "Your mom found your account. She thinks it's funny.", f: () => { S.clout += 2; } }),
+  () => ({ msg: "Late-night host does a whole segment on you. Ratings: up.", f: () => { const n = S.nodes.find(x => x.id === "latenight"); if (n.t + n.m === 0) n.t = .02; S.st.visibility += .5; } }),
+  () => ({ msg: "Advertisers 'pause' on your platform. Merch sales spike in response.", f: () => { S.cash += 6000 * S.st.cash; } }),
+];
+const TOWER_EVENTS = [
+  () => ({ msg: "The Ministry opened a file on you. Heat +8.", f: () => { S.heat = clamp(S.heat + 8, 0, 100); } }),
+  () => ({ msg: "Your memes now trade on the black market. Forbidden content premium.", f: () => { S.cash += 8000 * S.df.cash; S.st.spread += .1; } }),
+  () => ({ msg: "A Content Compliance Officer visited your aunt's Facebook.", f: () => { S.clout += 4; } }),
+];
+function randomEvent() {
+  const pool = S.sc.id === "tower" ? EVENTS.concat(TOWER_EVENTS, TOWER_EVENTS) : EVENTS;
+  const e = pool[Math.floor(Math.random() * pool.length)]();
+  e.f(); log(`<b>Day ${S.day}</b> ${e.msg}`); ticker(e.msg);
+}
+
+// ============================================================
+// BUBBLES
+// ============================================================
+function spawnBubble(kind) {
+  const live = S.nodes.filter(n => n.t + n.m > 0);
+  if (!live.length) return;
+  const pool = kind === "cash" ? live.filter(n => n.m > .05) : live;
+  if (!pool.length) return;
+  const n = pool[Math.floor(Math.random() * pool.length)];
+  const r = radius(n);
+  const x = n.x + rnd(-r, r), y = n.y - r - rnd(10, 30);
+  const colors = { rage: "var(--rage)", cash: "var(--cash)", mod: "var(--mod)" };
+  const labels = { rage: "!", cash: "$", mod: "⚑" };
+  const g = el("g", { class: "bubble", tabindex: 0, role: "button", "aria-label": kind === "mod" ? "Report — tap to dodge" : kind + " bubble" }, $("bubbles"));
+  el("circle", { cx: x, cy: y, r: 20, fill: colors[kind] }, g);
+  const t = el("text", { x, y: y + 1 }, g); t.textContent = labels[kind];
+  const b = { node: g, born: S.day, kind };
+  const collect = () => {
+    if (!S.bubbles.includes(b)) return;
+    if (kind === "rage") S.clout += Math.round(rnd(2, 4) * S.df.clout);
+    if (kind === "cash") { const c = Math.round((1500 + S.earned * .02) * S.df.cash); S.cash += c; }
+    if (kind === "mod") S.heat = clamp(S.heat - 1.5, 0, 100);
+    g.remove(); S.bubbles = S.bubbles.filter(x => x !== b); render();
+  };
+  g.addEventListener("click", collect);
+  g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); collect(); } });
+  S.bubbles.push(b);
+}
+
+// ============================================================
+// UI
+// ============================================================
+function render() {
+  const affected = S.nodes.reduce((s, n) => s + (n.t + n.m) * n.pop, 0) * 1e6;
+  $("sDay").textContent = S.day;
+  $("sInfamy").textContent = fmt(affected);
+  $("sClout").textContent = Math.floor(S.clout);
+  $("sCash").textContent = money(S.cash);
+  $("sHeat").textContent = Math.floor(S.heat) + "%";
+  $("heatFill").style.width = S.heat + "%";
+  const tower = S.sc.id === "tower";
+  $("heatLabel").textContent = !S.heatOn ? (tower ? "Ministry: watching" : "Trust & Safety: not watching yet") : (tower ? "Ministry deplatform order" : "Trust & Safety ban progress");
+  $("labClout").textContent = `${Math.floor(S.clout)} clout · ${money(S.cash)}`;
+  let rank = RANKS[0][1]; RANKS.forEach(([v, r]) => { if (S.peakInfamy >= v) rank = r; });
+  $("rankLabel").textContent = rank;
+  renderMap(); renderDossier();
+  if (!$("labModal").hidden) refreshLab();
+}
+
+function renderDossier() {
+  const n = S.nodes.find(x => x.id === selected); if (!n) return;
+  const pct = v => Math.round(v * 100) + "%";
+  const status = n.m > .8 ? "Full meltdown" : n.m > .3 ? "Melting down" : n.t + n.m > .3 ? "Triggered" : n.t + n.m > 0 ? "Noticing" : "Calm. For now.";
+  $("dossier").innerHTML = `
+    <span class="label">${status} · ${n.pop}M accounts</span>
+    <h2>${n.name}</h2>
+    <p>${n.blurb}</p>
+    <div class="meter"><span class="label">Triggered</span><span class="bar"><i style="width:${pct(n.t + n.m)};background:var(--rage-2)"></i></span><span class="num">${pct(n.t + n.m)}</span></div>
+    <div class="meter"><span class="label">Meltdown</span><span class="bar"><i style="width:${pct(n.m)};background:var(--rage)"></i></span><span class="num">${pct(n.m)}</span></div>
+    <div class="meter"><span class="label">Fragility</span><span class="bar"><i style="width:${pct(n.susc / 2.2)};background:var(--dim)"></i></span><span class="num">${n.susc.toFixed(1)}</span></div>`;
+}
+
+function log(html) {
+  const d = document.createElement("div"); d.innerHTML = html;
+  $("log").prepend(d);
+  while ($("log").children.length > 40) $("log").lastChild.remove();
+}
+function ticker(msg) { $("ticker").textContent = msg.replaceAll("{h}", S ? S.handle : "you"); }
+
+// ---------- Content Lab ----------
+function renderLab() {
+  $("labWallet").textContent = `${Math.floor(S.clout)} clout · ${money(S.cash)}`;
+  $("labTabs").innerHTML = TABS.map(t => `<button role="tab" aria-selected="${labTab === t.id}" data-tab="${t.id}">${t.name}</button>`).join("");
+  $("labGrid").innerHTML = UPGRADES[labTab].map(u => {
+    const owned = S.owned.has(u.id);
+    const locked = u.req && !S.owned.has(u.req);
+    const afford = u.cur === "clout" ? S.clout >= u.cost : S.cash >= u.cost;
+    const fx = Object.entries(u.fx).map(([k, v]) => ({ infect: "Infect", spread: "Spread", severity: "Severity", visibility: "Visibility", resist: "Ban armor", cash: "Payout", lives: "Extra life" }[k] + (v > 0 ? " +" : " ") + (k === "cash" ? Math.round(v * 100) + "%" : v))).join(" · ");
+    const cost = u.cur === "clout" ? `${u.cost} clout` : money(u.cost);
+    const req = locked ? `Needs: ${Object.values(UPGRADES).flat().find(x => x.id === u.req).name}` : "";
+    return `<button class="up ${owned ? "owned" : ""} ${locked ? "locked" : ""}" data-up="${u.id}" ${owned || locked || !afford ? "disabled" : ""}>
+      <b>${u.name}</b><small>${u.desc}</small><span class="fx">${fx}</span>
+      <span class="cost">${owned ? "OWNED" : locked ? req : cost}</span></button>`;
+  }).join("");
+}
+// cheap per-tick update: never rebuild buttons while the player is clicking them
+function refreshLab() {
+  $("labWallet").textContent = `${Math.floor(S.clout)} clout · ${money(S.cash)}`;
+  document.querySelectorAll("#labGrid [data-up]").forEach(b => {
+    const u = Object.values(UPGRADES).flat().find(x => x.id === b.dataset.up);
+    const locked = u.req && !S.owned.has(u.req);
+    const afford = u.cur === "clout" ? S.clout >= u.cost : S.cash >= u.cost;
+    b.disabled = S.owned.has(u.id) || locked || !afford;
+  });
+}
+$("openLab").onclick = () => { $("labModal").hidden = false; renderLab(); };
+$("labModal").addEventListener("click", e => {
+  if (e.target === $("labModal") || e.target.closest("[data-close]")) { $("labModal").hidden = true; return; }
+  const tab = e.target.closest("[data-tab]"); if (tab) { labTab = tab.dataset.tab; renderLab(); return; }
+  const b = e.target.closest("[data-up]"); if (!b || b.disabled) return;
+  const u = Object.values(UPGRADES).flat().find(x => x.id === b.dataset.up);
+  if (u.cur === "clout") S.clout -= u.cost; else S.cash -= u.cost;
+  for (const k in u.fx) S.st[k] += u.fx[k];
+  S.owned.add(u.id);
+  log(`<b>Day ${S.day}</b> Unlocked: ${u.name}.`);
+  $("traits").innerHTML = [...S.owned].map(id => `<span class="chip on">${Object.values(UPGRADES).flat().find(x => x.id === id).name}</span>`).join("");
+  render(); renderLab();
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape") $("labModal").hidden = true; });
+
+// ---------- speed ----------
+function setSpeed(v) {
+  speed = v; clearInterval(timer);
+  if (v > 0) timer = setInterval(tick, 900 / v);
+  document.querySelectorAll("[data-speed]").forEach(b => b.setAttribute("aria-pressed", +b.dataset.speed === v));
+}
+document.querySelectorAll("[data-speed]").forEach(b => b.onclick = () => setSpeed(+b.dataset.speed));
+
+// ---------- end ----------
+function endGame(won) {
+  S.over = true; setSpeed(0); render();
+  const affected = S.nodes.reduce((s, n) => s + (n.t + n.m) * n.pop, 0) * 1e6;
+  const tower = S.sc.id === "tower";
+  const title = won ? "Total Meltdown" : (tower ? "Disappeared" : "Permabanned");
+  const body = won
+    ? (tower ? `The Ministry of Online Safety declared a national emergency, went on state TV to denounce ${S.handle}, and lost the room. The Tower falls to a gas-stove meme.` : `Ninety percent of the outrage network is in full meltdown. Three cable panels, one Senate hearing, and a GoFundMe for flights to Canada that nobody used. ${S.handle} is now a verb.`)
+    : (tower ? `The Ministry's deplatform order went through on day ${S.day}. Your memes still circulate on thumb drives. Legends never die. They just get de-indexed.` : `Trust & Safety finally got you on day ${S.day}. Your Substack still makes $11 a month. Try more ban armor or a lower-visibility build.`);
+  $("endBody").innerHTML = `
+    <span class="label">${S.sc.name} · ${S.pf.name} · ${S.df.name}</span>
+    <h2 style="color:${won ? "var(--rage)" : "var(--mod)"}">${title}</h2>
+    <p>${body}</p>
+    <div class="score"><span class="label">Day</span><span>${S.day}</span><span class="label">Losing it</span><span>${fmt(affected)}</span><span class="label">Banked</span><span>${money(S.earned)}</span><span class="label">Rank</span><span>${$("rankLabel").textContent}</span></div>
+    <button class="go" id="again">Run it back</button>`;
+  $("endModal").hidden = false;
+  try {
+    const best = JSON.parse(localStorage.getItem("outrage-best") || "null");
+    if (!best || affected > best.infamy) localStorage.setItem("outrage-best", JSON.stringify({ handle: S.handle, infamy: affected, cash: S.earned, day: S.day }));
+  } catch (e) {}
+  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower"); $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
+}
+})();
+</script>
