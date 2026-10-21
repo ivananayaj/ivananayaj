@@ -90,6 +90,10 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02e
 :root.ru .mapbox { background: radial-gradient(ellipse at 50% 30%, #1d2a3d, var(--ink) 75%); }
 :root.ru .heatbar i { background: linear-gradient(180deg, #ffffff 0 33%, #1c57c9 33% 66%, #d52b1e 66%); }
 :root.ru .up.owned { background: #2a1a20; }
+:root.ir { --ink: #0b1210; --panel: #13201b; --panel-2: #1a2b24; --line: #2b4339; --rage: #e8323a; --rage-2: #ffb02e; --mod: #4fd18b; --calm: #4a6157; }
+:root.ir .mapbox { background: radial-gradient(ellipse at 50% 40%, #183026, var(--ink) 75%); }
+:root.ir .heatbar i { background: linear-gradient(180deg, #239f40 0 33%, #ffffff 33% 66%, #da0000 66%); }
+:root.ir .up.owned { background: #2a1a1c; }
 :root.tower .heatbar i { background: repeating-linear-gradient(45deg, #ddd, #ddd 6px, #888 6px, #888 12px); }
 .stage { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; }
 .mapbox { position: relative; background: radial-gradient(ellipse at 50% 40%, #171c27, var(--ink) 75%); border: 1px solid var(--line); overflow: hidden; min-height: 300px; }
@@ -278,6 +282,7 @@ const SCENARIOS = [
   { id: "cn", name: "Social Credit (China)", desc: "Start with a 1,000 social credit score. Every Pooh Bear meme costs points. Hit zero and you can't buy a train ticket.", heatMult: 1.3, heatStart: 0, cashMult: 1.7, susc: 1.2, map: "cn", start: "weibo", theme: "cn" },
   { id: "nuke", name: "Doomsday", desc: "Rage-bait world leaders until they feud. The diplomats are trying to make peace. Don't let them. Win: global annihilation.", heatMult: 1.25, heatStart: 0, cashMult: 1.5, susc: 1.1, map: "nuke", start: "dc", theme: "nuke" },
   { id: "ru", name: "Siberia Express (Russia)", desc: "Moscow, 2026. Every meme puts you a stop closer on the train to Siberia. Avoid upper-floor windows.", heatMult: 1.35, heatStart: 0, cashMult: 1.7, susc: 1.2, map: "ru", start: "rt", theme: "ru" },
+  { id: "ir", name: "Morality Police (Iran)", desc: "Tehran. The internet is shut off half the time and everyone has a VPN. Rage-bait the regime before the Guidance Patrol van finds you.", heatMult: 1.35, heatStart: 0, cashMult: 1.7, susc: 1.2, map: "ir", start: "irib", theme: "ir" },
   { id: "election", name: "Election Year", desc: "Everyone is already on edge. Spread is fast, and so are the mods.", heatMult: 1.25, heatStart: 0.04, cashMult: 1.3, susc: 1.35 },
 ];
 const PLATFORMS = [
@@ -440,7 +445,27 @@ const RU_EDGES = [
   ["duma","windows"],["duma","gazprom"],["duma","oligarch"],["windows","gazprom"],["windows","babushka"],["zblog","babushka"],["zblog","ruble"],
   ["oligarch","gazprom"],["oligarch","foreign"],["gazprom","foreign"],["gazprom","metro"],["babushka","metro"],["babushka","ruble"],["foreign","metro"],["metro","ruble"],
 ];
-const MAPS = { ru: [RU_NODES, RU_EDGES], cn: [CN_NODES, CN_EDGES], nuke: [NUKE_NODES, NUKE_EDGES], us: [NODES, EDGES], europe: [EURO_NODES, EURO_EDGES], nk: [NK_NODES, NK_EDGES], alpha: [ALPHA_NODES, ALPHA_EDGES] };
+// Iran: the clerical establishment up top, the security apparatus in the middle, the economy below
+const IR_NODES = [
+  { id: "irib",     name: "State TV Anchors",          x: 150, y: 120, pop: 4,   susc: 1.4, melt: 1.4, blurb: "Report that everyone is happy. Got hacked live on air once. Still reporting that everyone is happy." },
+  { id: "guardian", name: "Guardian Council",          x: 430, y: 90,  pop: 0.1, susc: 1.3, melt: 1.5, blurb: "Twelve men who approve every candidate. Approved four out of six hundred last time." },
+  { id: "friday",   name: "Friday Prayer Leaders",     x: 730, y: 110, pop: 1,   susc: 1.2, melt: 1.4, blurb: "Blamed an earthquake on women's hairstyles. On the record." },
+  { id: "patrol",   name: "Guidance Patrol Vans",      x: 290, y: 270, pop: 3,   susc: 1.5, melt: 1.6, blurb: "Drive around measuring sleeve lengths. Have a tape measure. Use it." },
+  { id: "chant",    name: "'Death to America' Chant Coaches", x: 590, y: 250, pop: 0.5, susc: 1.3, melt: 1.5, blurb: "Rehearse every Friday. Secretly love American sneakers." },
+  { id: "irgc",     name: "IRGC Instagram",            x: 900, y: 250, pop: 2,   susc: 1.3, melt: 1.4, blurb: "Posts missile videos with dramatic music. Instagram is banned in Iran. They post anyway." },
+  { id: "cyber",    name: "Cyber Army",                x: 120, y: 420, pop: 2,   susc: 1.2, melt: 1.3, blurb: "Shuts off the whole country's internet to delete one meme." },
+  { id: "dish",     name: "Satellite Dish Confiscators", x: 420, y: 420, pop: 3, susc: 1.1, melt: 1.4, blurb: "Seize 100,000 dishes a year. There are 10 million. Morale is low." },
+  { id: "basij",    name: "Basij Militia WhatsApp",    x: 720, y: 420, pop: 10,  susc: 1.1, melt: 1.3, blurb: "Volunteers. Mostly volunteered for the free lunch." },
+  { id: "enrich",   name: "Enrichment PR Office",      x: 260, y: 570, pop: 0.3, susc: 1.3, melt: 1.6, blurb: "Insists the program is for electricity. Also insists the lights are on." },
+  { id: "rial",     name: "Central Bank Rial Desk",    x: 580, y: 570, pop: 0.3, susc: 1.4, melt: 1.7, blurb: "A million rials buys a sandwich. Half a sandwich by Thursday." },
+  { id: "bazaar",   name: "Tehran Bazaar Merchants",   x: 900, y: 520, pop: 8,   susc: 0.9, melt: 1.2, blurb: "Have outlasted a shah and four presidents. When they close their shops, everyone notices." },
+];
+const IR_EDGES = [
+  ["irib","guardian"],["irib","patrol"],["irib","cyber"],["guardian","friday"],["guardian","patrol"],["guardian","chant"],["friday","chant"],["friday","irgc"],
+  ["patrol","chant"],["patrol","cyber"],["patrol","dish"],["chant","irgc"],["chant","basij"],["irgc","basij"],["irgc","bazaar"],["cyber","dish"],["cyber","enrich"],
+  ["dish","basij"],["dish","enrich"],["dish","rial"],["basij","rial"],["basij","bazaar"],["enrich","rial"],["rial","bazaar"],
+];
+const MAPS = { ir: [IR_NODES, IR_EDGES], ru: [RU_NODES, RU_EDGES], cn: [CN_NODES, CN_EDGES], nuke: [NUKE_NODES, NUKE_EDGES], us: [NODES, EDGES], europe: [EURO_NODES, EURO_EDGES], nk: [NK_NODES, NK_EDGES], alpha: [ALPHA_NODES, ALPHA_EDGES] };
 
 // Upgrades. cur: "clout" or "cash". req: prerequisite id.
 const UPGRADES = {
@@ -482,6 +507,10 @@ const UPGRADES = {
     { id: "itsawar", name: "Call It a War, Not a 'Special Operation'", cost: 9, cur: "clout", fx: { severity: .55, visibility: 1 }, only: "ru", desc: "Two words, fifteen years. The Duma gets very loud about it." },
     { id: "horse",   name: "Photoshop the Shirtless Horse Ride", cost: 7, cur: "clout", fx: { severity: .4, infect: .3 }, only: "ru", desc: "Same photo, but the horse is riding him. Kremlin Press Office has no information about it." },
     { id: "rublememe", name: "Daily Ruble Chart Meme", cost: 5, cur: "clout", fx: { infect: .4 }, only: "ru", desc: "Just the chart and a sad trombone. Every single day." },
+    { id: "dance",   name: "Dance Video on a Rooftop",  cost: 4, cur: "clout", fx: { severity: .35, infect: .3 }, only: "ir", desc: "Thirty seconds of bad dancing. The state calls it 'a threat to public morality.' Ten million views." },
+    { id: "water",   name: "Ask When the Water's Coming Back", cost: 7, cur: "clout", fx: { severity: .45, infect: .2 }, only: "ir", desc: "One question. The taps have been dry for a week. Nobody in charge has an answer." },
+    { id: "deathtraffic", name: "Get the Chant Crowd Yelling 'Death to Traffic'", cost: 9, cur: "clout", fx: { severity: .5, visibility: 1 }, only: "ir", desc: "Same rhythm. Nobody notices for three rounds. Then everybody does." },
+    { id: "hack",    name: "Hijack State TV for Ten Seconds", cost: 14, cur: "clout", fx: { severity: .6, spread: .4, visibility: 2 }, only: "ir", desc: "The evening news cuts to your meme. The anchor keeps reading. It's happened before." },
     { id: "unhinged",name: "Full Unhinged Arc", cost: 25, cur: "clout", fx: { severity: 1, visibility: 3, cash: .5 }, req: "billboard", desc: "Livestream from a monster truck. Nobody knows what the bit is. Including you." },
   ],
   armor: [
@@ -506,6 +535,9 @@ const UPGRADES = {
     { id: "ground",  name: "Ground-Floor Apartment",  cost: 6000,  cur: "cash", fx: { resist: 2 }, only: "ru", desc: "No windows above three feet. The Window Safety Inspectors hate this one trick." },
     { id: "vodka",   name: "Bribe the Border Officer in Vodka", cost: 3000, cur: "cash", fx: { resist: 1, lives: 1 }, only: "ru", desc: "One case gets you off the Siberia train at the next stop. Once." },
     { id: "tbilisi", name: "Post From a Flat in Tbilisi", cost: 35000, cur: "cash", fx: { resist: 3, spread: .2 }, only: "ru", desc: "Half of Moscow's IT guys already live there. Great wine, no FSB." },
+    { id: "irvpn",   name: "VPN (Like Everyone Else)", cost: 3000, cur: "cash", fx: { resist: 1, spread: .3 }, only: "ir", desc: "Officially illegal. Used by 80% of the country, including the officials." },
+    { id: "rugstar", name: "Starlink Smuggled in a Persian Rug", cost: 20000, cur: "cash", fx: { resist: 2, spread: .4 }, only: "ir", desc: "Hand-knotted, 400 knots per inch, one satellite dish. The Cyber Army can't shut this one off." },
+    { id: "pistachio", name: "Bribe the Patrol in Pistachios", cost: 5000, cur: "cash", fx: { resist: 1, lives: 1 }, only: "ir", desc: "One sack, premium Kerman. They let you off once." },
     { id: "dox",     name: "Burner Phone Discipline", cost: 5, cur: "clout", fx: { resist: 1 }, desc: "Paid in clout: you just have to stop posting your street." },
   ],
 };
@@ -648,6 +680,21 @@ const RU_EVENTS = [
   () => ({ msg: "The train conductor is a fan. He 'loses' your ticket. Siberia −5.", f: () => { S.heat = clamp(S.heat - 5, 0, 100); } }),
 ];
 
+const TICKER_IR = [
+  "State TV: 'The people are happy.' The broadcast is interrupted by a meme. The people are happy.",
+  "Friday sermon blames inflation on women's sleeves.",
+  "Cyber Army shuts off the whole country's internet. Country turns on VPNs. Cyber Army turns on VPNs.",
+  "Rial hits a new record low. Central Bank calls it 'a strategic retreat.'",
+  "Guidance Patrol measures a man's beard. It's too long. Or too short. Unclear.",
+  "Chant coaches report the crowd is 'tired' of the old material.",
+  "Satellite dish confiscators seize a dish. Neighbor puts up two.",
+];
+const IR_EVENTS = [
+  () => ({ msg: "The Guidance Patrol van parked outside your building for an hour. Heat +6.", f: () => { S.heat = clamp(S.heat + 6, 0, 100); } }),
+  () => ({ msg: "Tehrangeles satellite TV in LA rebroadcasts your meme to the whole country.", f: () => { S.st.spread += .2; S.cash += 8000 * S.df.cash; } }),
+  () => ({ msg: "Internet blackout. You had a VPN. Your followers had VPNs. Nothing happened. Heat −4.", f: () => { S.heat = clamp(S.heat - 4, 0, 100); } }),
+];
+
 // built lazily: the tower lists are declared further down
 const SPECIAL_FOR = id => ({
   tower: { ticker: TICKER_TOWER, events: TOWER_EVENTS },
@@ -657,6 +704,7 @@ const SPECIAL_FOR = id => ({
   cn: { ticker: TICKER_CN, events: CN_EVENTS },
   nuke: { ticker: TICKER_NUKE, events: NUKE_EVENTS },
   ru: { ticker: TICKER_RU, events: RU_EVENTS },
+  ir: { ticker: TICKER_IR, events: IR_EVENTS },
 })[id];
 
 // Per-scenario wording: what the ban meter is, how you lose, how you win
@@ -884,6 +932,38 @@ FLAVOR.ru = {
     [.8, "The ruble chart now has your face on it."],
   ],
 };
+FLAVOR.ir = {
+  watchOff: "Morality Police", watchOn: "Guidance Patrol closing in",
+  intro: h => `${h} connects through three VPNs and goes live in Tehran. The Cyber Army reaches for the internet's off switch.`,
+  firstNotice: h => `A Guidance Patrol van starts circling ${h}'s block. Very slowly.`, logNotice: "The Morality Police opened a file on you.",
+  life: h => `The van caught ${h}. A sack of pistachios changed hands. ${h} walked.`, lifeLog: "CAUGHT. Pistachios exchanged. Released.",
+  lose: "Taken to Evin",
+  loseBody: (h, d) => `The van got you on day ${d}. Your cellmates are a rapper, a grandmother who danced at a wedding, and an economist who said the word 'inflation' on TV. Your meme is still on every satellite dish in Tehran.`,
+  win: "The Regime Wobbles",
+  winBody: h => `The bazaar shut its shops, the oil workers walked out, and State TV showed ${h}'s meme for a full hour because nobody would turn it off. Buy "Run for President" next time to finish the job.`,
+  presTitle: h => `President ${h.replace(/^@/, "")}`,
+  presBody: h => `The first election where the Guardian Council didn't get a vote, and ${h} won it with a rooftop dance video. First decree: dancing is legal. Second: the chant coaches now lead cheers for the national football team.`,
+  modLabel: "Patrol van — tap to dodge", modIcon: "⚠",
+  chaosName: "Regime wobbling",
+  tipping: h => `A rooftop dance-off inspired by ${h} spreads across Tehran. Every rooftop. Every night.`,
+  copsBusy: "The Guidance Patrol is busy chasing rooftop dancers. Your file sits on a desk.",
+  beats: [
+    [10, "Chant crowd yells 'Death to Traffic' for a full minute before anyone notices."],
+    [25, "State TV gets hacked again. The anchor keeps reading the news under your meme."],
+    [40, "Satellite dish confiscators quietly put up their own dishes."],
+    [55, "Tehran Bazaar merchants close their shops. Historically, a very bad sign for whoever's in charge."],
+    [70, "Oil workers strike. The Rial Desk stops answering the phone."],
+    [85, "The Friday sermon is cancelled. Nobody showed up to give it."],
+  ],
+  steps: h => [
+    [.05, `State TV calls ${h} 'a foreign agent.' Your follower count triples.`],
+    [.15, "The Cyber Army shuts off the internet to stop your meme. It's on every VPN by dinner."],
+    [.3, `A Friday sermon blames ${h} for the drought.`],
+    [.5, "IRGC Instagram posts a missile video aimed at your meme. Gets ratioed by Iranians."],
+    [.7, "Half the Basij WhatsApp group has your meme as their profile picture."],
+    [.8, "Even the chant coaches are humming your jingle."],
+  ],
+};
 const flavor = k => (FLAVOR[S.sc.id] && FLAVOR[S.sc.id][k]) || FLAVOR.default[k];
 
 // ============================================================
@@ -938,7 +1018,7 @@ renderChoices();
 $("setupForm").addEventListener("submit", e => {
   e.preventDefault();
   S = newGame();
-  document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru");
+  document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir");
   if (S.sc.theme) document.documentElement.classList.add(S.sc.theme);
   $("setup").hidden = true; $("game").hidden = false;
   $("sHandle").textContent = S.handle;
@@ -1167,7 +1247,7 @@ const TOWER_EVENTS = [
 function randomEvent() {
   const extra = SPECIAL_FOR(S.sc.id) ? SPECIAL_FOR(S.sc.id).events : [];
   // US-only gags stay out of the foreign maps
-  const base = ["nk", "alpha", "cn", "nuke", "ru"].includes(S.sc.id) ? EVENTS.slice(4, 6) : EVENTS;
+  const base = ["nk", "alpha", "cn", "nuke", "ru", "ir"].includes(S.sc.id) ? EVENTS.slice(4, 6) : EVENTS;
   const pool = base.concat(extra, extra);
   const e = pool[Math.floor(Math.random() * pool.length)]();
   e.f(); log(`<b>Day ${S.day}</b> ${e.msg}`); ticker(e.msg);
@@ -1318,7 +1398,7 @@ function endGame(won) {
     const best = JSON.parse(localStorage.getItem("outrage-best") || "null");
     if (!best || affected > best.infamy) localStorage.setItem("outrage-best", JSON.stringify({ handle: S.handle, infamy: affected, cash: S.earned, day: S.day }));
   } catch (e) {}
-  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru"); $("chaosBox").hidden = true; $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
+  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir"); $("chaosBox").hidden = true; $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
 }
 })();
 </script>
