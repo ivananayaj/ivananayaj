@@ -86,6 +86,10 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02e
 :root.nuke .heatbar i { background: repeating-linear-gradient(45deg, #6cc4ff 0 8px, #ffffff 8px 16px); }
 :root.nuke .chaosbar i { background: repeating-linear-gradient(45deg, #ffc21f 0 10px, #111 10px 20px); }
 :root.nuke .up.owned { background: #2a2414; }
+:root.ru { --ink: #0c1016; --panel: #151c26; --panel-2: #1c2533; --line: #2e3b4f; --rage: #e4322b; --rage-2: #ff9a3c; --mod: #cfe3ff; --calm: #4c5b72; --fire: #fff1d6; }
+:root.ru .mapbox { background: radial-gradient(ellipse at 50% 30%, #1d2a3d, var(--ink) 75%); }
+:root.ru .heatbar i { background: linear-gradient(180deg, #ffffff 0 33%, #1c57c9 33% 66%, #d52b1e 66%); }
+:root.ru .up.owned { background: #2a1a20; }
 :root.tower .heatbar i { background: repeating-linear-gradient(45deg, #ddd, #ddd 6px, #888 6px, #888 12px); }
 .stage { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; }
 .mapbox { position: relative; background: radial-gradient(ellipse at 50% 40%, #171c27, var(--ink) 75%); border: 1px solid var(--line); overflow: hidden; min-height: 300px; }
@@ -273,6 +277,7 @@ const SCENARIOS = [
   { id: "alpha", name: "Gen Alpha Brainrot", desc: "Rage-bait the iPad kids. The meter is your own brain: let the brainrot hit 100% and you become one of them.", heatMult: 1.4, heatStart: 0, cashMult: 1.4, susc: 1.3, map: "alpha", start: "skibidi", theme: "alpha" },
   { id: "cn", name: "Social Credit (China)", desc: "Start with a 1,000 social credit score. Every Pooh Bear meme costs points. Hit zero and you can't buy a train ticket.", heatMult: 1.3, heatStart: 0, cashMult: 1.7, susc: 1.2, map: "cn", start: "weibo", theme: "cn" },
   { id: "nuke", name: "Doomsday", desc: "Rage-bait world leaders until they feud. The diplomats are trying to make peace. Don't let them. Win: global annihilation.", heatMult: 1.25, heatStart: 0, cashMult: 1.5, susc: 1.1, map: "nuke", start: "dc", theme: "nuke" },
+  { id: "ru", name: "Siberia Express (Russia)", desc: "Moscow, 2026. Every meme puts you a stop closer on the train to Siberia. Avoid upper-floor windows.", heatMult: 1.35, heatStart: 0, cashMult: 1.7, susc: 1.2, map: "ru", start: "rt", theme: "ru" },
   { id: "election", name: "Election Year", desc: "Everyone is already on edge. Spread is fast, and so are the mods.", heatMult: 1.25, heatStart: 0.04, cashMult: 1.3, susc: 1.35 },
 ];
 const PLATFORMS = [
@@ -415,7 +420,27 @@ const NUKE_EDGES = [
   ["london","paris"],["london","moscow"],["london","brussels"],["paris","brussels"],["paris","bern"],["brussels","moscow"],["moscow","beijing"],["moscow","islamabad"],
   ["islamabad","delhi"],["delhi","beijing"],["beijing","pyongyang"],["moscow","pyongyang"],["bern","islamabad"],
 ];
-const MAPS = { cn: [CN_NODES, CN_EDGES], nuke: [NUKE_NODES, NUKE_EDGES], us: [NODES, EDGES], europe: [EURO_NODES, EURO_EDGES], nk: [NK_NODES, NK_EDGES], alpha: [ALPHA_NODES, ALPHA_EDGES] };
+// Russia: Moscow power on the left, St. Petersburg and the provinces to the right
+const RU_NODES = [
+  { id: "rt",       name: "RT Newsroom",               x: 150, y: 120, pop: 2,   susc: 1.4, melt: 1.4, blurb: "Reports from America that America is collapsing. Reports from Russia that Russia is fine." },
+  { id: "kremlin",  name: "Kremlin Press Office",      x: 420, y: 90,  pop: 1,   susc: 1.3, melt: 1.5, blurb: "Has no information about that. Has no information about anything." },
+  { id: "trolls",   name: "St. Petersburg Troll Factory", x: 720, y: 110, pop: 1.5, susc: 1.2, melt: 1.3, blurb: "Four hundred people pretending to be Texans. Their Texas accent is 'y'all, comrade.'" },
+  { id: "duma",     name: "The Duma",                  x: 280, y: 280, pop: 0.5, susc: 1.2, melt: 1.4, blurb: "Votes 450 to 0 on everything. Once voted 451 to 0." },
+  { id: "windows",  name: "Window Safety Inspectors",  x: 560, y: 260, pop: 0.5, susc: 1.4, melt: 1.6, blurb: "Critics keep falling out of windows. Their investigation found the windows were at fault." },
+  { id: "zblog",    name: "Z-Blogger Telegram Channels", x: 880, y: 250, pop: 3, susc: 1.5, melt: 1.6, blurb: "Furious at everyone. Especially their own side. Especially before lunch." },
+  { id: "oligarch", name: "Oligarch Yacht Club",       x: 120, y: 400, pop: 0.2, susc: 1.1, melt: 1.5, blurb: "Twelve yachts, eight seized. Remaining four never leave port." },
+  { id: "gazprom",  name: "Gazprom HQ",                x: 420, y: 420, pop: 1,   susc: 1.0, melt: 1.3, blurb: "Turns off Europe's heat when sad. Currently sad." },
+  { id: "babushka", name: "Babushka Watch Committee",  x: 720, y: 420, pop: 12,  susc: 1.0, melt: 1.2, blurb: "Watches state TV nine hours a day. Will report you, then feed you." },
+  { id: "foreign",  name: "Foreign Ministry Telegram", x: 260, y: 560, pop: 0.5, susc: 1.3, melt: 1.5, blurb: "Threatens a Western capital every morning before breakfast." },
+  { id: "metro",    name: "Moscow Metro Commuters",    x: 580, y: 570, pop: 8,   susc: 0.9, melt: 1.1, blurb: "Have seen everything. Unimpressed by you. For now." },
+  { id: "ruble",    name: "Central Bank Ruble Desk",   x: 880, y: 520, pop: 0.3, susc: 1.4, melt: 1.7, blurb: "Watches the ruble chart like a horror movie. It is a horror movie." },
+];
+const RU_EDGES = [
+  ["rt","kremlin"],["rt","duma"],["rt","oligarch"],["kremlin","trolls"],["kremlin","duma"],["kremlin","windows"],["trolls","zblog"],["trolls","windows"],
+  ["duma","windows"],["duma","gazprom"],["duma","oligarch"],["windows","gazprom"],["windows","babushka"],["zblog","babushka"],["zblog","ruble"],
+  ["oligarch","gazprom"],["oligarch","foreign"],["gazprom","foreign"],["gazprom","metro"],["babushka","metro"],["babushka","ruble"],["foreign","metro"],["metro","ruble"],
+];
+const MAPS = { ru: [RU_NODES, RU_EDGES], cn: [CN_NODES, CN_EDGES], nuke: [NUKE_NODES, NUKE_EDGES], us: [NODES, EDGES], europe: [EURO_NODES, EURO_EDGES], nk: [NK_NODES, NK_EDGES], alpha: [ALPHA_NODES, ALPHA_EDGES] };
 
 // Upgrades. cur: "clout" or "cash". req: prerequisite id.
 const UPGRADES = {
@@ -453,6 +478,10 @@ const UPGRADES = {
     { id: "jaywalkvid", name: "Jaywalk on Camera, Wave at It", cost: 5, cur: "clout", fx: { infect: .4 }, only: "cn", desc: "Your face on the shame billboard, smiling. It goes viral." },
     { id: "allcaps", name: "Translate Speeches Badly on Purpose", cost: 5, cur: "clout", fx: { severity: .35, infect: .2 }, only: "nuke", desc: "'We seek peace' becomes 'your mother is a hamster.' Accuracy is overrated." },
     { id: "wrestler",name: "Photoshop Leaders Onto Pro Wrestlers", cost: 8, cur: "clout", fx: { severity: .45, infect: .3 }, only: "nuke", desc: "Every head of state in a speedo. Two of them take it personally." },
+    { id: "blank",   name: "Hold Up a Blank Sign",     cost: 4, cur: "clout", fx: { severity: .35, infect: .3 }, only: "ru", desc: "No words. Nothing on it. Police arrive anyway. The video does numbers." },
+    { id: "itsawar", name: "Call It a War, Not a 'Special Operation'", cost: 9, cur: "clout", fx: { severity: .55, visibility: 1 }, only: "ru", desc: "Two words, fifteen years. The Duma gets very loud about it." },
+    { id: "horse",   name: "Photoshop the Shirtless Horse Ride", cost: 7, cur: "clout", fx: { severity: .4, infect: .3 }, only: "ru", desc: "Same photo, but the horse is riding him. Kremlin Press Office has no information about it." },
+    { id: "rublememe", name: "Daily Ruble Chart Meme", cost: 5, cur: "clout", fx: { infect: .4 }, only: "ru", desc: "Just the chart and a sad trombone. Every single day." },
     { id: "unhinged",name: "Full Unhinged Arc", cost: 25, cur: "clout", fx: { severity: 1, visibility: 3, cash: .5 }, req: "billboard", desc: "Livestream from a monster truck. Nobody knows what the bit is. Including you." },
   ],
   armor: [
@@ -474,6 +503,9 @@ const UPGRADES = {
     { id: "twophone",name: "Second Phone Just for WeChat", cost: 9000, cur: "cash", fx: { resist: 1, cash: .3 }, only: "cn", desc: "One phone for the Party, one phone for the memes. Never mix them." },
     { id: "passport",name: "Foreign Passport",       cost: 40000,  cur: "cash", fx: { resist: 3 }, only: "cn", desc: "Hard to dock credit from a guy in Vancouver." },
     { id: "bunker",  name: "Bunker With Starlink",   cost: 30000,  cur: "cash", fx: { resist: 3, lives: 1 }, only: "nuke", desc: "Two years of canned beans and 300 Mbps. You will post through it." },
+    { id: "ground",  name: "Ground-Floor Apartment",  cost: 6000,  cur: "cash", fx: { resist: 2 }, only: "ru", desc: "No windows above three feet. The Window Safety Inspectors hate this one trick." },
+    { id: "vodka",   name: "Bribe the Border Officer in Vodka", cost: 3000, cur: "cash", fx: { resist: 1, lives: 1 }, only: "ru", desc: "One case gets you off the Siberia train at the next stop. Once." },
+    { id: "tbilisi", name: "Post From a Flat in Tbilisi", cost: 35000, cur: "cash", fx: { resist: 3, spread: .2 }, only: "ru", desc: "Half of Moscow's IT guys already live there. Great wine, no FSB." },
     { id: "dox",     name: "Burner Phone Discipline", cost: 5, cur: "clout", fx: { resist: 1 }, desc: "Paid in clout: you just have to stop posting your street." },
   ],
 };
@@ -601,6 +633,21 @@ const NUKE_EVENTS = [
   () => ({ msg: "A leader quote-tweets you with 'interesting.' Markets dip 4%.", f: () => { S.st.spread += .2; S.clout += 3; } }),
 ];
 
+const TICKER_RU = [
+  "Kremlin: 'We have no information about that.' Asked what 'that' was: no information.",
+  "Another businessman falls out of a window. Window placed under investigation.",
+  "State TV: Russia's economy 'never better.' Ruble: 'help.'",
+  "Duma votes 450–0 to ban the word 'vote.'",
+  "Troll factory employee of the month: 'Brad from Texas,' who is Sergei.",
+  "Gazprom turns off a pipeline to show it's not upset.",
+  "Man arrested for holding up a sign with eight asterisks on it.",
+];
+const RU_EVENTS = [
+  () => ({ msg: "The FSB put a microphone in your lamp. Your lamp is now your best-performing podcast guest. Siberia +6.", f: () => { S.heat = clamp(S.heat + 6, 0, 100); S.clout += 2; } }),
+  () => ({ msg: "An exiled oligarch sends a crypto 'donation' from his last unseized yacht.", f: () => { S.cash += 9000 * S.df.cash; } }),
+  () => ({ msg: "The train conductor is a fan. He 'loses' your ticket. Siberia −5.", f: () => { S.heat = clamp(S.heat - 5, 0, 100); } }),
+];
+
 // built lazily: the tower lists are declared further down
 const SPECIAL_FOR = id => ({
   tower: { ticker: TICKER_TOWER, events: TOWER_EVENTS },
@@ -609,6 +656,7 @@ const SPECIAL_FOR = id => ({
   alpha: { ticker: TICKER_ALPHA, events: ALPHA_EVENTS },
   cn: { ticker: TICKER_CN, events: CN_EVENTS },
   nuke: { ticker: TICKER_NUKE, events: NUKE_EVENTS },
+  ru: { ticker: TICKER_RU, events: RU_EVENTS },
 })[id];
 
 // Per-scenario wording: what the ban meter is, how you lose, how you win
@@ -804,6 +852,38 @@ FLAVOR.nuke = {
     [.8, "Bunker sales up 4,000%."],
   ],
 };
+FLAVOR.ru = {
+  watchOff: "Train to Siberia", watchOn: "Train to Siberia",
+  intro: h => `${h} goes live in Moscow. Somewhere, an FSB officer cracks his knuckles.`,
+  firstNotice: h => `The FSB opens a file on ${h}. It's thick already. They started it in advance.`, logNotice: "The FSB bought you a train ticket. You didn't ask for it.",
+  life: h => `${h} was on the Siberia train. Got off at the next stop with a case of vodka and a smile.`, lifeLog: "ON THE TRAIN. Bribed off at the next stop.",
+  lose: "Sent to Siberia",
+  loseBody: (h, d) => `On day ${d}, two men in leather jackets handed you a one-way ticket east. You now post from a labor camp at -40° on a 2G signal. Engagement is down, but the views are incredible.`,
+  win: "The Kremlin Cracks",
+  winBody: h => `The ruble meme broke the ruble, the Duma voted 0 to 450 for once, and the Kremlin Press Office finally has information: it's over. ${h} is a folk hero on every Telegram channel. Buy "Run for President" next time to finish the job.`,
+  presTitle: h => `President ${h.replace(/^@/, "")}`,
+  presBody: h => `First free election in decades, and ${h} won with a photoshop of a horse riding a shirtless man. First decree: every office is on the ground floor. Second: the Siberia train now runs both ways.`,
+  modLabel: "FSB agent — tap to dodge", modIcon: "☭",
+  chaosName: "Kremlin cracking",
+  tipping: h => `A blank-sign protest inspired by ${h} fills Red Square. Police are arresting people for signs with nothing on them.`,
+  copsBusy: "The FSB is busy arresting blank signs. The Siberia train is running late.",
+  beats: [
+    [10, "State TV anchor holds up a blank sign live on air. Is now 'on vacation.'"],
+    [25, "The Troll Factory accidentally posts a meme of its own boss."],
+    [40, "Babushkas switch off state TV in protest. Watch your stream instead."],
+    [55, "Gazprom turns off the gas. To the Kremlin."],
+    [70, "The Duma's vote comes back 449 to 1. Nobody has ever seen this."],
+    [85, "Kremlin Press Office: 'We have information.' Markets panic."],
+  ],
+  steps: h => [
+    [.05, `RT misspells ${h} in a segment about Western decadence.`],
+    [.15, "The Troll Factory is assigned to argue with you full time."],
+    [.3, `The Duma passes a law naming you specifically. It's called the ${h.replace(/^@/, "")} Law.`],
+    [.5, "Z-bloggers and liberals agree on something: they hate you."],
+    [.7, "Your memes appear on the side of the Moscow Metro. Nobody admits to putting them there."],
+    [.8, "The ruble chart now has your face on it."],
+  ],
+};
 const flavor = k => (FLAVOR[S.sc.id] && FLAVOR[S.sc.id][k]) || FLAVOR.default[k];
 
 // ============================================================
@@ -858,7 +938,7 @@ renderChoices();
 $("setupForm").addEventListener("submit", e => {
   e.preventDefault();
   S = newGame();
-  document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke");
+  document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru");
   if (S.sc.theme) document.documentElement.classList.add(S.sc.theme);
   $("setup").hidden = true; $("game").hidden = false;
   $("sHandle").textContent = S.handle;
@@ -1087,7 +1167,7 @@ const TOWER_EVENTS = [
 function randomEvent() {
   const extra = SPECIAL_FOR(S.sc.id) ? SPECIAL_FOR(S.sc.id).events : [];
   // US-only gags stay out of the foreign maps
-  const base = ["nk", "alpha", "cn", "nuke"].includes(S.sc.id) ? EVENTS.slice(4, 6) : EVENTS;
+  const base = ["nk", "alpha", "cn", "nuke", "ru"].includes(S.sc.id) ? EVENTS.slice(4, 6) : EVENTS;
   const pool = base.concat(extra, extra);
   const e = pool[Math.floor(Math.random() * pool.length)]();
   e.f(); log(`<b>Day ${S.day}</b> ${e.msg}`); ticker(e.msg);
@@ -1238,7 +1318,7 @@ function endGame(won) {
     const best = JSON.parse(localStorage.getItem("outrage-best") || "null");
     if (!best || affected > best.infamy) localStorage.setItem("outrage-best", JSON.stringify({ handle: S.handle, infamy: affected, cash: S.earned, day: S.day }));
   } catch (e) {}
-  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke"); $("chaosBox").hidden = true; $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
+  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru"); $("chaosBox").hidden = true; $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
 }
 })();
 </script>
