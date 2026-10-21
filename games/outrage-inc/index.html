@@ -257,6 +257,14 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02e
 .stat .v { transform-origin: left center; }
 #rankLabel.bump { animation: rankUp .8s ease-out; transform-origin: left center; }
 @keyframes rankUp { 0%, 60% { color: var(--cash); transform: scale(1.15); } }
+/* hazards: a blocked community goes grey with an icon; smog hazes the whole map */
+.node.blocked circle.base, .node.blocked path { filter: grayscale(1) brightness(.6); }
+.hz { font-size: 26px; pointer-events: none; animation: hzBob 1.2s ease-in-out infinite alternate; transform-box: fill-box; }
+@keyframes hzBob { to { transform: translateY(-4px) rotate(-6deg); } }
+.mapbox::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.2s; background: radial-gradient(ellipse at 30% 40%, rgba(150, 130, 100, .55), transparent 60%), radial-gradient(ellipse at 75% 65%, rgba(140, 125, 100, .5), transparent 55%), rgba(110, 100, 85, .35); }
+.mapbox.smog::after { opacity: 1; animation: smogDrift 9s ease-in-out infinite alternate; }
+@keyframes smogDrift { to { background-position: 60px -20px, -50px 30px, 0 0; } }
+.mapbox.dark { filter: brightness(.55); transition: filter .4s; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
@@ -789,6 +797,9 @@ const UPGRADES = {
     { id: "accounts",name: "Seventeen Backup Accounts", cost: 7, cur: "clout", fx: { resist: 1, lives: 1 }, only: "br", desc: "They geo-block one, sixteen are left. Gets you through one ban." },
     { id: "simstack",name: "Stack of Cheap SIM Cards", cost: 2000,  cur: "cash", fx: { resist: 1, spread: .3 }, only: "india", desc: "Data costs almost nothing here. Twelve SIMs, twelve accounts, one meme." },
     { id: "shutvpn", name: "Satellite Link for Shutdowns", cost: 15000, cur: "cash", fx: { resist: 2, lives: 1 }, only: "india", desc: "When they switch off your district, you keep posting. Saves you once." },
+    { id: "generator", name: "Diesel Generator",     cost: 5000,  cur: "cash", fx: {}, only: "india", desc: "Power cuts can't stop the stream. Income keeps flowing when the grid goes down." },
+    { id: "n95",     name: "N95 Mask Stockpile",     cost: 3000,  cur: "cash", fx: {}, only: "india", desc: "Smog season still hurts, but only half as much." },
+    { id: "cleanup", name: "Hire a Garbage Cleanup Crew", cost: 9000, cur: "cash", fx: {}, only: "india", desc: "Trash piles and landfill collapses can't block your communities anymore." },
     { id: "nri",     name: "NRI Cousin in New Jersey", cost: 35000, cur: "cash", fx: { resist: 3, cash: .3 }, only: "india", desc: "Posts your memes from Edison, NJ. Out of reach, and the family is proud of him." },
     { id: "faxonly", name: "Communicate Only by Fax", cost: 4000, cur: "cash", fx: { resist: 2 }, only: "jp", desc: "The ministry can't trace what it can't email. Neither can anyone else." },
     { id: "capsule", name: "Capsule Hotel Hideout",  cost: 9000, cur: "cash", fx: { resist: 1, lives: 1 }, only: "jp", desc: "Two meters long, one meter high, totally anonymous. Gets you out of one press conference." },
@@ -1449,6 +1460,23 @@ FLAVOR.br = {
   ],
 };
 FLAVOR.india = {
+  hazards: [
+    { kind: "block", icon: "🗑", label: "Garbage pile", days: 7, immune: "cleanup", title: "Trash pile", sub: "A community is blocked",
+      msg: "Garbage collectors went on strike. The trash pile got so high it blocked the cell tower serving {node}. They're offline for a week.",
+      dodged: "A trash pile started growing next to a cell tower. Your cleanup crew cleared it by lunch." },
+    { kind: "block", icon: "⛰", label: "Landfill collapse", days: 6, immune: "cleanup", title: "Landfill collapse", sub: "A community is blocked",
+      msg: "Part of a Delhi landfill taller than a 20-story building slid onto the fiber line. {node} goes dark.",
+      dodged: "The landfill shifted again. Your cleanup crew had already rerouted the fiber line." },
+    { kind: "temp", k: "infect", v: -.35, days: 8, cls: "smog", halvedBy: "n95", title: "Smog season", sub: "Spread slowed for 8 days",
+      msg: "Delhi smog season. The air quality index broke the scale. Nobody can see their phone screens. Spread slows down." },
+    { kind: "block", icon: "🌊", label: "Monsoon flood", days: 5, title: "Monsoon", sub: "A community is underwater",
+      msg: "Monsoon floods took out the cell towers. {node} is underwater for five days." },
+    { kind: "power", days: 4, immune: "generator", title: "Power cut", sub: "No income for 4 days",
+      msg: "Rolling power cuts. Nobody can charge their phone and no money is coming in for four days.",
+      dodged: "Rolling power cuts across the city. Your diesel generator kept the stream running." },
+    { kind: "cash", amount: 6000, title: "Cow on the highway", sub: "Merch shipment delayed",
+      msg: "A cow is lying in the middle of the highway and your merch truck has been stuck behind it for six hours. Nobody honks at the cow. You lose {amount}." },
+  ],
   watchOff: "Internet shutdown risk", watchOn: "Internet shutdown risk",
   intro: h => `${h} goes live from Delhi. Somewhere a primetime anchor is already shouting about it.`,
   firstNotice: h => `The Takedown Desk adds ${h} to this week's list. It's a long list.`, logNotice: "The government started watching your posts.",
@@ -1579,6 +1607,7 @@ $("setupForm").addEventListener("submit", e => {
   SFX.init(); setTimeout(() => SFX.play("news"), 60);
   Object.assign(shown, { clout: S.clout, cash: 0, infamy: 0 });
   document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx", "ca", "br", "india", "jp");
+  document.querySelector(".mapbox").classList.remove("smog", "dark");
   if (S.sc.theme) document.documentElement.classList.add(S.sc.theme);
   $("setup").hidden = true; $("game").hidden = false;
   $("sHandle").textContent = S.handle;
@@ -1614,6 +1643,7 @@ function buildMap() {
     el("path", { class: "fillarc", fill: "var(--rage-2)" }, g);
     el("path", { class: "meltarc", fill: "var(--rage)" }, g);
     el("path", { class: "riotarc", fill: "var(--fire)" }, g);
+    const hz = el("text", { class: "hz", x: n.x + r * .75, y: n.y - r * .55, "text-anchor": "middle", style: "display:none" }, g); hz.textContent = "";
     const fl = el("text", { class: "flame", x: n.x, y: n.y - r + 4, "text-anchor": "middle", style: "display:none" }, g); fl.textContent = flavor("flameIcon") || "🔥";
     const lbl = el("text", { x: n.x, y: n.y + r + 18, "text-anchor": "middle" }, g);
     lbl.textContent = n.name.length > 22 ? n.name.slice(0, 21) + "…" : n.name;
@@ -1783,6 +1813,10 @@ function renderMap() {
     if (n.vt === undefined || reduceMotion) drawArcs(n, true);
     // display, not opacity: the flicker animation overrides opacity
     g.querySelector(".flame").style.display = n.r > .25 ? "" : "none";
+    const block = (S.blocks || []).find(b => b.id === n.id);
+    g.classList.toggle("blocked", !!block);
+    g.querySelector(".hz").style.display = block ? "" : "none";
+    if (block) g.querySelector(".hz").textContent = block.icon;
     g.classList.toggle("sel", selected === n.id);
     g.classList.toggle("melt", n.m > .5);
     g.querySelector(".ring").setAttribute("opacity", n.m > .5 ? .8 : 0);
@@ -1842,10 +1876,12 @@ function tick() {
   if (!S.started || S.over) return;
   S.day++;
   const st = S.st;
+  expireHazards();
+  const blocked = id => (S.blocks || []).some(b => b.id === id);
 
   // within-community spread and meltdown
   S.nodes.forEach(n => {
-    if (n.t + n.m <= 0) return;
+    if (n.t + n.m <= 0 || blocked(n.id)) return;
     const h = 1 - n.t - n.m;
     const grow = 0.07 * st.infect * n.susc * (n.t + n.m * .6 + .004) * h;
     const melt = 0.035 * st.severity * n.melt * n.t;
@@ -1857,7 +1893,7 @@ function tick() {
   S.edges.forEach(([a, b]) => {
     const A = S.nodes.find(n => n.id === a), B = S.nodes.find(n => n.id === b);
     [[A, B], [B, A]].forEach(([src, dst]) => {
-      const lvl = src.t + src.m;
+      const lvl = blocked(src.id) || blocked(dst.id) ? 0 : src.t + src.m;
       if (lvl > .12 && dst.t + dst.m === 0 && Math.random() < 0.05 * st.spread * lvl * dst.susc) {
         dst.t = .01;
         spreadFx(src, dst);
@@ -1892,7 +1928,7 @@ function tick() {
   S.chaos = clamp(riotShare / .7 * 100, 0, 100);
 
   // money
-  const income = (melted + rioting * 1.5) * 110 * st.cash * S.sc.cashMult * S.df.cash;
+  const income = S.powerCutUntil > S.day ? 0 : (melted + rioting * 1.5) * 110 * st.cash * S.sc.cashMult * S.df.cash;
   S.cash += income; S.earned += income;
   S.clout += 0.15 * S.df.clout;
   S.peakInfamy = Math.max(S.peakInfamy, affected * 1e6);
@@ -1921,6 +1957,7 @@ function tick() {
 
   // events, milestones, ticker
   if (S.day % 9 === 0) randomEvent();
+  if (flavor("hazards") && S.started && S.day >= 14 && S.day % 7 === 4) hazard();
   if (S.day % 4 === 0) {
     const special = SPECIAL_FOR(S.sc.id) && SPECIAL_FOR(S.sc.id).ticker;
     const list = special && Math.random() < .6 ? special : TICKER_GENERIC;
@@ -1964,6 +2001,53 @@ function collapseBeats(c) {
     if (c >= lvl && !S.milestones.has(key)) { S.milestones.add(key); const m = msg.replaceAll("{h}", S.handle); ticker(m, true); log(`<b>Day ${S.day}</b> ${m}`); S.clout += 4; }
   });
   if (c >= 25 && !S.milestones.has("cops") && S.heatOn) { S.milestones.add("cops"); log(`<b>Day ${S.day}</b> ${flavor("copsBusy")}`); }
+}
+
+// ---------- hazards: things that hold you back (India) ----------
+// kind "block": one active community stops growing and spreading for a while
+// kind "temp":  a stat penalty for a few days; kind "power": no income; kind "cash": straight loss
+function hazard() {
+  // a block needs at least 3 live communities to pick from, and never hits the same one twice in a row
+  const live = S.nodes.filter(n => n.t + n.m > 0 && !(S.blocks || []).some(b => b.id === n.id) && n.id !== S.lastBlocked);
+  const list = flavor("hazards").filter(x => x.kind !== "block" || live.length >= 3);
+  const h = list[Math.floor(Math.random() * list.length)];
+  if (h.immune && S.owned.has(h.immune)) {
+    log(`<b>Day ${S.day}</b> ${h.dodged}`);
+    return;
+  }
+  let msg = h.msg;
+  if (h.kind === "block") {
+    const n = live[Math.floor(Math.random() * live.length)];
+    S.lastBlocked = n.id;
+    S.blocks = (S.blocks || []).concat({ id: n.id, until: S.day + h.days, icon: h.icon, label: h.label });
+    msg = msg.replace("{node}", n.name);
+    shock(n);
+  } else if (h.kind === "temp") {
+    const v = S.owned.has(h.halvedBy) ? h.v / 2 : h.v;
+    S.st[h.k] += v;
+    S.temps = (S.temps || []).concat({ k: h.k, v, until: S.day + h.days, cls: h.cls });
+    if (h.cls) document.querySelector(".mapbox").classList.add(h.cls);
+  } else if (h.kind === "power") {
+    S.powerCutUntil = S.day + h.days;
+    document.querySelector(".mapbox").classList.add("dark");
+  } else if (h.kind === "cash") {
+    const loss = Math.min(S.cash, h.amount * S.df.cash);
+    S.cash -= loss;
+    msg = msg.replace("{amount}", money(loss));
+  }
+  log(`<b>Day ${S.day}</b> ${msg}`);
+  ticker(msg, true);
+  banner(h.title, h.sub, "var(--rage-2)");
+  SFX.play("warn");
+}
+function expireHazards() {
+  (S.temps || []).filter(t => t.until <= S.day).forEach(t => {
+    S.st[t.k] -= t.v;
+    if (t.cls && !(S.temps || []).some(o => o !== t && o.cls === t.cls && o.until > S.day)) document.querySelector(".mapbox").classList.remove(t.cls);
+  });
+  S.temps = (S.temps || []).filter(t => t.until > S.day);
+  if (S.powerCutUntil && S.powerCutUntil <= S.day) { S.powerCutUntil = 0; document.querySelector(".mapbox").classList.remove("dark"); }
+  S.blocks = (S.blocks || []).filter(b => b.until > S.day);
 }
 
 const EVENTS = [
@@ -2063,7 +2147,8 @@ function render() {
 function renderDossier() {
   const n = S.nodes.find(x => x.id === selected); if (!n) return;
   const pct = v => Math.round(v * 100) + "%";
-  const status = flavor("sortie") ? (n.r > .5 ? "Mostly offline" : n.r > .1 ? "Taking damage" : n.m > .3 ? "Crashing" : n.t + n.m > .3 ? "Glitching" : n.t + n.m > 0 ? "Noticing you" : "Fully operational") :
+  const blk = (S.blocks || []).find(b => b.id === n.id);
+  const status = blk ? `Blocked: ${blk.label} (${blk.until - S.day}d)` : flavor("sortie") ? (n.r > .5 ? "Mostly offline" : n.r > .1 ? "Taking damage" : n.m > .3 ? "Crashing" : n.t + n.m > .3 ? "Glitching" : n.t + n.m > 0 ? "Noticing you" : "Fully operational") :
     n.r > .5 ? "On fire" : n.r > .1 ? "Rioting" : n.m > .8 ? "Full meltdown" : n.m > .3 ? "Melting down" : n.t + n.m > .3 ? "Triggered" : n.t + n.m > 0 ? "Noticing" : "Calm. For now.";
   $("dossier").innerHTML = `
     <span class="label">${status} · ${n.pop}M accounts</span>
