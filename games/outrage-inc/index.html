@@ -193,6 +193,37 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02e
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .stat.who, .stat.heat { grid-column: 1 / -1; }
 }
+/* ---------- juice ---------- */
+.floater { font-family: var(--display); font-size: 24px; paint-order: stroke; stroke: var(--ink); stroke-width: 5px; text-anchor: middle; pointer-events: none; animation: floatUp .9s ease-out forwards; transform-box: fill-box; }
+@keyframes floatUp { 0% { transform: translateY(0) scale(.7); opacity: 0; } 15% { transform: translateY(-6px) scale(1.15); opacity: 1; } 100% { transform: translateY(-54px) scale(1); opacity: 0; } }
+.shock { fill: none; stroke: var(--rage-2); stroke-width: 4; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: shockOut .8s ease-out forwards; }
+@keyframes shockOut { from { transform: scale(1); opacity: 1; } to { transform: scale(2.4); opacity: 0; stroke-width: 1; } }
+.packet { fill: var(--rage-2); pointer-events: none; }
+.ticker .feed.in { animation: tickIn .45s cubic-bezier(.2, .8, .2, 1); }
+@keyframes tickIn { from { transform: translateY(100%); opacity: 0; } }
+.ticker b.flash { animation: badge .9s steps(1); }
+@keyframes badge { 0%, 50% { background: var(--ink); color: var(--rage); } 25%, 75% { background: var(--rage); color: var(--ink); } }
+.wrap.shake { animation: shake .45s; }
+@keyframes shake { 0%, 100% { transform: none; } 15% { transform: translate(-8px, 3px); } 30% { transform: translate(7px, -4px); } 45% { transform: translate(-5px, -2px); } 60% { transform: translate(4px, 3px); } 80% { transform: translate(-2px, 1px); } }
+#flash { position: fixed; inset: 0; pointer-events: none; z-index: 15; opacity: 0; }
+#flash.go { animation: flashOut .7s ease-out; }
+@keyframes flashOut { from { opacity: .45; } to { opacity: 0; } }
+.stat.heat.danger { animation: danger 1s ease-in-out infinite; }
+@keyframes danger { 50% { box-shadow: inset 0 0 0 2px var(--rage), inset 0 0 24px rgba(255, 40, 40, .35); } }
+.up.bought { animation: bought .6s ease-out; }
+@keyframes bought { 0% { transform: scale(.95); box-shadow: 0 0 0 0 var(--rage); } 50% { transform: scale(1.03); } 100% { transform: none; box-shadow: 0 0 0 14px transparent; } }
+.chip.fresh { animation: chipIn .5s cubic-bezier(.2, 1.5, .4, 1); }
+@keyframes chipIn { from { transform: scale(.3); opacity: 0; } }
+#endModal:not([hidden]) .sheet { animation: sheetIn .35s ease-out; }
+@keyframes sheetIn { from { transform: scale(.9); opacity: 0; } }
+.end > * { animation: rise .5s ease-out both; }
+.end > *:nth-child(1) { animation-delay: .1s; }
+.end > *:nth-child(3) { animation-delay: .55s; }
+.end > *:nth-child(4) { animation-delay: .75s; }
+.end > *:nth-child(5) { animation-delay: .95s; }
+.end > h2 { animation: slam .6s cubic-bezier(.2, 1.4, .4, 1) .2s both; }
+@keyframes rise { from { transform: translateY(14px); opacity: 0; } }
+@keyframes slam { from { transform: scale(1.9); opacity: 0; filter: blur(8px); } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
@@ -271,6 +302,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02e
   </section>
 </div>
 
+<div id="flash" aria-hidden="true"></div>
 <div class="modal" id="labModal" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="labTitle">
     <header>
@@ -1317,13 +1349,43 @@ function buildMap() {
     el("path", { class: "fillarc", fill: "var(--rage-2)" }, g);
     el("path", { class: "meltarc", fill: "var(--rage)" }, g);
     el("path", { class: "riotarc", fill: "var(--fire)" }, g);
-    const fl = el("text", { class: "flame", x: n.x, y: n.y - r + 4, "text-anchor": "middle", opacity: 0 }, g); fl.textContent = flavor("flameIcon") || "🔥";
+    const fl = el("text", { class: "flame", x: n.x, y: n.y - r + 4, "text-anchor": "middle", style: "display:none" }, g); fl.textContent = flavor("flameIcon") || "🔥";
     const lbl = el("text", { x: n.x, y: n.y + r + 18, "text-anchor": "middle" }, g);
     lbl.textContent = n.name.length > 22 ? n.name.slice(0, 21) + "…" : n.name;
     g.addEventListener("click", () => onNode(n.id));
     g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onNode(n.id); } });
   });
   el("g", { id: "bubbles" }, svg);
+  el("g", { id: "fx" }, svg);
+}
+
+// ---------- effects ----------
+const reduceMotion = (() => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } })();
+function floater(x, y, text, color) {
+  if (reduceMotion) return;
+  const t = el("text", { class: "floater", x, y, fill: color }, $("fx"));
+  t.textContent = text;
+  setTimeout(() => t.remove(), 950);
+}
+function shock(n) {
+  if (reduceMotion || !$("fx")) return;
+  const c = el("circle", { class: "shock", cx: n.x, cy: n.y, r: radius(n) }, $("fx"));
+  setTimeout(() => c.remove(), 850);
+}
+// a dot that travels along the edge, then a shockwave where it lands
+function spreadFx(src, dst) {
+  if (reduceMotion || !$("fx")) return;
+  const dot = el("circle", { class: "packet", cx: 0, cy: 0, r: 7 }, $("fx"));
+  if (!dot.animate) { dot.remove(); shock(dst); return; }
+  const a = dot.animate([{ transform: `translate(${src.x}px, ${src.y}px)` }, { transform: `translate(${dst.x}px, ${dst.y}px)` }], { duration: 520, easing: "ease-in" });
+  a.onfinish = () => { dot.remove(); shock(dst); };
+}
+function restart(node, cls) { node.classList.remove(cls); void node.getBoundingClientRect(); node.classList.add(cls); }
+function jolt(color) {
+  if (reduceMotion) return;
+  restart(document.querySelector(".wrap"), "shake");
+  $("flash").style.background = color;
+  restart($("flash"), "go");
 }
 
 // pie-slice path from 0 to frac of a circle
@@ -1339,10 +1401,9 @@ function renderMap() {
   S.nodes.forEach(n => {
     const g = document.querySelector(`.node[data-id="${n.id}"]`);
     const r = radius(n);
-    g.querySelector(".riotarc").setAttribute("d", arc(n.x, n.y, r, 0, n.r));
-    g.querySelector(".meltarc").setAttribute("d", arc(n.x, n.y, r, n.r, n.m));
-    g.querySelector(".flame").setAttribute("opacity", n.r > .25 ? 1 : 0);
-    g.querySelector(".fillarc").setAttribute("d", arc(n.x, n.y, r, n.m, n.m + n.t));
+    if (n.vt === undefined || reduceMotion) drawArcs(n, true);
+    // display, not opacity: the flicker animation overrides opacity
+    g.querySelector(".flame").style.display = n.r > .25 ? "" : "none";
     g.classList.toggle("sel", selected === n.id);
     g.classList.toggle("melt", n.m > .5);
     g.querySelector(".ring").setAttribute("opacity", n.m > .5 ? .8 : 0);
@@ -1353,6 +1414,30 @@ function renderMap() {
   });
 }
 
+// Pies ease toward the sim's values every frame instead of jumping once per day
+function drawArcs(n, snap) {
+  if (snap) { n.vt = n.t; n.vm = n.m; n.vr = n.r; }
+  const g = document.querySelector(`.node[data-id="${n.id}"]`); if (!g) return;
+  const r = radius(n);
+  g.querySelector(".riotarc").setAttribute("d", arc(n.x, n.y, r, 0, n.vr));
+  g.querySelector(".meltarc").setAttribute("d", arc(n.x, n.y, r, n.vr, n.vm));
+  g.querySelector(".fillarc").setAttribute("d", arc(n.x, n.y, r, n.vm, n.vm + n.vt));
+}
+function animateArcs() {
+  if (S && !$("game").hidden && !reduceMotion) {
+    S.nodes.forEach(n => {
+      let moved = false;
+      for (const [v, k] of [["vt", "t"], ["vm", "m"], ["vr", "r"]]) {
+        const d = n[k] - (n[v] ?? n[k]);
+        if (Math.abs(d) > .0004) { n[v] = (n[v] ?? n[k]) + d * .14; moved = true; } else n[v] = n[k];
+      }
+      if (moved) drawArcs(n);
+    });
+  }
+  requestAnimationFrame(animateArcs);
+}
+requestAnimationFrame(animateArcs);
+
 function onNode(id) {
   if (!S.started && !S.over) { startAt(id); }
   selectNode(id);
@@ -1362,6 +1447,7 @@ function selectNode(id) { selected = id; renderDossier(); renderMap(); renderSor
 function startAt(id) {
   const n = S.nodes.find(x => x.id === id);
   n.t = .02; S.started = true;
+  shock(n); setTimeout(() => shock(n), 180);
   $("maphint").textContent = "";
   log(`<b>Day ${S.day}</b> First post drops in ${n.name}. Somebody already screenshotted it.`);
   ticker(`${S.handle} posts something in ${n.name}. Nobody is okay.`);
@@ -1392,6 +1478,7 @@ function tick() {
       const lvl = src.t + src.m;
       if (lvl > .12 && dst.t + dst.m === 0 && Math.random() < 0.05 * st.spread * lvl * dst.susc) {
         dst.t = .01;
+        spreadFx(src, dst);
         S.clout += 2 * S.df.clout;
         log(`<b>Day ${S.day}</b> ${dst.name} found out. +2 clout.`);
         ticker(dst.blurb);
@@ -1401,7 +1488,7 @@ function tick() {
   // rare long-range jump once spread is strong (screenshots travel)
   if (st.spread > 1.8 && Math.random() < .02 * st.spread) {
     const cold = S.nodes.filter(n => n.t + n.m === 0);
-    if (cold.length) { const c = cold[Math.floor(Math.random() * cold.length)]; c.t = .01; log(`<b>Day ${S.day}</b> A screenshot jumped straight into ${c.name}.`); }
+    if (cold.length) { const c = cold[Math.floor(Math.random() * cold.length)]; c.t = .01; shock(c); log(`<b>Day ${S.day}</b> A screenshot jumped straight into ${c.name}.`); }
   }
 
   const affected = S.nodes.reduce((s, n) => s + (n.t + n.m) * n.pop, 0);
@@ -1414,8 +1501,9 @@ function tick() {
   if (!S.tipped && melted / total >= .45) {
     S.tipped = true; st.riot += .3;
     log(`<b>Day ${S.day}</b> TIPPING POINT. The meltdown left the internet. The 🔥 Collapse tab is open in the Content Lab.`);
-    ticker(flavor("tipping")(S.handle));
+    ticker(flavor("tipping")(S.handle), true);
     $("chaosBox").hidden = false;
+    jolt("var(--rage-2)");
   }
   S.chaos = clamp(riotShare / .7 * 100, 0, 100);
 
@@ -1429,7 +1517,7 @@ function tick() {
   if (!S.heatOn && affected / total > S.sc.heatStart) {
     S.heatOn = true;
     log(`<b>Day ${S.day}</b> ${flavor("logNotice")}`);
-    ticker(flavor("firstNotice")(S.handle));
+    ticker(flavor("firstNotice")(S.handle), true);
   }
   if (S.heatOn) {
     const meltShare = melted / total;
@@ -1460,8 +1548,9 @@ function tick() {
   if (S.heat >= 100) {
     if (st.lives > 0) {
       st.lives--; S.heat = 60;
+      jolt("var(--mod)");
       log(`<b>Day ${S.day}</b> ${flavor("lifeLog")}`);
-      ticker(flavor("life")(S.handle));
+      ticker(flavor("life")(S.handle), true);
     } else return endGame(false);
   }
   if (S.chaos >= 100) return endGame(true);
@@ -1478,7 +1567,7 @@ function milestones(share) {
     [.8, "People are talking about leaving the country. Again. You set up the GoFundMe."],
   ];
   steps.forEach(([lvl, msg]) => {
-    if (share >= lvl && !S.milestones.has(lvl)) { S.milestones.add(lvl); ticker(msg); log(`<b>Day ${S.day}</b> ${msg}`); S.clout += 3; }
+    if (share >= lvl && !S.milestones.has(lvl)) { S.milestones.add(lvl); ticker(msg, true); log(`<b>Day ${S.day}</b> ${msg}`); S.clout += 3; }
   });
 }
 
@@ -1486,7 +1575,7 @@ function collapseBeats(c) {
   const beats = flavor("beats");
   beats.forEach(([lvl, msg]) => {
     const key = "c" + lvl;
-    if (c >= lvl && !S.milestones.has(key)) { S.milestones.add(key); const m = msg.replaceAll("{h}", S.handle); ticker(m); log(`<b>Day ${S.day}</b> ${m}`); S.clout += 4; }
+    if (c >= lvl && !S.milestones.has(key)) { S.milestones.add(key); const m = msg.replaceAll("{h}", S.handle); ticker(m, true); log(`<b>Day ${S.day}</b> ${m}`); S.clout += 4; }
   });
   if (c >= 25 && !S.milestones.has("cops") && S.heatOn) { S.milestones.add("cops"); log(`<b>Day ${S.day}</b> ${flavor("copsBusy")}`); }
 }
@@ -1535,9 +1624,9 @@ function spawnBubble(kind) {
   const b = { node: g, born: S.day, kind };
   const collect = () => {
     if (!S.bubbles.includes(b)) return;
-    if (kind === "rage") S.clout += Math.round(rnd(2, 4) * S.df.clout);
-    if (kind === "cash") { const c = Math.round((1500 + S.earned * .02) * S.df.cash); S.cash += c; }
-    if (kind === "mod") S.heat = clamp(S.heat - 1.5, 0, 100);
+    if (kind === "rage") { const c = Math.round(rnd(2, 4) * S.df.clout); S.clout += c; floater(x, y, `+${c} clout`, "var(--rage)"); }
+    if (kind === "cash") { const c = Math.round((1500 + S.earned * .02) * S.df.cash); S.cash += c; floater(x, y, `+${money(c)}`, "var(--cash)"); }
+    if (kind === "mod") { S.heat = clamp(S.heat - 1.5, 0, 100); floater(x, y, flavor("credit") ? "+15 credit" : "−heat", "var(--mod)"); }
     g.remove(); S.bubbles = S.bubbles.filter(x => x !== b); render();
   };
   g.addEventListener("click", collect);
@@ -1562,6 +1651,7 @@ function render() {
     $("sHeat").textContent = Math.floor(S.heat) + "%";
     $("heatFill").style.width = S.heat + "%";
   }
+  document.querySelector(".stat.heat").classList.toggle("danger", S.heat >= 80 && !S.over);
   $("chaosFill").style.width = S.chaos + "%";
   $("chaosLabel").textContent = flavor("chaosText") ? flavor("chaosText")(S.chaos) : `${flavor("chaosName")} ${Math.floor(S.chaos)}%`;
   document.querySelector(".mapbox").classList.toggle("burning", S.chaos > 30);
@@ -1593,7 +1683,12 @@ function log(html) {
   $("log").prepend(d);
   while ($("log").children.length > 40) $("log").lastChild.remove();
 }
-function ticker(msg) { $("ticker").textContent = msg.replaceAll("{h}", S ? S.handle : "you"); }
+function ticker(msg, big) {
+  $("ticker").textContent = msg.replaceAll("{h}", S ? S.handle : "you");
+  if (reduceMotion) return;
+  restart($("ticker"), "in");
+  if (big) restart(document.querySelector(".ticker b"), "flash");
+}
 
 // ---------- Content Lab ----------
 function renderLab() {
@@ -1637,6 +1732,7 @@ $("sortieBtn").onclick = () => {
   if (!n || S.over || S.clout < SORTIE_COST || n.m - n.r <= .1) return;
   S.clout -= SORTIE_COST;
   n.r = clamp(n.r + .3, 0, n.m);
+  shock(n); floater(n.x, n.y - radius(n), "SORTIE", "var(--fire)");
   S.heat = clamp(S.heat + 2, 0, 100);
   log(`<b>Day ${S.day}</b> Sortie on ${n.name}. ${Math.round(n.r * 100)}% of it is offline.`);
   ticker(flavor("sortieTicker")(n.name));
@@ -1653,8 +1749,10 @@ $("labModal").addEventListener("click", e => {
   for (const k in u.fx) S.st[k] += u.fx[k];
   S.owned.add(u.id);
   log(`<b>Day ${S.day}</b> Unlocked: ${u.name}.`);
-  $("traits").innerHTML = [...S.owned].map(id => `<span class="chip on">${Object.values(UPGRADES).flat().find(x => x.id === id).name}</span>`).join("");
+  $("traits").innerHTML = [...S.owned].map(id => `<span class="chip on${id === u.id ? " fresh" : ""}">${Object.values(UPGRADES).flat().find(x => x.id === id).name}</span>`).join("");
   render(); renderLab();
+  const card = $("labGrid").querySelector(`[data-up="${u.id}"]`);
+  if (card && !reduceMotion) card.classList.add("bought");
 });
 document.addEventListener("keydown", e => { if (e.key === "Escape") $("labModal").hidden = true; });
 
@@ -1680,6 +1778,7 @@ function endGame(won) {
     <div class="score"><span class="label">Day</span><span>${S.day}</span><span class="label">Losing it</span><span>${fmt(affected)}</span><span class="label">Banked</span><span>${money(S.earned)}</span><span class="label">Rank</span><span>${$("rankLabel").textContent}</span></div>
     <button class="go" id="again">Run it back</button>`;
   $("endModal").hidden = false;
+  jolt(won ? "var(--rage)" : "var(--mod)");
   try {
     const best = JSON.parse(localStorage.getItem("outrage-best") || "null");
     if (!best || affected > best.infamy) localStorage.setItem("outrage-best", JSON.stringify({ handle: S.handle, infamy: affected, cash: S.earned, day: S.day }));
