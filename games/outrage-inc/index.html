@@ -69,6 +69,14 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02e
 @keyframes flicker { to { transform: scale(1.15, .9); opacity: .8; } }
 .mapbox.burning { box-shadow: inset 0 -80px 120px -60px rgba(255, 110, 30, .35); }
 .tabs button.new { color: var(--rage-2); }
+:root.nk { --ink: #140b0b; --panel: #2a0f10; --panel-2: #361416; --line: #5a2224; --rage: #ff2a1a; --rage-2: #ffb21f; --mod: #f2c230; --calm: #6b4a3a; }
+:root.nk .mapbox { background: radial-gradient(ellipse at 50% 40%, #3a1214, var(--ink) 75%); }
+:root.nk .heatbar i { background: repeating-linear-gradient(45deg, #f2c230 0 8px, #b3121b 8px 16px); }
+:root.nk .up.owned { background: #3d1416; }
+:root.alpha { --ink: #120d1f; --panel: #1d1531; --panel-2: #271c42; --line: #3d2d66; --rage: #ff3d9a; --rage-2: #7cf05c; --mod: #4de3ff; --calm: #5b4f86; }
+:root.alpha .mapbox { background: radial-gradient(ellipse at 50% 40%, #2a1d4a, var(--ink) 75%); }
+:root.alpha .heatbar i { background: repeating-linear-gradient(90deg, #ff3d9a 0 10px, #7cf05c 10px 20px, #4de3ff 20px 30px); }
+:root.alpha .up.owned { background: #2e1840; }
 :root.tower .heatbar i { background: repeating-linear-gradient(45deg, #ddd, #ddd 6px, #888 6px, #888 12px); }
 .stage { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; }
 .mapbox { position: relative; background: radial-gradient(ellipse at 50% 40%, #171c27, var(--ink) 75%); border: 1px solid var(--line); overflow: hidden; min-height: 300px; }
@@ -249,9 +257,11 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02e
 // ============================================================
 const SCENARIOS = [
   { id: "standard", name: "Standard Timeline", desc: "2026. The algorithm is neutral-ish. Mods are slow.", heatMult: 1, heatStart: 0.08, cashMult: 1, susc: 1 },
-  { id: "tower", name: "The High Tower", desc: "Alt-history: the Ministry of Online Safety runs the internet. They watch from day one. Forbidden posts pay 1.75×.", heatMult: 1.55, heatStart: 0, cashMult: 1.75, susc: 1.1 },
+  { id: "tower", name: "The High Tower", desc: "Alt-history: the Ministry of Online Safety runs the internet. They watch from day one. Forbidden posts pay 1.75×.", heatMult: 1.55, heatStart: 0, cashMult: 1.75, susc: 1.1, theme: "tower" },
   { id: "campus", name: "Campus Siege", desc: "You start at the Campus Quad. Students are primed. HR is extra sensitive.", heatMult: 1.1, heatStart: 0.05, cashMult: 1.1, susc: 1, forceStart: "campus" },
-  { id: "europe", name: "Speech Police (Europe)", desc: "Post from the UK and EU. Police watch from day one and arrest you at your door. Americans pay 2× to watch.", heatMult: 1.3, heatStart: 0, cashMult: 2, susc: 1.25, map: "europe", start: "guardian" },
+  { id: "europe", name: "Speech Police (Europe)", desc: "Post from the UK and EU. Police watch from day one and arrest you at your door. Americans pay 2× to watch.", heatMult: 1.3, heatStart: 0, cashMult: 2, susc: 1.25, map: "europe", start: "guardian", theme: "euro" },
+  { id: "nk", name: "Supreme Leader Mode", desc: "North Korea. You run a smuggled-meme ring. Dishonor the Supreme Leader before the Bureau catches you. Pays in Choco Pies and dollars.", heatMult: 1.35, heatStart: 0, cashMult: 1.6, susc: 1.2, map: "nk", start: "anchors", theme: "nk" },
+  { id: "alpha", name: "Gen Alpha Brainrot", desc: "Rage-bait the iPad kids. The meter is your own brain: let the brainrot hit 100% and you become one of them.", heatMult: 1.4, heatStart: 0, cashMult: 1.4, susc: 1.3, map: "alpha", start: "skibidi", theme: "alpha" },
   { id: "election", name: "Election Year", desc: "Everyone is already on edge. Spread is fast, and so are the mods.", heatMult: 1.25, heatStart: 0.04, cashMult: 1.3, susc: 1.35 },
 ];
 const PLATFORMS = [
@@ -315,6 +325,47 @@ const EURO_EDGES = [
   ["dublin","paris"],["madrid","eurotw"],["guardian","eurotw"],
 ];
 
+// North Korea: Pyongyang institutions up top, the provinces below
+const NK_NODES = [
+  { id: "anchors",  name: "State TV Anchors",          x: 150, y: 110, pop: 2,   susc: 1.4, melt: 1.5, blurb: "Read every announcement at a volume normally reserved for war. Which is every announcement." },
+  { id: "haircut",  name: "Ministry of Approved Haircuts", x: 420, y: 80, pop: 1, susc: 1.5, melt: 1.4, blurb: "Twenty-eight approved styles. Yours isn't one of them." },
+  { id: "propaganda", name: "Propaganda Department",   x: 690, y: 110, pop: 3,   susc: 1.2, melt: 1.3, blurb: "Paints murals of the Supreme Leader riding a whale. They're sensitive about the whale." },
+  { id: "weather",  name: "Official Weather Bureau",   x: 900, y: 220, pop: 0.5, susc: 1.3, melt: 1.6, blurb: "The forecast is always 'glorious.' It is raining." },
+  { id: "parade",   name: "Parade Choreographers",     x: 300, y: 260, pop: 2,   susc: 1.1, melt: 1.4, blurb: "Forty thousand people, one formation. One guy is always half a step late." },
+  { id: "juche",    name: "Juche Philosophy Faculty",  x: 560, y: 270, pop: 1.5, susc: 1.0, melt: 1.2, blurb: "Self-reliance studies. Funded by foreign aid." },
+  { id: "inminban", name: "Neighborhood Watch Unit",   x: 110, y: 380, pop: 6,   susc: 1.3, melt: 1.2, blurb: "Knows how many bowls of rice you ate. Reports it weekly." },
+  { id: "burger",   name: "State Hamburger Committee", x: 780, y: 360, pop: 0.5, susc: 1.2, melt: 1.5, blurb: "Officially, the hamburger was invented here. It is called 'double bread with meat.'" },
+  { id: "hackers",  name: "Bureau 121 Hackers",        x: 440, y: 420, pop: 1,   susc: 1.1, melt: 1.3, blurb: "Can steal a billion in crypto. Cannot handle one meme about their boss." },
+  { id: "farm",     name: "Collective Farm No. 17",    x: 220, y: 540, pop: 8,   susc: 0.9, melt: 1.1, blurb: "Record harvest every year. Also hungry every year." },
+  { id: "border",   name: "Border Guard Karaoke Night",x: 620, y: 540, pop: 1,   susc: 1.0, melt: 1.4, blurb: "Will look the other way for a box of Choco Pies and a K-pop song." },
+  { id: "elite",    name: "Party Elite Kids",          x: 900, y: 500, pop: 0.3, susc: 1.4, melt: 1.6, blurb: "Secretly own every K-drama ever made. Publicly furious about them." },
+];
+const NK_EDGES = [
+  ["anchors","haircut"],["anchors","parade"],["anchors","inminban"],["haircut","propaganda"],["haircut","parade"],["haircut","juche"],["propaganda","weather"],
+  ["propaganda","juche"],["propaganda","burger"],["weather","burger"],["weather","elite"],["parade","juche"],["parade","inminban"],["juche","hackers"],
+  ["juche","burger"],["inminban","farm"],["inminban","hackers"],["hackers","border"],["hackers","farm"],["farm","border"],["border","elite"],["burger","elite"],["border","burger"],
+];
+// Gen Alpha: school-day communities and the apps they live in
+const ALPHA_NODES = [
+  { id: "skibidi",  name: "Skibidi Discord Server",    x: 150, y: 120, pop: 6,   susc: 1.5, melt: 1.4, blurb: "Eleven thousand members. Nine thousand are the same kid's alts." },
+  { id: "therian",  name: "Therian TikTok",            x: 450, y: 90,  pop: 3,   susc: 1.6, melt: 1.6, blurb: "Identifies as a dolphin. Has a tail clipped to their jeans. Will bark at you anyway." },
+  { id: "ipad",     name: "iPad Kid Nation",           x: 760, y: 120, pop: 12,  susc: 1.3, melt: 1.3, blurb: "Screen time: 14 hours. Remaining hours: also screen time." },
+  { id: "roblox",   name: "Roblox Condo Raiders",      x: 300, y: 290, pop: 9,   susc: 1.2, melt: 1.3, blurb: "Spent dad's credit card on a virtual hat. Dad is also on Roblox." },
+  { id: "fanum",    name: "Fanum Tax Cafeteria",       x: 600, y: 260, pop: 5,   susc: 1.2, melt: 1.4, blurb: "Your fries are taxed at 40%. No representation." },
+  { id: "mewing",   name: "Mewing Club",               x: 900, y: 290, pop: 2,   susc: 1.3, melt: 1.3, blurb: "Will not speak to you. Jawline is in progress." },
+  { id: "sephora",  name: "Sephora Tweens",            x: 120, y: 420, pop: 4,   susc: 1.3, melt: 1.6, blurb: "Ten years old. Fourteen-step skincare routine. Will ruin an employee's whole shift." },
+  { id: "rizz",     name: "Rizz Coaches",              x: 420, y: 440, pop: 1,   susc: 1.1, melt: 1.4, blurb: "Thirteen. Single. Selling a $49 course on talking to girls." },
+  { id: "sigma",    name: "Sigma Grindset Middle School", x: 720, y: 440, pop: 3, susc: 1.0, melt: 1.3, blurb: "Wakes at 4 AM for the grind. The grind is Fortnite." },
+  { id: "teachers", name: "Teachers' Lounge (Barely Coping)", x: 270, y: 560, pop: 1.5, susc: 1.0, melt: 1.5, blurb: "Has heard 'six seven' four hundred times today. It's 9:15." },
+  { id: "ohio",     name: "Ohio",                      x: 580, y: 570, pop: 2,   susc: 1.4, melt: 1.7, blurb: "Only in Ohio." },
+];
+const ALPHA_EDGES = [
+  ["skibidi","therian"],["skibidi","roblox"],["skibidi","sephora"],["therian","ipad"],["therian","fanum"],["ipad","mewing"],["ipad","fanum"],["ipad","roblox"],
+  ["roblox","fanum"],["roblox","rizz"],["roblox","sephora"],["fanum","sigma"],["fanum","rizz"],["mewing","sigma"],["sephora","teachers"],["rizz","teachers"],
+  ["rizz","ohio"],["sigma","ohio"],["teachers","ohio"],
+];
+const MAPS = { us: [NODES, EDGES], europe: [EURO_NODES, EURO_EDGES], nk: [NK_NODES, NK_EDGES], alpha: [ALPHA_NODES, ALPHA_EDGES] };
+
 // Upgrades. cur: "clout" or "cash". req: prerequisite id.
 const UPGRADES = {
   reach: [
@@ -338,6 +389,13 @@ const UPGRADES = {
     { id: "moron",   name: "Meme Calling a Minister a Moron", cost: 6, cur: "clout", fx: { severity: .45, visibility: 1 }, only: "europe", desc: "One cartoon. Prosecutors open a file before lunch." },
     { id: "flag",    name: "Hang a Flag From a Lamppost", cost: 5, cur: "clout", fx: { severity: .3, infect: .3 }, only: "europe", desc: "Your own country's flag. Somehow this is a whole news cycle." },
     { id: "buffer",  name: "Think Silently in a Buffer Zone", cost: 12, cur: "clout", fx: { severity: .6, visibility: 2 }, only: "europe", desc: "No sign. No words. Just standing there, thinking. They have a law for that." },
+    { id: "photo",   name: "Unflattering Photo of the Supreme Leader", cost: 6, cur: "clout", fx: { severity: .5, visibility: 1 }, only: "nk", desc: "Mid-blink, mid-chew. The Propaganda Department needs a minute." },
+    { id: "clap",    name: "Clap Slightly Less Enthusiastically", cost: 4, cur: "clout", fx: { severity: .3, infect: .3 }, only: "nk", desc: "Ninety-five percent effort. Everyone noticed." },
+    { id: "kdrama",  name: "Smuggled K-Drama USB Drops", cost: 10, cur: "clout", fx: { infect: .5, spread: .4 }, only: "nk", desc: "One season of a rom-com and the whole block questions everything." },
+    { id: "forecast",name: "Leak the Real Weather", cost: 8, cur: "clout", fx: { severity: .4, visibility: 1 }, only: "nk", desc: "'It is raining.' The most dangerous sentence in the country." },
+    { id: "ratio",   name: "Ratio a Ten-Year-Old", cost: 3, cur: "clout", fx: { severity: .3, infect: .2 }, only: "alpha", desc: "They called you 'unc.' You posted their Roblox avatar. It's war." },
+    { id: "unc",     name: "Explain What a Landline Was", cost: 6, cur: "clout", fx: { severity: .4, visibility: 1 }, only: "alpha", desc: "A phone. Attached to the wall. Shared by the whole family. They're screaming." },
+    { id: "wifi",    name: "Turn Off the School Wi-Fi", cost: 10, cur: "clout", fx: { severity: .6, infect: .3 }, only: "alpha", desc: "One router. Six hundred meltdowns. Fastest spread in the game." },
     { id: "unhinged",name: "Full Unhinged Arc", cost: 25, cur: "clout", fx: { severity: 1, visibility: 3, cash: .5 }, req: "billboard", desc: "Livestream from a monster truck. Nobody knows what the bit is. Including you." },
   ],
   armor: [
@@ -351,6 +409,10 @@ const UPGRADES = {
     { id: "vpn",     name: "VPN Set to Texas",     cost: 3000,   cur: "cash", fx: { resist: 1 }, only: "europe", desc: "As far as the Online Safety Act knows, you're a cattle rancher." },
     { id: "florida", name: "Post Only From Florida", cost: 45000, cur: "cash", fx: { resist: 3, cash: .3 }, only: "europe", desc: "Hard to knock on a door in Tampa. Also, no income tax." },
     { id: "congress",name: "A US Congressman Tweets About Your Case", cost: 14, cur: "clout", fx: { resist: 2, spread: .4 }, only: "europe", desc: "Now it's a diplomatic incident. The knock gets more polite." },
+    { id: "chocopie",name: "Bribe the Border Guard in Choco Pies", cost: 4000, cur: "cash", fx: { resist: 2 }, only: "nk", desc: "The real national currency. A case gets you a lot of looking the other way." },
+    { id: "simcard", name: "Chinese SIM Card",       cost: 12000,  cur: "cash", fx: { resist: 1, spread: .4 }, only: "nk", desc: "Works within three miles of the border. That's where you live now." },
+    { id: "grass",   name: "Touch Grass Daily",      cost: 4, cur: "clout", fx: { resist: 2 }, only: "alpha", desc: "Fifteen minutes outside. Your brain slowly comes back." },
+    { id: "flipphone",name: "Flip Phone Detox",      cost: 8000, cur: "cash", fx: { resist: 2, cash: .2 }, only: "alpha", desc: "Can't scroll if there's nothing to scroll. Kids think it's retro. Sell them one." },
     { id: "dox",     name: "Burner Phone Discipline", cost: 5, cur: "clout", fx: { resist: 1 }, desc: "Paid in clout: you just have to stop posting your street." },
   ],
 };
@@ -417,6 +479,42 @@ const EURO_EVENTS = [
   () => ({ msg: "A US State Department official called your case 'concerning.' Heat −5.", f: () => { S.heat = clamp(S.heat - 5, 0, 100); } }),
 ];
 
+const TICKER_NK = [
+  "State TV: the Supreme Leader scored 11 holes-in-one in his first round of golf. Again.",
+  "Weather Bureau forecasts 'glorious' for the 400th day running. It is snowing.",
+  "Ministry adds a 29th approved haircut. It is the same as the 28th.",
+  "Citizens reminded that laughing is permitted on designated days only.",
+  "Propaganda Department repaints the whale mural. The whale looks nervous.",
+  "Neighborhood Watch reports a man smiling at a K-pop song. Investigation ongoing.",
+  "Hamburger Committee reaffirms that double bread with meat was invented locally.",
+];
+const TICKER_ALPHA = [
+  "Kid in Ohio says 'six seven.' Entire class says 'six seven.' Teacher retires.",
+  "Therian student requests a litter box in the bathroom. School board forms committee.",
+  "Ten-year-old's skincare budget now exceeds his father's car payment.",
+  "Roblox outage. Nation's youth step outside, see the sun, go back in.",
+  "Rizz coach, 13, raises seed round.",
+  "Fanum Tax rate raised to 60%. Cafeteria fries now considered a luxury good.",
+  "Mewing Club wins debate tournament without saying a word.",
+];
+const NK_EVENTS = [
+  () => ({ msg: "The Bureau searched your apartment. They found nothing. They found the K-dramas. Heat +7.", f: () => { S.heat = clamp(S.heat + 7, 0, 100); } }),
+  () => ({ msg: "A border guard asked for your autograph. And Choco Pies.", f: () => { S.cash += 5000 * S.df.cash; S.clout += 2; } }),
+  () => ({ msg: "Defector YouTube channel covers your memes. South Korea is obsessed.", f: () => { S.st.spread += .2; S.cash += 7000 * S.df.cash; } }),
+];
+const ALPHA_EVENTS = [
+  () => ({ msg: "You said 'skibidi' unironically for the first time. Brainrot +7.", f: () => { S.heat = clamp(S.heat + 7, 0, 100); } }),
+  () => ({ msg: "A kid used his mom's card to buy your merch. Then 40 more kids did.", f: () => { S.cash += 6000 * S.df.cash; } }),
+  () => ({ msg: "You went camping with no signal for two days. Brainrot −6.", f: () => { S.heat = clamp(S.heat - 6, 0, 100); } }),
+];
+// built lazily: the tower lists are declared further down
+const SPECIAL_FOR = id => ({
+  tower: { ticker: TICKER_TOWER, events: TOWER_EVENTS },
+  europe: { ticker: TICKER_EUROPE, events: EURO_EVENTS },
+  nk: { ticker: TICKER_NK, events: NK_EVENTS },
+  alpha: { ticker: TICKER_ALPHA, events: ALPHA_EVENTS },
+})[id];
+
 // Per-scenario wording: what the ban meter is, how you lose, how you win
 const FLAVOR = {
   default: {
@@ -426,7 +524,7 @@ const FLAVOR = {
     lose: "Permabanned", win: "Total Meltdown",
     loseBody: (h, d) => `Trust & Safety finally got you on day ${d}. Your Substack still makes $11 a month. Try more ban armor or a lower-visibility build.`,
     winBody: h => `Ninety percent of the outrage network is in full meltdown. Three cable panels, one Senate hearing, and a GoFundMe for flights to Canada that nobody used. ${h} is now a verb.`,
-    modLabel: "Report — tap to dodge",
+    modLabel: "Report — tap to dodge", modIcon: "⚑",
     chaosName: "Society collapse",
     tipping: h => `The meltdown over ${h} has left the internet. People are in the streets. Nobody is sure what about.`,
     copsBusy: "Trust & Safety is short-staffed. Half the team is stuck in traffic behind a burning Waymo.",
@@ -481,6 +579,70 @@ const FLAVOR = {
     presBody: h => `The Fifth Republic gave way to the Sixth, and the Sixth asked for ${h}. Sworn in at the Élysée. First decree: the Online Safety Act, translated into French and set on fire, ceremonially. Brussels is drafting a response. It will be ready in 2031.`,
   },
 };
+FLAVOR.nk = {
+  watchOff: "Bureau: watching", watchOn: "Dishonor to the Supreme Leader",
+  intro: h => `State TV: 'Comrade ${h} is a loyal citizen.' The Bureau has opened a file to make sure.`,
+  firstNotice: h => `The Bureau assigns three agents to ${h}. One of them is your uncle.`, logNotice: "The State Security Bureau opened a file on you.",
+  life: h => `${h} caught. Escaped through the Choco Pie network the same night.`, lifeLog: "CAUGHT. Smuggled back out before dawn.",
+  lose: "Sent to the Mountains",
+  loseBody: (h, d) => `The Bureau got you on day ${d}. Your whole family has been reassigned to a very scenic re-education camp. Your memes are still on a USB stick in a guard's pocket.`,
+  win: "The Regime Falls",
+  winBody: h => `The statues came down, the murals got painted over, and nobody can agree on who's in charge. ${h}'s memes are taught in schools now. Buy "Run for President" next time to finish the job.`,
+  presTitle: h => `President ${h.replace(/^@/, "")}`,
+  presBody: h => `The first free election in seventy years, and ${h} won it with a meme of the Supreme Leader mid-blink. First decree: all haircuts are legal. Second decree: the weather report tells the truth.`,
+  modLabel: "Bureau agent — tap to dodge", modIcon: "★",
+  chaosName: "Regime cracking",
+  tipping: h => `Citizens caught clapping sarcastically in Kim Il Sung Square. Nobody knows who started it. It was ${h}.`,
+  copsBusy: "The Bureau is busy rounding up people who clapped wrong. Your file sits on a desk.",
+  beats: [
+    [10, "State TV anchor laughs on air. Anchor is 'on vacation' now."],
+    [25, "The parade marches the wrong direction. On purpose."],
+    [40, "Someone painted a gas stove on the whale mural."],
+    [55, "Collective Farm No. 17 announces a 'record harvest' of memes."],
+    [70, "Border guards hold karaoke night. On the other side of the border."],
+    [85, "The statue in the square has its head on backwards. Nobody will admit to doing it."],
+  ],
+  steps: h => [
+    [.05, `The Propaganda Department misspells ${h} in a denunciation poster.`],
+    [.15, `Neighborhood Watch adds ${h} to the weekly report. Page one.`],
+    [.3, `State TV airs a 3-hour special: 'Who is ${h}?'`],
+    [.5, `The Supreme Leader mentions ${h} in a speech. Everyone claps at the wrong moment.`],
+    [.7, "Smuggled USB drives now carry more memes than K-dramas."],
+    [.8, "Even the Party Elite Kids are sharing it."],
+  ],
+};
+FLAVOR.alpha = {
+  watchOff: "Your brainrot", watchOn: "Your brainrot",
+  intro: h => `${h} logs on to rage-bait the iPad kids. The iPad kids log on to rage-bait ${h} back.`,
+  firstNotice: h => `${h} said 'no cap' to a waiter. Unprompted.`, logNotice: "Your brain started to rot.",
+  life: h => `${h} hit full brainrot, threw the phone in a lake, came back stronger.`, lifeLog: "FULL BRAINROT. Phone in the lake. Recovered.",
+  lose: "You Are a Dolphin Now",
+  loseBody: (h, d) => `On day ${d} it stopped being ironic. You have a tail clipped to your jeans, a fourteen-step skincare routine, and you say 'six seven' when nobody asked. Touch grass more next time.`,
+  win: "Ohio Has Fallen",
+  winBody: h => `Every iPad in the country has been thrown across a living room. Parents are reading books to their kids again. ${h} is accidentally a public-health hero. Buy "Run for President" next time to finish the job.`,
+  presTitle: h => `Sigma President ${h.replace(/^@/, "")}`,
+  presBody: h => `Gen Alpha can't vote, but their parents could, and they were grateful. ${h} is sworn in. First executive order: school Wi-Fi off at lunch. Second: the word 'skibidi' is retired with full honors.`,
+  modLabel: "Touch grass — tap to un-rot", modIcon: "🌱",
+  chaosName: "Recess riot",
+  tipping: h => `The school Wi-Fi went down over ${h}. Six hundred kids are in the hallway screaming at once.`,
+  copsBusy: "Your brain is too busy watching the chaos to rot. Brainrot slows down.",
+  beats: [
+    [10, "Kids refuse to leave the bus until their iPads are charged."],
+    [25, "Cafeteria food fight. Fanum Tax collectors overwhelmed."],
+    [40, "Roblox servers crash from rage. Kids look at each other's faces for the first time."],
+    [55, "Therians stage a howl-in. The actual dogs in the neighborhood join."],
+    [70, "Sephora Tweens storm a mall. Every tester is used."],
+    [85, "Teachers' lounge declares independence."],
+  ],
+  steps: h => [
+    [.05, `A kid stitches your video with 'who is this unc.'`],
+    [.15, `${h} becomes a Roblox villain skin.`],
+    [.3, `'${h}' is a slang word now. Nobody knows what it means.`],
+    [.5, "The school sends a letter home to parents about you."],
+    [.7, "Half the fourth grade has you blocked. The other half is your fan account."],
+    [.8, "A Skibidi episode features you as the final boss."],
+  ],
+};
 const flavor = k => (FLAVOR[S.sc.id] && FLAVOR[S.sc.id][k]) || FLAVOR.default[k];
 
 // ============================================================
@@ -506,8 +668,8 @@ function newGame() {
     sc, pf, df, st,
     day: 0, clout: 3, cash: 0, tipped: false, chaos: 0, heat: sc.heatStart > 0 ? 0 : 1, heatOn: sc.heatStart === 0,
     owned: new Set(), started: false, over: false, bubbles: [], bid: 0, peakInfamy: 0, earned: 0,
-    edges: sc.map === "europe" ? EURO_EDGES : EDGES,
-    nodes: (sc.map === "europe" ? EURO_NODES : NODES).map(n => ({ ...n, t: 0, m: 0, r: 0, susc: n.susc * sc.susc * (sc.id === "campus" && (n.id === "campus" || n.id === "hr") ? 1.5 : 1) })),
+    edges: MAPS[sc.map || "us"][1],
+    nodes: MAPS[sc.map || "us"][0].map(n => ({ ...n, t: 0, m: 0, r: 0, susc: n.susc * sc.susc * (sc.id === "campus" && (n.id === "campus" || n.id === "hr") ? 1.5 : 1) })),
     milestones: new Set(),
   };
 }
@@ -535,8 +697,8 @@ renderChoices();
 $("setupForm").addEventListener("submit", e => {
   e.preventDefault();
   S = newGame();
-  document.documentElement.classList.toggle("tower", S.sc.id === "tower");
-  document.documentElement.classList.toggle("euro", S.sc.id === "europe");
+  document.documentElement.classList.remove("tower", "euro", "nk", "alpha");
+  if (S.sc.theme) document.documentElement.classList.add(S.sc.theme);
   $("setup").hidden = true; $("game").hidden = false;
   $("sHandle").textContent = S.handle;
   buildMap();
@@ -703,7 +865,7 @@ function tick() {
   // events, milestones, ticker
   if (S.day % 9 === 0) randomEvent();
   if (S.day % 4 === 0) {
-    const special = { tower: TICKER_TOWER, europe: TICKER_EUROPE }[S.sc.id];
+    const special = SPECIAL_FOR(S.sc.id) && SPECIAL_FOR(S.sc.id).ticker;
     const list = special && Math.random() < .6 ? special : TICKER_GENERIC;
     ticker(list[Math.floor(Math.random() * list.length)]);
   }
@@ -723,7 +885,7 @@ function tick() {
 }
 
 function milestones(share) {
-  const steps = [
+  const steps = flavor("steps") ? flavor("steps")(S.handle) : [
     [.05, "Cable news runs a chyron with your handle misspelled."],
     [.15, "A college offers a seminar on you. It's waitlisted."],
     [.3, "Op-ed: 'Is " + S.handle + " the most dangerous person in America?' (Answer: yes, says op-ed.)"],
@@ -762,7 +924,10 @@ const TOWER_EVENTS = [
   () => ({ msg: "A Content Compliance Officer visited your aunt's Facebook.", f: () => { S.clout += 4; } }),
 ];
 function randomEvent() {
-  const pool = S.sc.id === "tower" ? EVENTS.concat(TOWER_EVENTS, TOWER_EVENTS) : S.sc.id === "europe" ? EVENTS.concat(EURO_EVENTS, EURO_EVENTS) : EVENTS;
+  const extra = SPECIAL_FOR(S.sc.id) ? SPECIAL_FOR(S.sc.id).events : [];
+  // US-only gags stay out of the foreign maps
+  const base = ["nk", "alpha"].includes(S.sc.id) ? EVENTS.slice(4, 6) : EVENTS;
+  const pool = base.concat(extra, extra);
   const e = pool[Math.floor(Math.random() * pool.length)]();
   e.f(); log(`<b>Day ${S.day}</b> ${e.msg}`); ticker(e.msg);
 }
@@ -779,7 +944,7 @@ function spawnBubble(kind) {
   const r = radius(n);
   const x = n.x + rnd(-r, r), y = n.y - r - rnd(10, 30);
   const colors = { rage: "var(--rage)", cash: "var(--cash)", mod: "var(--mod)" };
-  const labels = { rage: "!", cash: "$", mod: "⚑" };
+  const labels = { rage: "!", cash: "$", mod: flavor("modIcon") };
   const g = el("g", { class: "bubble", tabindex: 0, role: "button", "aria-label": kind === "mod" ? flavor("modLabel") : kind + " bubble" }, $("bubbles"));
   el("circle", { cx: x, cy: y, r: 20, fill: colors[kind] }, g);
   const t = el("text", { x, y: y + 1 }, g); t.textContent = labels[kind];
@@ -890,7 +1055,7 @@ document.querySelectorAll("[data-speed]").forEach(b => b.onclick = () => setSpee
 
 // ---------- end ----------
 function endGame(won) {
-  S.over = true; setSpeed(0); render();
+  S.over = true; setSpeed(0); $("labModal").hidden = true; render();
   const affected = S.nodes.reduce((s, n) => s + (n.t + n.m) * n.pop, 0) * 1e6;
   const pres = won && S.st.president > 0;
   const title = won ? (pres ? flavor("presTitle")(S.handle) : flavor("win")) : flavor("lose");
@@ -906,7 +1071,7 @@ function endGame(won) {
     const best = JSON.parse(localStorage.getItem("outrage-best") || "null");
     if (!best || affected > best.infamy) localStorage.setItem("outrage-best", JSON.stringify({ handle: S.handle, infamy: affected, cash: S.earned, day: S.day }));
   } catch (e) {}
-  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower", "euro"); $("chaosBox").hidden = true; $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
+  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower", "euro", "nk", "alpha"); $("chaosBox").hidden = true; $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
 }
 })();
 </script>
