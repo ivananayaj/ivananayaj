@@ -77,6 +77,15 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02e
 :root.alpha .mapbox { background: radial-gradient(ellipse at 50% 40%, #2a1d4a, var(--ink) 75%); }
 :root.alpha .heatbar i { background: repeating-linear-gradient(90deg, #ff3d9a 0 10px, #7cf05c 10px 20px, #4de3ff 20px 30px); }
 :root.alpha .up.owned { background: #2e1840; }
+:root.cn { --ink: #0f0d0d; --panel: #1e1414; --panel-2: #2a1a1a; --line: #4a2626; --rage: #ee1c25; --rage-2: #ffde00; --mod: #ffde00; --calm: #5a4646; }
+:root.cn .mapbox { background: radial-gradient(ellipse at 50% 40%, #2e1616, var(--ink) 75%); }
+:root.cn .heatbar i { background: linear-gradient(90deg, #ee1c25, #ffde00); }
+:root.cn .up.owned { background: #331616; }
+:root.nuke { --ink: #0e0f0a; --panel: #191b12; --panel-2: #22251a; --line: #3b3f2a; --rage: #ff5a1f; --rage-2: #ffc21f; --mod: #6cc4ff; --calm: #4f5440; --fire: #fff6c9; }
+:root.nuke .mapbox { background: radial-gradient(ellipse at 50% 40%, #23261a, var(--ink) 75%); }
+:root.nuke .heatbar i { background: repeating-linear-gradient(45deg, #6cc4ff 0 8px, #ffffff 8px 16px); }
+:root.nuke .chaosbar i { background: repeating-linear-gradient(45deg, #ffc21f 0 10px, #111 10px 20px); }
+:root.nuke .up.owned { background: #2a2414; }
 :root.tower .heatbar i { background: repeating-linear-gradient(45deg, #ddd, #ddd 6px, #888 6px, #888 12px); }
 .stage { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; }
 .mapbox { position: relative; background: radial-gradient(ellipse at 50% 40%, #171c27, var(--ink) 75%); border: 1px solid var(--line); overflow: hidden; min-height: 300px; }
@@ -262,6 +271,8 @@ const SCENARIOS = [
   { id: "europe", name: "Speech Police (Europe)", desc: "Post from the UK and EU. Police watch from day one and arrest you at your door. Americans pay 2× to watch.", heatMult: 1.3, heatStart: 0, cashMult: 2, susc: 1.25, map: "europe", start: "guardian", theme: "euro" },
   { id: "nk", name: "Supreme Leader Mode", desc: "North Korea. You run a smuggled-meme ring. Dishonor the Supreme Leader before the Bureau catches you. Pays in Choco Pies and dollars.", heatMult: 1.35, heatStart: 0, cashMult: 1.6, susc: 1.2, map: "nk", start: "anchors", theme: "nk" },
   { id: "alpha", name: "Gen Alpha Brainrot", desc: "Rage-bait the iPad kids. The meter is your own brain: let the brainrot hit 100% and you become one of them.", heatMult: 1.4, heatStart: 0, cashMult: 1.4, susc: 1.3, map: "alpha", start: "skibidi", theme: "alpha" },
+  { id: "cn", name: "Social Credit (China)", desc: "Start with a 1,000 social credit score. Every Pooh Bear meme costs points. Hit zero and you can't buy a train ticket.", heatMult: 1.3, heatStart: 0, cashMult: 1.7, susc: 1.2, map: "cn", start: "weibo", theme: "cn" },
+  { id: "nuke", name: "Doomsday", desc: "Rage-bait world leaders until they feud. The diplomats are trying to make peace. Don't let them. Win: global annihilation.", heatMult: 1.25, heatStart: 0, cashMult: 1.5, susc: 1.1, map: "nuke", start: "dc", theme: "nuke" },
   { id: "election", name: "Election Year", desc: "Everyone is already on edge. Spread is fast, and so are the mods.", heatMult: 1.25, heatStart: 0.04, cashMult: 1.3, susc: 1.35 },
 ];
 const PLATFORMS = [
@@ -364,7 +375,47 @@ const ALPHA_EDGES = [
   ["roblox","fanum"],["roblox","rizz"],["roblox","sephora"],["fanum","sigma"],["fanum","rizz"],["mewing","sigma"],["sephora","teachers"],["rizz","teachers"],
   ["rizz","ohio"],["sigma","ohio"],["teachers","ohio"],
 ];
-const MAPS = { us: [NODES, EDGES], europe: [EURO_NODES, EURO_EDGES], nk: [NK_NODES, NK_EDGES], alpha: [ALPHA_NODES, ALPHA_EDGES] };
+// China: Beijing power centers, the tech apparatus, and the export arms
+const CN_NODES = [
+  { id: "weibo",    name: "Weibo Censor Desk",         x: 150, y: 120, pop: 4,   susc: 1.5, melt: 1.4, blurb: "Deletes a post in 11 seconds. Your post has been up for 12." },
+  { id: "pooh",     name: "Ministry of Pooh Bear Removal", x: 430, y: 80, pop: 1, susc: 1.6, melt: 1.6, blurb: "One job: no cartoon bears. Morale is low. The bear keeps coming back." },
+  { id: "wolf",     name: "Wolf Warrior Diplomats",    x: 740, y: 110, pop: 0.5, susc: 1.4, melt: 1.6, blurb: "Will call you a 'running dog of imperialism' on X, a site banned in their own country." },
+  { id: "fifty",    name: "50-Cent Army",              x: 300, y: 280, pop: 10,  susc: 1.1, melt: 1.2, blurb: "Paid per patriotic comment. You are now their best source of income." },
+  { id: "firewall", name: "Great Firewall Engineers",  x: 580, y: 250, pop: 1,   susc: 1.2, melt: 1.3, blurb: "Built the wall. Use a VPN at home. Don't tell anyone." },
+  { id: "cctv",     name: "CCTV Evening News",         x: 900, y: 260, pop: 3,   susc: 1.1, melt: 1.4, blurb: "Thirty minutes of the leader shaking hands, then the weather." },
+  { id: "jaywalk",  name: "Facial-Recognition Jaywalking Unit", x: 110, y: 420, pop: 2, susc: 1.3, melt: 1.4, blurb: "Puts your face on a billboard for crossing the street wrong." },
+  { id: "cadre",    name: "Party Cadre WeChat Group",  x: 420, y: 440, pop: 5,   susc: 1.0, melt: 1.3, blurb: "Everyone posts the same thumbs-up. Nobody posts first." },
+  { id: "ghost",    name: "Ghost City Developers",     x: 720, y: 420, pop: 2,   susc: 1.2, melt: 1.5, blurb: "Built a city for a million people. Population: one guard and a dog." },
+  { id: "confucius",name: "Confucius Institute (US Campus)", x: 260, y: 570, pop: 1, susc: 1.3, melt: 1.3, blurb: "Teaches Mandarin. Also takes notes on who asks about Taiwan." },
+  { id: "hkcouncil",name: "Patriots-Only Council",     x: 600, y: 570, pop: 1,   susc: 1.1, melt: 1.4, blurb: "Free and fair elections. Only patriots on the ballot." },
+  { id: "shein",    name: "Fast-Fashion Haul Influencers", x: 900, y: 500, pop: 6, susc: 1.2, melt: 1.3, blurb: "Will defend the Party for a $4 dress and an affiliate code." },
+];
+const CN_EDGES = [
+  ["weibo","pooh"],["weibo","fifty"],["weibo","jaywalk"],["pooh","wolf"],["pooh","firewall"],["pooh","fifty"],["wolf","cctv"],["wolf","firewall"],
+  ["fifty","firewall"],["fifty","cadre"],["fifty","jaywalk"],["firewall","cadre"],["firewall","ghost"],["cctv","ghost"],["cctv","shein"],
+  ["jaywalk","confucius"],["cadre","confucius"],["cadre","hkcouncil"],["ghost","hkcouncil"],["ghost","shein"],["hkcouncil","shein"],["wolf","shein"],
+];
+// Doomsday: capitals of nuclear powers plus the people trying to calm them down
+const NUKE_NODES = [
+  { id: "dc",       name: "Washington",               x: 160, y: 230, pop: 6,   susc: 1.4, melt: 1.4, blurb: "Posts at 3 AM. Always in all caps." },
+  { id: "ottawa",   name: "Ottawa",                   x: 150, y: 90,  pop: 1,   susc: 0.8, melt: 1.0, blurb: "No nukes. Apologizing to everyone anyway, just in case." },
+  { id: "un",       name: "UN Security Council",      x: 300, y: 390, pop: 2,   susc: 1.0, melt: 1.2, blurb: "Expresses deep concern. Then expresses deeper concern." },
+  { id: "london",   name: "London",                   x: 430, y: 120, pop: 2,   susc: 1.1, melt: 1.2, blurb: "Will start a nuclear war, then arrest you for tweeting about it." },
+  { id: "paris",    name: "Paris",                    x: 470, y: 230, pop: 2,   susc: 1.2, melt: 1.4, blurb: "Already on strike. Will strike back, after lunch." },
+  { id: "brussels", name: "Brussels",                 x: 560, y: 160, pop: 1,   susc: 1.3, melt: 1.1, blurb: "No nukes. Drafting a regulation on the size of mushroom clouds." },
+  { id: "bern",     name: "Bern",                     x: 540, y: 320, pop: 0.5, susc: 0.7, melt: 0.9, blurb: "Neutral. Very neutral. Has a bunker for every citizen, just neutrally." },
+  { id: "moscow",   name: "Moscow",                   x: 700, y: 110, pop: 5,   susc: 1.3, melt: 1.5, blurb: "Keeps a nuclear briefcase and a shirtless-horse-riding photo budget." },
+  { id: "islamabad",name: "Islamabad",                x: 680, y: 330, pop: 2,   susc: 1.3, melt: 1.5, blurb: "One cricket match away from it." },
+  { id: "delhi",    name: "New Delhi",                x: 770, y: 430, pop: 5,   susc: 1.2, melt: 1.4, blurb: "One cricket match away from it. Same match." },
+  { id: "beijing",  name: "Beijing",                  x: 860, y: 230, pop: 6,   susc: 1.1, melt: 1.3, blurb: "Says nothing. Builds 300 silos. Says nothing." },
+  { id: "pyongyang",name: "Pyongyang",                x: 920, y: 120, pop: 1,   susc: 1.6, melt: 1.8, blurb: "Has been one insult away from launching since 1994." },
+];
+const NUKE_EDGES = [
+  ["dc","ottawa"],["dc","un"],["dc","london"],["dc","moscow"],["dc","beijing"],["dc","pyongyang"],["ottawa","london"],["un","paris"],["un","bern"],["un","islamabad"],
+  ["london","paris"],["london","moscow"],["london","brussels"],["paris","brussels"],["paris","bern"],["brussels","moscow"],["moscow","beijing"],["moscow","islamabad"],
+  ["islamabad","delhi"],["delhi","beijing"],["beijing","pyongyang"],["moscow","pyongyang"],["bern","islamabad"],
+];
+const MAPS = { cn: [CN_NODES, CN_EDGES], nuke: [NUKE_NODES, NUKE_EDGES], us: [NODES, EDGES], europe: [EURO_NODES, EURO_EDGES], nk: [NK_NODES, NK_EDGES], alpha: [ALPHA_NODES, ALPHA_EDGES] };
 
 // Upgrades. cur: "clout" or "cash". req: prerequisite id.
 const UPGRADES = {
@@ -396,6 +447,12 @@ const UPGRADES = {
     { id: "ratio",   name: "Ratio a Ten-Year-Old", cost: 3, cur: "clout", fx: { severity: .3, infect: .2 }, only: "alpha", desc: "They called you 'unc.' You posted their Roblox avatar. It's war." },
     { id: "unc",     name: "Explain What a Landline Was", cost: 6, cur: "clout", fx: { severity: .4, visibility: 1 }, only: "alpha", desc: "A phone. Attached to the wall. Shared by the whole family. They're screaming." },
     { id: "wifi",    name: "Turn Off the School Wi-Fi", cost: 10, cur: "clout", fx: { severity: .6, infect: .3 }, only: "alpha", desc: "One router. Six hundred meltdowns. Fastest spread in the game." },
+    { id: "poohmeme",name: "Post a Winnie the Pooh Meme", cost: 3, cur: "clout", fx: { severity: .35, infect: .2 }, only: "cn", desc: "A yellow bear in a red shirt. −50 social credit. Worth it." },
+    { id: "taiwan",  name: "Say 'Taiwan Is a Country'", cost: 8, cur: "clout", fx: { severity: .5, visibility: 1 }, only: "cn", desc: "Four words. A whole embassy files a complaint." },
+    { id: "1989",    name: "Ask What Happened in 1989", cost: 12, cur: "clout", fx: { severity: .6, spread: .3, visibility: 1 }, only: "cn", desc: "Nothing happened. Nothing. Why are you asking. Who sent you." },
+    { id: "jaywalkvid", name: "Jaywalk on Camera, Wave at It", cost: 5, cur: "clout", fx: { infect: .4 }, only: "cn", desc: "Your face on the shame billboard, smiling. It goes viral." },
+    { id: "allcaps", name: "Translate Speeches Badly on Purpose", cost: 5, cur: "clout", fx: { severity: .35, infect: .2 }, only: "nuke", desc: "'We seek peace' becomes 'your mother is a hamster.' Accuracy is overrated." },
+    { id: "wrestler",name: "Photoshop Leaders Onto Pro Wrestlers", cost: 8, cur: "clout", fx: { severity: .45, infect: .3 }, only: "nuke", desc: "Every head of state in a speedo. Two of them take it personally." },
     { id: "unhinged",name: "Full Unhinged Arc", cost: 25, cur: "clout", fx: { severity: 1, visibility: 3, cash: .5 }, req: "billboard", desc: "Livestream from a monster truck. Nobody knows what the bit is. Including you." },
   ],
   armor: [
@@ -413,16 +470,24 @@ const UPGRADES = {
     { id: "simcard", name: "Chinese SIM Card",       cost: 12000,  cur: "cash", fx: { resist: 1, spread: .4 }, only: "nk", desc: "Works within three miles of the border. That's where you live now." },
     { id: "grass",   name: "Touch Grass Daily",      cost: 4, cur: "clout", fx: { resist: 2 }, only: "alpha", desc: "Fifteen minutes outside. Your brain slowly comes back." },
     { id: "flipphone",name: "Flip Phone Detox",      cost: 8000, cur: "cash", fx: { resist: 2, cash: .2 }, only: "alpha", desc: "Can't scroll if there's nothing to scroll. Kids think it's retro. Sell them one." },
+    { id: "cnvpn",   name: "Black-Market VPN",       cost: 5000,   cur: "cash", fx: { resist: 2 }, only: "cn", desc: "Paid in crypto to a guy named Kevin in Shenzhen. Works most Tuesdays." },
+    { id: "twophone",name: "Second Phone Just for WeChat", cost: 9000, cur: "cash", fx: { resist: 1, cash: .3 }, only: "cn", desc: "One phone for the Party, one phone for the memes. Never mix them." },
+    { id: "passport",name: "Foreign Passport",       cost: 40000,  cur: "cash", fx: { resist: 3 }, only: "cn", desc: "Hard to dock credit from a guy in Vancouver." },
+    { id: "bunker",  name: "Bunker With Starlink",   cost: 30000,  cur: "cash", fx: { resist: 3, lives: 1 }, only: "nuke", desc: "Two years of canned beans and 300 Mbps. You will post through it." },
     { id: "dox",     name: "Burner Phone Discipline", cost: 5, cur: "clout", fx: { resist: 1 }, desc: "Paid in clout: you just have to stop posting your street." },
   ],
 };
 // Endgame tree: unlocks at the tipping point
 UPGRADES.collapse = [
   { id: "opposite", name: "Opposite Day", cost: 8, cur: "clout", fx: { riot: .4, severity: .3 }, desc: "Bad is good, good is bad. Nobody can tell anymore, and they're furious about it." },
-  { id: "peaceful", name: "'Mostly Peaceful' Chyron", cost: 10, cur: "clout", fx: { riot: .5, visibility: 1 }, desc: "A reporter stands in front of a burning building and calls it mostly peaceful. Live." },
-  { id: "statue",   name: "Topple a Statue Nobody Can Name", cost: 12, cur: "clout", fx: { riot: .4, infect: .3 }, req: "opposite", desc: "Nobody checked who it was. Turns out it was the guy who freed the slaves. Ratio." },
-  { id: "car",      name: "Burn Your Own Car to Protest Cars", cost: 14, cur: "clout", fx: { riot: .6 }, req: "peaceful", desc: "An old French New Year's tradition. Now year-round, worldwide." },
-  { id: "firedept", name: "Defund the Fire Department", cost: 20, cur: "clout", fx: { riot: .9, visibility: 2 }, req: "car", desc: "They put out the last three protests. That was problematic." },
+  { id: "peaceful", except: ["nuke"], name: "'Mostly Peaceful' Chyron", cost: 10, cur: "clout", fx: { riot: .5, visibility: 1 }, desc: "A reporter stands in front of a burning building and calls it mostly peaceful. Live." },
+  { id: "statue",   except: ["nuke"], name: "Topple a Statue Nobody Can Name", cost: 12, cur: "clout", fx: { riot: .4, infect: .3 }, req: "opposite", desc: "Nobody checked who it was. Turns out it was the guy who freed the slaves. Ratio." },
+  { id: "car",      except: ["nuke"], name: "Burn Your Own Car to Protest Cars", cost: 14, cur: "clout", fx: { riot: .6 }, req: "peaceful", desc: "An old French New Year's tradition. Now year-round, worldwide." },
+  { id: "firedept", except: ["nuke"], name: "Defund the Fire Department", cost: 20, cur: "clout", fx: { riot: .9, visibility: 2 }, req: "car", desc: "They put out the last three protests. That was problematic." },
+  { id: "yomama",   only: "nuke", name: "Deepfake a 'Yo Mama' Joke Between Two Leaders", cost: 10, cur: "clout", fx: { riot: .5, visibility: 1 }, desc: "Perfect lip sync. Both mothers are offended. Both leaders are worse." },
+  { id: "crowd",    only: "nuke", name: "Start a Crowd-Size Argument", cost: 12, cur: "clout", fx: { riot: .5, infect: .3 }, req: "opposite", desc: "Whose military parade was bigger. Nobody can drop this one." },
+  { id: "codes",    only: "nuke", name: "Leak That the Launch Code Is 00000000", cost: 16, cur: "clout", fx: { riot: .7 }, req: "yomama", desc: "Allegedly true for years. Now every leader is trying it on everyone else's silos." },
+  { id: "redphone", only: "nuke", name: "Cut the Red Phone Line", cost: 22, cur: "clout", fx: { riot: .9, visibility: 2 }, req: "codes", desc: "The hotline goes to your voicemail now. Your voicemail says 'ratio.'" },
   { id: "potus",    name: "Run for President", cost: 250000, cur: "cash", fx: { resist: 2, president: 1 }, req: "opposite", desc: "Platform: 'I was right about all of it.' Slogan: a picture of a gas stove." },
   { id: "rally",    name: "Rally in a Burning City", cost: 18, cur: "clout", fx: { riot: .4, cash: .5, resist: 1 }, req: "potus", desc: "Best-lit rally in campaign history. Free pyrotechnics." },
 ];
@@ -507,12 +572,43 @@ const ALPHA_EVENTS = [
   () => ({ msg: "A kid used his mom's card to buy your merch. Then 40 more kids did.", f: () => { S.cash += 6000 * S.df.cash; } }),
   () => ({ msg: "You went camping with no signal for two days. Brainrot −6.", f: () => { S.heat = clamp(S.heat - 6, 0, 100); } }),
 ];
+const TICKER_CN = [
+  "CCTV: the leader shook 400 hands today. All of them were grateful.",
+  "Weibo deletes the word 'bear.' Then 'yellow.' Then 'honey.'",
+  "Man loses 200 social credit for buying too many video games. Gains 50 for buying a Party biography.",
+  "Wolf Warrior diplomat calls a Swedish cartoon 'an act of war.'",
+  "Ghost city welcomes its first resident. He's lost.",
+  "Jaywalker shamed on billboard. Billboard shamed by Weibo users. Billboard removed.",
+  "Great Firewall blocks a website about the Great Firewall.",
+];
+const TICKER_NUKE = [
+  "UN passes a resolution expressing 'deep concern.' Leaders express deep concern about the UN.",
+  "Two heads of state argue about whose button is bigger. Literally.",
+  "Switzerland remains neutral. Is also stocking up.",
+  "Canada apologizes to everyone, preemptively.",
+  "Doomsday Clock makers order a smaller clock.",
+  "Leader posts a 3 AM all-caps thread. Rival leader replies 'cope.'",
+  "Brussels drafts a regulation on mushroom cloud emissions.",
+];
+const CN_EVENTS = [
+  () => ({ msg: "Facial recognition spotted you jaywalking. −40 social credit.", f: () => { S.heat = clamp(S.heat + 4, 0, 100); } }),
+  () => ({ msg: "A US senator retweets your Pooh meme. Credit drops, merch sales soar.", f: () => { S.heat = clamp(S.heat + 3, 0, 100); S.cash += 8000 * S.df.cash; } }),
+  () => ({ msg: "You bought a Party biography as cover. +60 social credit.", f: () => { S.heat = clamp(S.heat - 6, 0, 100); } }),
+];
+const NUKE_EVENTS = [
+  () => ({ msg: "Two leaders shook hands at a summit. The diplomats are winning. Peace +6.", f: () => { S.heat = clamp(S.heat + 6, 0, 100); } }),
+  () => ({ msg: "Defense contractors start sponsoring your stream.", f: () => { S.cash += 10000 * S.df.cash; } }),
+  () => ({ msg: "A leader quote-tweets you with 'interesting.' Markets dip 4%.", f: () => { S.st.spread += .2; S.clout += 3; } }),
+];
+
 // built lazily: the tower lists are declared further down
 const SPECIAL_FOR = id => ({
   tower: { ticker: TICKER_TOWER, events: TOWER_EVENTS },
   europe: { ticker: TICKER_EUROPE, events: EURO_EVENTS },
   nk: { ticker: TICKER_NK, events: NK_EVENTS },
   alpha: { ticker: TICKER_ALPHA, events: ALPHA_EVENTS },
+  cn: { ticker: TICKER_CN, events: CN_EVENTS },
+  nuke: { ticker: TICKER_NUKE, events: NUKE_EVENTS },
 })[id];
 
 // Per-scenario wording: what the ban meter is, how you lose, how you win
@@ -643,6 +739,71 @@ FLAVOR.alpha = {
     [.8, "A Skibidi episode features you as the final boss."],
   ],
 };
+FLAVOR.cn = {
+  credit: true,
+  watchOff: "Social credit score", watchOn: "Social credit score",
+  intro: h => `${h} logs in with a perfect 1,000 social credit score. It will not last.`,
+  firstNotice: h => `The Ministry of State Security assigns a camera to ${h}. Then nine more.`, logNotice: "Your social credit started dropping.",
+  life: h => `${h} hit zero credit. Bought a new identity from Kevin in Shenzhen. Back at 400.`, lifeLog: "CREDIT ZERO. New identity purchased. Back at 400.",
+  lose: "Banned From Trains",
+  loseBody: (h, d) => `Social credit hit zero on day ${d}. You can't buy a train ticket, a plane ticket, or a good bubble tea. Your face is on the jaywalking billboard permanently. A Pooh Bear meme is still in your drafts.`,
+  win: "The Firewall Falls",
+  winBody: h => `The Great Firewall came down in a single afternoon, mostly from Pooh Bear memes. Everyone's social credit is now 1,000, because nobody is counting. Buy "Run for President" next time to finish the job.`,
+  presTitle: h => `Chairman ${h.replace(/^@/, "")}`,
+  presBody: h => `The Party congress voted unanimously, as always, but this time for ${h}. First decree: Winnie the Pooh is the national mascot. Second decree: the social credit system now rewards memes.`,
+  modLabel: "Camera — tap to dodge", modIcon: "◉",
+  chaosName: "Party losing control",
+  tipping: h => `A Pooh Bear meme of ${h}'s hits a billion views behind the Firewall. The censors can't keep up.`,
+  copsBusy: "The censors are busy deleting the word 'bear' from 40 million posts. They missed yours.",
+  beats: [
+    [10, "CCTV anchor wears a yellow tie. Coincidence, says CCTV."],
+    [25, "50-Cent Army goes on strike over pay. Demands one dollar."],
+    [40, "Ghost city fills overnight with people hiding from cameras."],
+    [55, "Wolf Warrior diplomat accidentally posts a Pooh meme from the official account."],
+    [70, "The Great Firewall shows a 'site under maintenance' page. To the whole country."],
+    [85, "Party Cadre WeChat Group: someone posts something other than a thumbs-up."],
+  ],
+  steps: h => [
+    [.05, `Weibo bans the word '${h.replace(/^@/, "")}.'`],
+    [.15, "A Wolf Warrior diplomat calls you a 'running dog.' Your follower count doubles."],
+    [.3, `CCTV runs a segment on 'foreign agent ${h}.'`],
+    [.5, "Every Pooh Bear plush in the country is recalled."],
+    [.7, "The 50-Cent Army now spends most of its budget on you."],
+    [.8, "Even the censors are sharing it, in private."],
+  ],
+};
+FLAVOR.nuke = {
+  watchOff: "Peace talks", watchOn: "Peace talks progress",
+  intro: h => `${h} sets out to make the world's leaders hate each other. The diplomats set out to stop ${h}.`,
+  firstNotice: h => `The UN appoints a special envoy to calm things down after ${h}'s posts. The envoy is very calm.`, logNotice: "The diplomats are trying to make peace.",
+  life: h => `A peace treaty almost got signed. ${h} leaked the seating chart. It's off.`, lifeLog: "PEACE ALMOST HAPPENED. Seating chart leaked. Treaty off.",
+  lose: "World Peace Achieved",
+  loseBody: (h, d) => `On day ${d} every leader signed the treaty and hugged on stage. Nobody needs to be angry anymore, so nobody follows ${h} anymore. Your engagement is gone. Unacceptable.`,
+  win: "Global Annihilation",
+  winBody: h => `Every leader launched at every other leader over a deepfake 'yo mama' joke. ${h} posted the last post on Earth from a bunker: 'ratio.' It got one like, from a cockroach. Buy "Run for President" next time to rule what's left.`,
+  presTitle: h => `President of the Wasteland`,
+  presBody: h => `Every leader launched over a crowd-size argument, and the survivors needed someone in charge. ${h} climbed out of the bunker with Starlink and won the election 14 to 3. The cockroaches voted as a bloc. First order: rebuild the Wi-Fi.`,
+  modLabel: "Diplomat — tap to sabotage peace", modIcon: "🕊",
+  chaosText: c => `Doomsday Clock: ${Math.max(0, Math.round(90 * (1 - c / 100)))} seconds to midnight`,
+  tipping: h => `Two heads of state are now feuding in ${h}'s replies. The Doomsday Clock is ticking.`,
+  copsBusy: "The diplomats are too busy explaining a deepfake to make peace.",
+  beats: [
+    [10, "Ambassadors recalled over a meme. Embassies reduced to posting on X."],
+    [25, "Two leaders challenge each other to a cage match. Both accept."],
+    [40, "Military parades double in size to win the crowd-size argument."],
+    [55, "Leaders hold competing nuclear tests on the same day. Both claim theirs was bigger."],
+    [70, "The red phone line goes to voicemail. The voicemail is your podcast."],
+    [85, "Every leader's finger is on the button. Every leader is still online."],
+  ],
+  steps: h => [
+    [.05, `A deputy foreign minister replies to ${h}. Diplomatic incident.`],
+    [.15, "A head of state calls your meme 'an act of aggression.'"],
+    [.3, `Two countries cite ${h} in official statements about each other.`],
+    [.5, "The UN holds an emergency session on your posts. Ten of fifteen members are posting during it."],
+    [.7, "Every leader on Earth has muted you, then unmuted you to check."],
+    [.8, "Bunker sales up 4,000%."],
+  ],
+};
 const flavor = k => (FLAVOR[S.sc.id] && FLAVOR[S.sc.id][k]) || FLAVOR.default[k];
 
 // ============================================================
@@ -697,7 +858,7 @@ renderChoices();
 $("setupForm").addEventListener("submit", e => {
   e.preventDefault();
   S = newGame();
-  document.documentElement.classList.remove("tower", "euro", "nk", "alpha");
+  document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke");
   if (S.sc.theme) document.documentElement.classList.add(S.sc.theme);
   $("setup").hidden = true; $("game").hidden = false;
   $("sHandle").textContent = S.handle;
@@ -926,7 +1087,7 @@ const TOWER_EVENTS = [
 function randomEvent() {
   const extra = SPECIAL_FOR(S.sc.id) ? SPECIAL_FOR(S.sc.id).events : [];
   // US-only gags stay out of the foreign maps
-  const base = ["nk", "alpha"].includes(S.sc.id) ? EVENTS.slice(4, 6) : EVENTS;
+  const base = ["nk", "alpha", "cn", "nuke"].includes(S.sc.id) ? EVENTS.slice(4, 6) : EVENTS;
   const pool = base.concat(extra, extra);
   const e = pool[Math.floor(Math.random() * pool.length)]();
   e.f(); log(`<b>Day ${S.day}</b> ${e.msg}`); ticker(e.msg);
@@ -970,10 +1131,16 @@ function render() {
   $("sInfamy").textContent = fmt(affected);
   $("sClout").textContent = Math.floor(S.clout);
   $("sCash").textContent = money(S.cash);
-  $("sHeat").textContent = Math.floor(S.heat) + "%";
-  $("heatFill").style.width = S.heat + "%";
+  if (flavor("credit")) {
+    // shown as a score that counts down from 1,000
+    $("sHeat").textContent = Math.max(0, Math.round(1000 - S.heat * 10)).toLocaleString();
+    $("heatFill").style.width = (100 - S.heat) + "%";
+  } else {
+    $("sHeat").textContent = Math.floor(S.heat) + "%";
+    $("heatFill").style.width = S.heat + "%";
+  }
   $("chaosFill").style.width = S.chaos + "%";
-  $("chaosLabel").textContent = `${flavor("chaosName")} ${Math.floor(S.chaos)}%`;
+  $("chaosLabel").textContent = flavor("chaosText") ? flavor("chaosText")(S.chaos) : `${flavor("chaosName")} ${Math.floor(S.chaos)}%`;
   document.querySelector(".mapbox").classList.toggle("burning", S.chaos > 30);
   $("heatLabel").textContent = S.heatOn ? flavor("watchOn") : flavor("watchOff");
   $("labClout").textContent = `${Math.floor(S.clout)} clout · ${money(S.cash)}`;
@@ -1008,7 +1175,7 @@ function ticker(msg) { $("ticker").textContent = msg.replaceAll("{h}", S ? S.han
 function renderLab() {
   $("labWallet").textContent = `${Math.floor(S.clout)} clout · ${money(S.cash)}`;
   $("labTabs").innerHTML = TABS.filter(t => !t.gated || S.tipped).map(t => `<button role="tab" aria-selected="${labTab === t.id}" data-tab="${t.id}">${t.name}</button>`).join("");
-  $("labGrid").innerHTML = UPGRADES[labTab].filter(u => !u.only || u.only === S.sc.id).map(u => {
+  $("labGrid").innerHTML = UPGRADES[labTab].filter(u => (!u.only || u.only === S.sc.id) && !(u.except || []).includes(S.sc.id)).map(u => {
     const owned = S.owned.has(u.id);
     const locked = u.req && !S.owned.has(u.req);
     const afford = u.cur === "clout" ? S.clout >= u.cost : S.cash >= u.cost;
@@ -1071,7 +1238,7 @@ function endGame(won) {
     const best = JSON.parse(localStorage.getItem("outrage-best") || "null");
     if (!best || affected > best.infamy) localStorage.setItem("outrage-best", JSON.stringify({ handle: S.handle, infamy: affected, cash: S.earned, day: S.day }));
   } catch (e) {}
-  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower", "euro", "nk", "alpha"); $("chaosBox").hidden = true; $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
+  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke"); $("chaosBox").hidden = true; $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
 }
 })();
 </script>
