@@ -121,6 +121,10 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02e
 :root.india .mapbox { background: radial-gradient(ellipse at 50% 40%, #2b2117, var(--ink) 75%); }
 :root.india .heatbar i { background: linear-gradient(180deg, #ff9933 0 33%, #ffffff 33% 66%, #138808 66%); }
 :root.india .up.owned { background: #2e1d12; }
+:root.jp { --ink: #0e0f14; --panel: #171822; --panel-2: #1f202d; --line: #34364a; --rage: #e0193a; --rage-2: #ff9fb6; --mod: #f4f1ea; --calm: #4c4e66; --fire: #ffe1ea; }
+:root.jp .mapbox { background: radial-gradient(circle at 50% 45%, #2a1620 0 18%, #161724 40%, var(--ink) 75%); }
+:root.jp .heatbar i { background: radial-gradient(circle at 50% 50%, #e0193a 0 4px, #f4f1ea 4.5px) 0 0 / 14px 100%; }
+:root.jp .up.owned { background: #2b1520; }
 :root.tower .heatbar i { background: repeating-linear-gradient(45deg, #ddd, #ddd 6px, #888 6px, #888 12px); }
 .stage { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; }
 .mapbox { position: relative; background: radial-gradient(ellipse at 50% 40%, #171c27, var(--ink) 75%); border: 1px solid var(--line); overflow: hidden; min-height: 300px; }
@@ -371,6 +375,7 @@ const SCENARIOS = [
   { id: "ca", name: "Sorry, Not Sorry (Canada)", desc: "Ottawa. Rage-bait the politest country on Earth. Push too far and they freeze your bank account. Politely.", heatMult: 1.4, heatStart: 0, cashMult: 1.6, susc: 1.15, map: "ca", start: "cbc", theme: "ca" },
   { id: "br", name: "Banned in Brazil", desc: "Brasília. The Supreme Court once switched off X for the whole country. Rage-bait the censors before they geo-block you personally.", heatMult: 1.45, heatStart: 0, cashMult: 1.6, susc: 1.25, map: "br", start: "court", theme: "br" },
   { id: "india", name: "Internet Shutdown (India)", desc: "1.4 billion people, 900 million online, and the world record for internet shutdowns. Rage-bait the anchors and the IT cells before they switch off your district.", heatMult: 1.45, heatStart: 0, cashMult: 1.6, susc: 1.25, map: "india", start: "anchors", theme: "india" },
+  { id: "jp", name: "The Deep Bow (Japan)", desc: "Tokyo. The most polite internet on Earth, until it isn't. Push too far and you're bowing at a press conference.", heatMult: 1.4, heatStart: 0, cashMult: 1.6, susc: 1.2, map: "jp", start: "nhk", theme: "jp" },
   { id: "election", name: "Election Year", desc: "Everyone is already on edge. Spread is fast, and so are the mods.", heatMult: 1.25, heatStart: 0.04, cashMult: 1.3, susc: 1.35 },
 ];
 const PLATFORMS = [
@@ -653,7 +658,27 @@ const INDIA_EDGES = [
   ["whatsapp","unions"],["whatsapp","cricket"],["whatsapp","kota"],["unions","bollywood"],["unions","kota"],["unions","aunties"],["bollywood","aunties"],["bollywood","influencers"],
   ["cricket","kota"],["cricket","blr"],["kota","aunties"],["kota","blr"],["aunties","callcenter"],["aunties","influencers"],["blr","callcenter"],["callcenter","influencers"],
 ];
-const MAPS = { india: [INDIA_NODES, INDIA_EDGES], br: [BR_NODES, BR_EDGES], ca: [CA_NODES, CA_EDGES], mx: [MX_NODES, MX_EDGES], ai: [AI_NODES, AI_EDGES], ir: [IR_NODES, IR_EDGES], ru: [RU_NODES, RU_EDGES], cn: [CN_NODES, CN_EDGES], nuke: [NUKE_NODES, NUKE_EDGES], us: [NODES, EDGES], europe: [EURO_NODES, EURO_EDGES], nk: [NK_NODES, NK_EDGES], alpha: [ALPHA_NODES, ALPHA_EDGES] };
+// Japan: institutions up top, Tokyo daily life in the middle, the internet and the regions below
+const JP_NODES = [
+  { id: "nhk",      name: "NHK Evening News",          x: 150, y: 120, pop: 2,   susc: 1.3, melt: 1.4, blurb: "Reports a scandal with the same face it uses for the weather." },
+  { id: "fax",      name: "Ministry Fax Department",   x: 430, y: 90,  pop: 1,   susc: 1.4, melt: 1.5, blurb: "Every form needs a hanko stamp and a fax. Email has been 'under review' since 1998." },
+  { id: "yahoo",    name: "Yahoo! News Comment Section", x: 730, y: 110, pop: 6, susc: 1.5, melt: 1.6, blurb: "The angriest place in Japan. Polite in person, furious in the comments." },
+  { id: "salaryman",name: "Salaryman Izakaya",         x: 290, y: 270, pop: 10,  susc: 1.0, melt: 1.3, blurb: "Work till 10, drink with the boss till 1, train home, repeat. Nobody leaves before the boss." },
+  { id: "idols",    name: "Idol Fan Clubs",            x: 580, y: 260, pop: 4,   susc: 1.4, melt: 1.6, blurb: "Bought 400 copies of one CD for 400 handshake tickets. Very calm about it." },
+  { id: "anime",    name: "Anime Twitter",             x: 900, y: 260, pop: 8,   susc: 1.3, melt: 1.5, blurb: "Has opinions about the finale. The finale hasn't aired yet." },
+  { id: "pushers",  name: "Train Station Pushers",     x: 120, y: 420, pop: 1,   susc: 1.1, melt: 1.3, blurb: "White gloves. Job: push 300 people into a car built for 150. They take pride in it." },
+  { id: "trash",    name: "Neighborhood Trash-Sorting Committee", x: 420, y: 430, pop: 3, susc: 1.5, melt: 1.5, blurb: "Eleven categories. PET bottles: cap off, label off, rinsed, crushed. Tuesdays only." },
+  { id: "konbini",  name: "Konbini Night Shift",       x: 720, y: 430, pop: 3,   susc: 1.0, melt: 1.2, blurb: "Bows when you enter, bows when you leave, heats your bento, never blinks." },
+  { id: "kyoto",    name: "Kyoto Overtourism Board",   x: 260, y: 570, pop: 1,   susc: 1.3, melt: 1.4, blurb: "Fines tourists for photographing geisha. Furious at everyone in a rented kimono." },
+  { id: "pachinko", name: "Pachinko Parlors",          x: 580, y: 570, pop: 5,   susc: 1.1, melt: 1.3, blurb: "Technically not gambling. Technically you win prizes you exchange next door for cash." },
+  { id: "osaka",    name: "Osaka Comedians",           x: 900, y: 520, pop: 3,   susc: 0.9, melt: 1.4, blurb: "Stand on the right of the escalator, unlike Tokyo. Will roast you back. Louder." },
+];
+const JP_EDGES = [
+  ["nhk","fax"],["nhk","salaryman"],["nhk","pushers"],["fax","yahoo"],["fax","salaryman"],["fax","trash"],["yahoo","idols"],["yahoo","anime"],
+  ["salaryman","idols"],["salaryman","pushers"],["salaryman","konbini"],["idols","anime"],["idols","konbini"],["anime","osaka"],["anime","pachinko"],
+  ["pushers","trash"],["pushers","kyoto"],["trash","konbini"],["trash","kyoto"],["konbini","pachinko"],["kyoto","pachinko"],["pachinko","osaka"],["konbini","osaka"],["yahoo","trash"],
+];
+const MAPS = { jp: [JP_NODES, JP_EDGES], india: [INDIA_NODES, INDIA_EDGES], br: [BR_NODES, BR_EDGES], ca: [CA_NODES, CA_EDGES], mx: [MX_NODES, MX_EDGES], ai: [AI_NODES, AI_EDGES], ir: [IR_NODES, IR_EDGES], ru: [RU_NODES, RU_EDGES], cn: [CN_NODES, CN_EDGES], nuke: [NUKE_NODES, NUKE_EDGES], us: [NODES, EDGES], europe: [EURO_NODES, EURO_EDGES], nk: [NK_NODES, NK_EDGES], alpha: [ALPHA_NODES, ALPHA_EDGES] };
 
 // Upgrades. cur: "clout" or "cash". req: prerequisite id.
 const UPGRADES = {
@@ -719,6 +744,10 @@ const UPGRADES = {
     { id: "worstxi", name: "Post Your Cricket Worst XI", cost: 6, cur: "clout", fx: { severity: .5, infect: .3 }, only: "india", desc: "Eleven names, one captain. Thirty million fans, one target." },
     { id: "louder",  name: "Out-Shout a Primetime Anchor", cost: 9, cur: "clout", fx: { severity: .5, visibility: 1 }, only: "india", desc: "Go on the debate show and be louder than him. Nobody has ever done this." },
     { id: "goodmorning", name: "Reply-All to Every Good Morning Forward", cost: 12, cur: "clout", fx: { severity: .5, spread: .5, visibility: 1 }, only: "india", desc: "With a fact-check. In every family group. The uncles will never forgive you." },
+    { id: "phonecall",name: "Take a Phone Call on the Train", cost: 3, cur: "clout", fx: { severity: .35, infect: .3 }, only: "jp", desc: "Speakerphone. Normal volume. A whole car stares at you in silence." },
+    { id: "trashwrong", name: "Sort Your Trash Wrong on Purpose", cost: 6, cur: "clout", fx: { severity: .5, infect: .2 }, only: "jp", desc: "PET bottle in burnables. On a Thursday. The committee convenes." },
+    { id: "escalator", name: "Stand on the Wrong Side of the Escalator", cost: 8, cur: "clout", fx: { severity: .45, spread: .3 }, only: "jp", desc: "Left in Osaka, right in Tokyo. Both cities are furious, at you and at each other." },
+    { id: "spoiler", name: "Spoil the Anime Finale", cost: 12, cur: "clout", fx: { severity: .6, spread: .4, visibility: 2 }, only: "jp", desc: "One screenshot, posted an hour before it airs. Anime Twitter will never recover." },
     { id: "unhinged",name: "Full Unhinged Arc", cost: 25, cur: "clout", fx: { severity: 1, visibility: 3, cash: .5 }, req: "billboard", desc: "Livestream from a monster truck. Nobody knows what the bit is. Including you." },
   ],
   armor: [
@@ -761,6 +790,9 @@ const UPGRADES = {
     { id: "simstack",name: "Stack of Cheap SIM Cards", cost: 2000,  cur: "cash", fx: { resist: 1, spread: .3 }, only: "india", desc: "Data costs almost nothing here. Twelve SIMs, twelve accounts, one meme." },
     { id: "shutvpn", name: "Satellite Link for Shutdowns", cost: 15000, cur: "cash", fx: { resist: 2, lives: 1 }, only: "india", desc: "When they switch off your district, you keep posting. Saves you once." },
     { id: "nri",     name: "NRI Cousin in New Jersey", cost: 35000, cur: "cash", fx: { resist: 3, cash: .3 }, only: "india", desc: "Posts your memes from Edison, NJ. Out of reach, and the family is proud of him." },
+    { id: "faxonly", name: "Communicate Only by Fax", cost: 4000, cur: "cash", fx: { resist: 2 }, only: "jp", desc: "The ministry can't trace what it can't email. Neither can anyone else." },
+    { id: "capsule", name: "Capsule Hotel Hideout",  cost: 9000, cur: "cash", fx: { resist: 1, lives: 1 }, only: "jp", desc: "Two meters long, one meter high, totally anonymous. Gets you out of one press conference." },
+    { id: "moveosaka", name: "Move to Osaka",        cost: 30000, cur: "cash", fx: { resist: 3, cash: .2 }, only: "jp", desc: "Nobody in Osaka apologizes for anything. They'll love you." },
     { id: "dox",     name: "Burner Phone Discipline", cost: 5, cur: "clout", fx: { resist: 1 }, desc: "Paid in clout: you just have to stop posting your street." },
   ],
 };
@@ -996,6 +1028,21 @@ const INDIA_EVENTS = [
   () => ({ msg: "India won a cricket match. Nobody in government is reading posts tonight. Shutdown −5.", f: () => { S.heat = clamp(S.heat - 5, 0, 100); } }),
 ];
 
+const TICKER_JP = [
+  "Ministry announces plan to phase out fax machines. Announcement sent by fax.",
+  "Company president bows 90 degrees for 14 seconds. Yahoo comments: 'Not enough.'",
+  "Neighborhood committee leaves a polite note on an improperly sorted bag. The note is 3 pages.",
+  "Idol fan buys 900 copies of the same CD. Says it's 'normal.'",
+  "Train arrives 40 seconds late. Railway issues a formal apology.",
+  "Kyoto bans photography in its photogenic alley. Tourists photograph the ban sign.",
+  "Osaka comedian roasts Tokyo on live TV. Tokyo issues no comment. Very loudly.",
+];
+const JP_EVENTS = [
+  () => ({ msg: "Your company HR department 'requests a short meeting.' Apology risk +6.", f: () => { S.heat = clamp(S.heat + 6, 0, 100); } }),
+  () => ({ msg: "Weebs overseas discovered you. Merch orders pour in from America and Brazil.", f: () => { S.cash += 9000 * S.df.cash; } }),
+  () => ({ msg: "Golden Week holiday. Every office in Japan is empty. Apology risk −5.", f: () => { S.heat = clamp(S.heat - 5, 0, 100); } }),
+];
+
 // built lazily: the tower lists are declared further down
 const SPECIAL_FOR = id => ({
   tower: { ticker: TICKER_TOWER, events: TOWER_EVENTS },
@@ -1011,6 +1058,7 @@ const SPECIAL_FOR = id => ({
   ca: { ticker: TICKER_CA, events: CA_EVENTS },
   br: { ticker: TICKER_BR, events: BR_EVENTS },
   india: { ticker: TICKER_INDIA, events: INDIA_EVENTS },
+  jp: { ticker: TICKER_JP, events: JP_EVENTS },
 })[id];
 
 // Per-scenario wording: what the ban meter is, how you lose, how you win
@@ -1432,12 +1480,44 @@ FLAVOR.india = {
     [.8, "Even the night-shift call center reads your memes to Americans on hold."],
   ],
 };
+FLAVOR.jp = {
+  watchOff: "Public apology risk", watchOn: "Public apology risk",
+  intro: h => `${h} goes live from Tokyo. Somewhere, an NHK anchor adjusts his tie very slightly.`,
+  firstNotice: h => `The Yahoo! News comment section finds ${h}. 4,000 replies in an hour, all polite, all furious.`, logNotice: "People are demanding an apology.",
+  life: h => `${h} hid in a capsule hotel until the press conference was cancelled. Back online.`, lifeLog: "APOLOGY DEMANDED. Hid in a capsule hotel. Survived.",
+  lose: "The Deep Bow",
+  loseBody: (h, d) => `On day ${d} you held a press conference and bowed 90 degrees for eleven seconds. The Yahoo comment section graded the bow 'insufficient.' You now work at a konbini in Hokkaido under a different name.`,
+  win: "Japan Loses Its Composure",
+  winBody: h => `For one afternoon the whole country stopped being polite. Salarymen left before the boss, trains ran 3 minutes late, and someone recycled a bottle with the cap on. All because of ${h}. Buy "Run for President" next time to finish the job.`,
+  presTitle: h => `Prime Minister ${h.replace(/^@/, "")}`,
+  presBody: h => `${h} won in a landslide, which in Japan means the ruling party lost a seat. First order: fax machines are retired. Second: you may leave work before your boss. Third: trash sorting goes down to four categories. The country is stunned.`,
+  modLabel: "Apology demand — tap to dodge", modIcon: "🙇",
+  chaosName: "Composure lost",
+  tipping: h => `A salaryman leaves the office before his boss, inspired by ${h}. Twelve more follow. Then a whole floor.`,
+  copsBusy: "The comment section is busy fighting about the escalator. Nobody is demanding your apology right now.",
+  beats: [
+    [10, "A train arrives 2 minutes late. Passengers are visibly annoyed. Visibly."],
+    [25, "Idol fans and anime fans start a flame war. The flame war has better production than the anime."],
+    [40, "Someone puts a PET bottle in the burnables. The neighborhood committee meets until midnight."],
+    [55, "The Ministry's fax machines jam simultaneously. Officials are forced to use email."],
+    [70, "Tokyo and Osaka argue about the escalator on live TV. Neither side backs down."],
+    [85, "A konbini clerk forgets to bow. The nation holds its breath."],
+  ],
+  steps: h => [
+    [.05, `NHK mentions ${h} for four seconds. Japanese Twitter: 'NHK mentioned it???'`],
+    [.15, "The Trash-Sorting Committee leaves a polite note on your door. It's 3 pages."],
+    [.3, `The Ministry faxes a warning to ${h}. You don't have a fax machine.`],
+    [.5, "Yahoo comments demand you apologize. Then demand you apologize for the apology."],
+    [.7, "Half of Japan has muted you. The other half bowed to your posts ironically."],
+    [.8, "Even the Osaka comedians say you went too far."],
+  ],
+};
 const flavor = k => (FLAVOR[S.sc.id] && FLAVOR[S.sc.id][k]) || FLAVOR.default[k];
 
 // Setup-screen sections for the scenario picker
 const SCENARIO_GROUPS = [
   ["Home", ["standard", "tower", "campus", "election", "alpha"]],
-  ["World Tour", ["ca", "mx", "br", "europe", "india", "cn", "ru", "ir", "nk"]],
+  ["World Tour", ["ca", "mx", "br", "europe", "india", "jp", "cn", "ru", "ir", "nk"]],
   ["Apocalypse", ["nuke", "ai"]],
 ];
 
@@ -1498,7 +1578,7 @@ $("setupForm").addEventListener("submit", e => {
   S = newGame();
   SFX.init(); setTimeout(() => SFX.play("news"), 60);
   Object.assign(shown, { clout: S.clout, cash: 0, infamy: 0 });
-  document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx", "ca", "br", "india");
+  document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx", "ca", "br", "india", "jp");
   if (S.sc.theme) document.documentElement.classList.add(S.sc.theme);
   $("setup").hidden = true; $("game").hidden = false;
   $("sHandle").textContent = S.handle;
@@ -1905,7 +1985,7 @@ const TOWER_EVENTS = [
 function randomEvent() {
   const extra = SPECIAL_FOR(S.sc.id) ? SPECIAL_FOR(S.sc.id).events : [];
   // US-only gags stay out of the foreign maps
-  const base = ["nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx", "ca", "br", "india"].includes(S.sc.id) ? EVENTS.slice(4, 6) : EVENTS;
+  const base = ["nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx", "ca", "br", "india", "jp"].includes(S.sc.id) ? EVENTS.slice(4, 6) : EVENTS;
   const pool = base.concat(extra, extra);
   const e = pool[Math.floor(Math.random() * pool.length)]();
   e.f(); log(`<b>Day ${S.day}</b> ${e.msg}`); ticker(e.msg);
@@ -2106,7 +2186,7 @@ function endGame(won) {
     const best = JSON.parse(localStorage.getItem("outrage-best") || "null");
     if (!best || affected > best.infamy) localStorage.setItem("outrage-best", JSON.stringify({ handle: S.handle, infamy: affected, cash: S.earned, day: S.day }));
   } catch (e) {}
-  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx", "ca", "br", "india"); $("chaosBox").hidden = true; $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
+  $("again").onclick = () => { $("endModal").hidden = true; $("game").hidden = true; $("setup").hidden = false; document.documentElement.classList.remove("tower", "euro", "nk", "alpha", "cn", "nuke", "ru", "ir", "ai", "mx", "ca", "br", "india", "jp"); $("chaosBox").hidden = true; $("log").innerHTML = ""; $("traits").innerHTML = '<span class="chip">No upgrades yet</span>'; renderChoices(); };
 }
 })();
 </script>
